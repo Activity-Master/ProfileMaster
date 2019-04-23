@@ -3,10 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.jwebmp</groupId>
-        <artifactId>jwebmp-builder</artifactId>
+        <groupId>com.armineasy.activitymaster</groupId>
+        <artifactId>activitymaster-group</artifactId>
         <version>0.0.0_0-SNAPSHOT</version>
     </parent>
+
 
     <artifactId>profile-master</artifactId>
     <packaging>jar</packaging>
@@ -14,13 +15,13 @@
 	
     <dependencies>
         <dependency>
-            <groupId>com.jwebmp</groupId>
+            <groupId>com.armineasy.activitymaster</groupId>
             <artifactId>activity-master</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.jwebmp</groupId>
+            <groupId>com.armineasy.activitymaster</groupId>
             <artifactId>activity-master</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
@@ -28,19 +29,19 @@
         </dependency>
 
         <dependency>
-            <groupId>com.jwebmp</groupId>
+            <groupId>com.jwebmp.thirdparty</groupId>
             <artifactId>uadetector-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.jwebmp</groupId>
+            <groupId>com.jwebmp.guicedee.servlets</groupId>
             <artifactId>guiced-servlets</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.jwebmp</groupId>
+            <groupId>com.jwebmp.guicedee.servlets</groupId>
             <artifactId>guiced-servlets</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

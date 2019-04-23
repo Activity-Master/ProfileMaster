@@ -9,9 +9,11 @@ import com.armineasy.activitymaster.activitymaster.db.entities.security.Security
 import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
 import com.armineasy.activitymaster.activitymaster.implementations.*;
 import com.armineasy.activitymaster.activitymaster.services.IIdentificationType;
+import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes;
 import com.armineasy.activitymaster.activitymaster.services.exceptions.ActivityMasterException;
+import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.GuestDTO;
@@ -54,21 +56,23 @@ import static com.jwebmp.guicedinjection.GuiceContext.*;
 public class ProfileService
 {
 
-	public GuestDTO<?> loginVisitor(GuestDTO<?> guestDTO, Enterprise enterprise, UUID... identityToken) throws ProfileServiceException
+	public GuestDTO<?> loginVisitor(GuestDTO<?> guestDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
 		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
+		Enterprise enterprise = GuiceContext.get(IEnterpriseService.class)
+		                                    .getEnterprise(enterpriseName);
 
 		Optional<UserDTO<?>> guestExists = findByKey(IdentificationTypeWebClientUUID, guestDTO.getWebClientUUID(), enterprise, identityToken);
 
 		Systems profileSystem = ProfileSystem.getNewSystem()
-		                                     .get(enterprise);
+		                                     .get(enterpriseName);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
-		                                      .get(enterprise);
+		                                      .get(enterpriseName);
 
 		InvolvedParty newIp = null;
 		if (guestExists.isEmpty())
 		{
-			newIp = createNewVisitor(guestDTO, enterprise, identityToken);
+			newIp = createNewVisitor(guestDTO, enterpriseName, identityToken);
 			//Create new guest record
 		}
 		else
@@ -81,12 +85,14 @@ public class ProfileService
 		return guestDTO;
 	}
 
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
-	InvolvedParty createNewVisitor(GuestDTO<?> guestDTO, Enterprise enterprise, UUID... identityToken)
+	InvolvedParty createNewVisitor(GuestDTO<?> guestDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken)
 	{
+		Enterprise enterprise = GuiceContext.get(IEnterpriseService.class)
+		                                    .getEnterprise(enterpriseName);
+
 		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
-		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
-		                                      .get(enterprise);
+	/*	UUID profileSystemUUID = ProfileSystem.getSystemTokens()
+		                                      .get(enterprise);*/
 		Systems profileSystem = ProfileSystem.getNewSystem()
 		                                     .get(enterprise);
 
@@ -97,9 +103,9 @@ public class ProfileService
 		           .setValue(guestDTO.getWebClientUUID()
 		                             .toString());
 
-		newIp = involvedPartyService.create(profileSystem, guestIDType, true, profileSystemUUID);
+		newIp = involvedPartyService.create(profileSystem, guestIDType, true, identityToken);
 		SecurityToken visitorsGroup = GuiceContext.get(SecurityTokenService.class)
-		                                          .getVisitorsGuestsFolder(enterprise, profileSystemUUID);
+		                                          .getVisitorsGuestsFolder(enterprise, identityToken);
 
 		SecurityToken myToken = get(SecurityTokenService.class).create(Identity,
 		                                                               guestDTO.getWebClientUUID()
@@ -107,15 +113,17 @@ public class ProfileService
 		                                                               "A new visitor device",
 		                                                               profileSystem,
 		                                                               visitorsGroup,
-		                                                               profileSystemUUID);
+		                                                               identityToken);
 		guestDTO.setIdentityToken(UUID.fromString(myToken.getSecurityToken()));
 
 		newIp.addIdentificationType(IdentificationTypeUUID, profileSystem, myToken.getSecurityToken(), identityToken);
-		newIp.addNameType(PreferredNameType, profileSystem, "Guest", profileSystemUUID);
-		newIp.addClassification(CreatedBy, Long.toString(newIp.getId()), profileSystem, profileSystemUUID);
+		newIp.addNameType(PreferredNameType, profileSystem, "Guest", identityToken);
+		newIp.addClassification(CreatedBy, Long.toString(newIp.getId()), profileSystem, identityToken);
 		return newIp;
 	}
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+
+
+
 	public InvolvedParty configureFromReadableUserAgent(UserDTO<?> dto, ReadableUserAgent readableUserAgent, Enterprise enterprise, UUID... identityToken)
 	{
 		UUID systemID = ProfileSystem.getSystemTokens()
@@ -184,7 +192,6 @@ public class ProfileService
 		return ip;
 	}
 
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	public InvolvedParty configureFromHTTPServletRequest(UserDTO<?> dto, HttpServletRequest servletRequest, Enterprise enterprise)
 	{
 		UUID systemID = ProfileSystem.getSystemTokens()
@@ -235,7 +242,6 @@ public class ProfileService
 
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS");
 
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	InvolvedParty updateLatestVisit(GuestDTO<?> guestDTO, Enterprise enterprise, InvolvedParty newIp,
 	                                UUID... identityToken)
 	{
