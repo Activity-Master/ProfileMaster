@@ -44,9 +44,6 @@ class ProfileServiceTest
 		//newGuest.setReadableUserAgent()
 		newGuest = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
 		                                                   .get(enterprise));
-		JobService.getInstance()
-		          .waitForJob("DefaultSecurityPersister");
-
 		HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
 		ProfileService profileService = GuiceContext.get(ProfileService.class);
 		InvolvedParty ip = profileService.configureFromHTTPServletRequest(newGuest, request, enterprise);
@@ -59,10 +56,23 @@ class ProfileServiceTest
 	{
 		defaultWaitTime = 1;
 		defaultWaitUnit = MINUTES;
-		JobService.maxQueueCount = 20;
 		ExecutorService service = null;
 		Enterprise enterprise = get(IEnterpriseService.class).getEnterprise(TestEnterprise);
 		for (int i = 0; i < 100; i++)
+		{
+			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
+
+		}
+		JobService.getInstance()
+		          .waitForJob("TestCreate100NewGuests", 5, MINUTES);
+	}
+
+	@org.junit.jupiter.api.Test
+	public void testCreate1000NewGuests()
+	{
+		ExecutorService service = null;
+		Enterprise enterprise = get(IEnterpriseService.class).getEnterprise(TestEnterprise);
+		for (int i = 0; i < 1000; i++)
 		{
 			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
 
@@ -70,9 +80,27 @@ class ProfileServiceTest
 			thread.setIdentityToken(ProfileSystem.getSystemTokens()
 			                                     .get(enterprise));*/
 			service = JobService.getInstance()
-			                    .addJob("TestCreate100NewGuests", thread);
+			                    .addJob("TestCreate100NewGuests",(Callable) thread);
 		}
-		service.isTerminated();
+		JobService.getInstance()
+		          .waitForJob("TestCreate100NewGuests", 5, MINUTES);
+	}
+
+	@org.junit.jupiter.api.Test
+	public void testCreate10000NewGuests()
+	{
+		ExecutorService service = null;
+		Enterprise enterprise = get(IEnterpriseService.class).getEnterprise(TestEnterprise);
+		for (int i = 0; i < 10000; i++)
+		{
+			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
+
+			/*thread.setEnterprise(TestEnterprise);
+			thread.setIdentityToken(ProfileSystem.getSystemTokens()
+			                                     .get(enterprise));*/
+			service = JobService.getInstance()
+			                    .addJob("TestCreate100NewGuests",(Callable<?>) thread);
+		}
 		JobService.getInstance()
 		          .waitForJob("TestCreate100NewGuests", 5, MINUTES);
 	}

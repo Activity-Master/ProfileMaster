@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import com.jwebmp.guicedinjection.GuiceContext;
 import com.jwebmp.guicedinjection.pairing.Pair;
 import com.jwebmp.guicedpersistence.db.annotations.Transactional;
+import com.jwebmp.guicedservlets.GuicedServletKeys;
 import lombok.extern.java.Log;
 import net.sf.uadetector.ReadableUserAgent;
 import org.json.JSONObject;
@@ -81,6 +82,10 @@ public class ProfileService
 			                                                                                               .toString(), profileSystem, identityToken);
 		}
 		newIp = updateLatestVisit(guestDTO, enterprise, newIp, identityToken);
+
+		HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
+		InvolvedParty ip = configureFromHTTPServletRequest(guestDTO, request, enterprise);
+		configureFromReadableUserAgent(guestDTO, get(ReadableUserAgent.class), enterprise, identityToken);
 
 		return guestDTO;
 	}

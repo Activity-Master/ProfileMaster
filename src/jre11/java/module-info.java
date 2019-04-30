@@ -14,6 +14,7 @@ module com.armineasy.activitymaster.profiles {
 	requires net.sf.uadetector.core;
 	requires org.json;
 	requires com.jwebmp.guicedpersistence;
+	requires com.jwebmp.guicedservlets;
 
 	exports com.armineasy.activitymaster.profiles.dto;
 	exports com.armineasy.activitymaster.profiles.services;
