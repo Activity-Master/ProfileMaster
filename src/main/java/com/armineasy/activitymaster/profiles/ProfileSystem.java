@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
+import static com.armineasy.activitymaster.profiles.enumerations.ProfileEventTypes.*;
 
 @Singleton
 public class ProfileSystem
@@ -39,13 +40,18 @@ public class ProfileSystem
 		                                           .getActivityMaster(enterprise);
 
 		EventsService eventsService = GuiceContext.get(EventsService.class);
-		EventType eType = eventsService.createEventType(ProfileEventTypes.GuestVisit, newSystem.get(enterprise), systemTokens.get(enterprise));
+		EventType eType = eventsService.createEventType(SiteVisit, newSystem.get(enterprise), systemTokens.get(enterprise));
+		EventType eType2 = eventsService.createEventType(UserRegistered, newSystem.get(enterprise), systemTokens.get(enterprise));
+		EventType eType3 = eventsService.createEventType(UserConfirmedAccount, newSystem.get(enterprise), systemTokens.get(enterprise));
 
 		Classification clazz = classificationService.create(LastLoginTime, newSystem.get(enterprise));
 		Classification clazz1 = 		classificationService.create(LastVisitTime, newSystem.get(enterprise));
 		clazz.createDefaultSecurity(activityMasterSystem);
 		clazz1.createDefaultSecurity(activityMasterSystem);
+
 		eType.createDefaultSecurity(activityMasterSystem);
+		eType2.createDefaultSecurity(activityMasterSystem);
+		eType3.createDefaultSecurity(activityMasterSystem);
 
 		InvolvedPartyIdentificationType idType = GuiceContext.get(InvolvedPartyService.class)
 		            .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID, "The Web Client UUID stored as a device identifier",
@@ -71,7 +77,6 @@ public class ProfileSystem
 		systemTokens.put(enterprise, uuid);
 
 		createInvolvedPartyClassifications(enterprise);
-
 	}
 
 	public static Map<Enterprise, UUID> getSystemTokens()

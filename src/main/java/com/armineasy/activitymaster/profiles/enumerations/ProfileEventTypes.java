@@ -5,7 +5,11 @@ import com.armineasy.activitymaster.activitymaster.services.IEventTypeValue;
 public enum ProfileEventTypes
 		implements IEventTypeValue<ProfileEventTypes>
 {
-	GuestVisit("When a guest user visits the site"),
+	SiteVisit("When a user visits the site"),
+	UserRegistered("When a user has registered with the site"),
+	UserConfirmedAccount("When the account has been confirmed with the user"),
+
+
 
 	;
 

@@ -1,29 +1,35 @@
 package com.armineasy.activitymaster.profiles.services;
 
-import com.armineasy.activitymaster.activitymaster.db.ActivityMasterDB;
 import com.armineasy.activitymaster.activitymaster.db.entities.address.Address;
 import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
+import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
+import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXInvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.db.entities.resourceitem.ResourceItem;
 import com.armineasy.activitymaster.activitymaster.db.entities.security.SecurityToken;
 import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
 import com.armineasy.activitymaster.activitymaster.implementations.*;
 import com.armineasy.activitymaster.activitymaster.services.IIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
+import com.armineasy.activitymaster.activitymaster.services.classifications.events.EventResourceItemClassifications;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes;
 import com.armineasy.activitymaster.activitymaster.services.exceptions.ActivityMasterException;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
-import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
+import com.armineasy.activitymaster.activitymaster.services.system.IEventService;
+import com.armineasy.activitymaster.activitymaster.services.system.ISecurityTokenService;
+import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.GuestDTO;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
 import com.armineasy.activitymaster.profiles.dto.UserLoginDTO;
 import com.armineasy.activitymaster.profiles.dto.UserProfileBasicDTO;
+import com.armineasy.activitymaster.profiles.enumerations.ProfileEventTypes;
 import com.armineasy.activitymaster.profiles.exceptions.ProfileServiceException;
 import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import com.jwebmp.guicedinjection.GuiceContext;
+import com.jwebmp.guicedinjection.interfaces.JobService;
 import com.jwebmp.guicedinjection.pairing.Pair;
 import com.jwebmp.guicedpersistence.db.annotations.Transactional;
 import com.jwebmp.guicedservlets.GuicedServletKeys;
@@ -44,6 +50,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 import static com.armineasy.activitymaster.activitymaster.services.classifications.events.EventInvolvedPartiesClassifications.*;
+import static com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications.*;
 import static com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes.*;
 import static com.armineasy.activitymaster.activitymaster.services.classifications.securitytokens.SecurityTokenClassifications.*;
 import static com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes.*;
@@ -66,14 +73,16 @@ public class ProfileService
 		Optional<UserDTO<?>> guestExists = findByKey(IdentificationTypeWebClientUUID, guestDTO.getWebClientUUID(), enterprise, identityToken);
 
 		Systems profileSystem = ProfileSystem.getNewSystem()
-		                                     .get(enterpriseName);
+		                                     .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
-		                                      .get(enterpriseName);
+		                                      .get(enterprise);
+
+		Event event = get(IEventService.class).createEvent(ProfileEventTypes.SiteVisit, profileSystem);
 
 		InvolvedParty newIp = null;
 		if (guestExists.isEmpty())
 		{
-			newIp = createNewVisitor(guestDTO, enterpriseName, identityToken);
+			newIp = createNewVisitor(event, guestDTO, enterprise, profileSystem, identityToken);
 			//Create new guest record
 		}
 		else
@@ -83,24 +92,28 @@ public class ProfileService
 		}
 		newIp = updateLatestVisit(guestDTO, enterprise, newIp, identityToken);
 
-		HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
-		InvolvedParty ip = configureFromHTTPServletRequest(guestDTO, request, enterprise);
-		configureFromReadableUserAgent(guestDTO, get(ReadableUserAgent.class), enterprise, identityToken);
-
+		try
+		{
+			HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
+			newIp = configureFromHTTPServletRequest(event, guestDTO, newIp, profileSystem, request, enterprise);
+		}
+		catch (Throwable T)
+		{
+			log.log(Level.FINER, "Unable to log servlet requesat information", T);
+		}
+		newIp = configureFromReadableUserAgent(event, guestDTO, newIp, get(ReadableUserAgent.class), profileSystem, enterprise, identityToken);
+		Optional<InvolvedPartyXInvolvedPartyIdentificationType> id = newIp.findIdentificationType(IdentificationTypeUUID, profileSystem, profileSystemUUID);
+		if (id.isPresent())
+		{
+			guestDTO.setIdentityToken(java.util.UUID.fromString(id.get()
+			                                                      .getValue()));
+		}
 		return guestDTO;
 	}
 
-	InvolvedParty createNewVisitor(GuestDTO<?> guestDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken)
+	InvolvedParty createNewVisitor(Event event, GuestDTO<?> guestDTO, Enterprise enterprise, Systems profileSystem, UUID... identityToken)
 	{
-		Enterprise enterprise = GuiceContext.get(IEnterpriseService.class)
-		                                    .getEnterprise(enterpriseName);
-
 		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
-	/*	UUID profileSystemUUID = ProfileSystem.getSystemTokens()
-		                                      .get(enterprise);*/
-		Systems profileSystem = ProfileSystem.getNewSystem()
-		                                     .get(enterprise);
-
 		InvolvedParty newIp;
 		//Create new guest record
 		Pair<IIdentificationType, String> guestIDType = new Pair<>();
@@ -119,94 +132,88 @@ public class ProfileService
 		                                                               profileSystem,
 		                                                               visitorsGroup,
 		                                                               identityToken);
-		guestDTO.setIdentityToken(UUID.fromString(myToken.getSecurityToken()));
+		guestDTO.setIdentityToken(java.util.UUID.fromString(myToken.getSecurityToken()));
 
 		newIp.addIdentificationType(IdentificationTypeUUID, profileSystem, myToken.getSecurityToken(), identityToken);
 		newIp.addNameType(PreferredNameType, profileSystem, "Guest", identityToken);
 		newIp.addClassification(CreatedBy, Long.toString(newIp.getId()), profileSystem, identityToken);
+
+		event.add(newIp, PerformedBy, profileSystem, identityToken);
 		return newIp;
 	}
 
-
-
-	public InvolvedParty configureFromReadableUserAgent(UserDTO<?> dto, ReadableUserAgent readableUserAgent, Enterprise enterprise, UUID... identityToken)
+	InvolvedParty configureFromReadableUserAgent(Event event, UserDTO<?> dto, InvolvedParty ip, ReadableUserAgent readableUserAgent, Systems profileSystem, Enterprise enterprise, UUID... identityToken)
 	{
 		UUID systemID = ProfileSystem.getSystemTokens()
 		                             .get(enterprise);
-		Systems profileSystem = GuiceContext.get(SystemsService.class)
-		                                    .findSystem(enterprise, systemID, systemID);
-
-		IInvolvedPartyService involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		InvolvedParty ip = involvedPartyService.findByIdentificationType(IdentificationTypeUUID, dto.getIdentityToken()
-		                                                                                            .toString(), profileSystem, identityToken);
-
-		ResourceItemService resourceItemService = GuiceContext.get(ResourceItemService.class);
-		ResourceItem resourceItem = ip.addResourceItem(BrowserDeviceCategory,ResourceItemClassifications.AddedANewDevice,
+		ResourceItem resourceItem = ip.addResourceItem(BrowserDeviceCategory, AddedANewDevice,
 		                                               readableUserAgent.getDeviceCategory()
 		                                                                .getName()
 		                                                                .getBytes(),
-		                                               "application/text", profileSystem, identityToken);
+		                                               "application/text", profileSystem, systemID);
 
-		resourceItem.addClassification(ResourceItemClassifications.AddedANewDevice, BrowserDeviceCategory.classificationName(), profileSystem, systemID);
+		resourceItem.addClassification(AddedANewDevice, BrowserDeviceCategory.classificationName(), profileSystem, systemID);
 		resourceItem.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
 		                                                                                                .getName()
 		                                                                                                .length()), profileSystem, systemID);
-		ResourceItem resourceItemName = ip.addResourceItem(BrowserDeviceName,ResourceItemClassifications.AddedANewDevice,
+		event.add(resourceItem, Added, profileSystem, identityToken);
+
+		ResourceItem resourceItemName = ip.addResourceItem(BrowserDeviceName, AddedANewDevice,
 		                                                   readableUserAgent.getDeviceCategory()
 		                                                                    .getCategory()
 		                                                                    .getName()
 		                                                                    .getBytes(),
-		                                                   "application/text", profileSystem, identityToken);
-		resourceItemName.addClassification(ResourceItemClassifications.AddedANewDevice, BrowserDeviceName.classificationName(), profileSystem, systemID);
+		                                                   "application/text", profileSystem, systemID);
+		event.add(resourceItemName, Added, profileSystem, identityToken);
+
+		resourceItemName.addClassification(AddedANewDevice, BrowserDeviceName.classificationName(), profileSystem, systemID);
 		resourceItemName.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
 		                                                                                                    .getName()
 		                                                                                                    .length()), profileSystem, systemID);
-		ResourceItem resourceItemIcon = ip.addResourceItem(BrowserDeviceIcon,ResourceItemClassifications.AddedANewDevice,
+
+		ResourceItem resourceItemIcon = ip.addResourceItem(BrowserDeviceIcon, AddedANewDevice,
 		                                                   readableUserAgent.getDeviceCategory()
 		                                                                    .getIcon()
 		                                                                    .getBytes(),
-		                                                   "application/text", profileSystem, identityToken);
-		resourceItemIcon.addClassification(ResourceItemClassifications.AddedANewDevice, BrowserDeviceIcon.classificationName(), profileSystem, systemID);
+		                                                   "application/text", profileSystem, systemID);
+		event.add(resourceItemIcon, Added, profileSystem, identityToken);
+
+		resourceItemIcon.addClassification(AddedANewDevice, BrowserDeviceIcon.classificationName(), profileSystem, systemID);
 		resourceItemIcon.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
 		                                                                                                    .getIcon()
 		                                                                                                    .length()), profileSystem, systemID);
 
-		ResourceItem resourceItemOperatingSystem = ip.addResourceItem(OperatingSystem,ResourceItemClassifications.AddedANewDevice,
+		ResourceItem resourceItemOperatingSystem = ip.addResourceItem(OperatingSystem, AddedANewDevice,
 		                                                              readableUserAgent.getOperatingSystem()
 		                                                                               .getName()
 		                                                                               .getBytes(),
-		                                                              "application/text", profileSystem, identityToken);
-		resourceItemOperatingSystem.addClassification(ResourceItemClassifications.AddedANewDevice, OperatingSystem.classificationName(), profileSystem, systemID);
+		                                                              "application/text", profileSystem, systemID);
+		event.add(resourceItemOperatingSystem, Added, profileSystem, identityToken);
+		resourceItemOperatingSystem.addClassification(AddedANewDevice, OperatingSystem.classificationName(), profileSystem, systemID);
 		resourceItemOperatingSystem.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getOperatingSystem()
 		                                                                                                               .getName()
 		                                                                                                               .length()), profileSystem, systemID);
-
-		ResourceItem resourceItemFamily = ip.addResourceItem(OperatingSystemFamily,ResourceItemClassifications.AddedANewDevice,
+		ResourceItem resourceItemFamily = ip.addResourceItem(OperatingSystemFamily, AddedANewDevice,
 		                                                     readableUserAgent.getOperatingSystem()
 		                                                                      .getFamily()
 		                                                                      .getName()
 		                                                                      .getBytes(),
 		                                                     "application/text", profileSystem, identityToken);
-		resourceItemFamily.addClassification(ResourceItemClassifications.AddedANewDevice, OperatingSystemFamily.classificationName(), profileSystem, systemID);
-		resourceItemFamily.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getOperatingSystem()
-		                                                                                                      .getFamily()
-		                                                                                                      .getName()
-		                                                                                                      .length()), profileSystem, systemID);
+		event.add(resourceItemFamily, Added, profileSystem, identityToken);
 
-
+		resourceItemFamily.addClassification(AddedANewDevice, OperatingSystemFamily.classificationName(), profileSystem, systemID);
+		resourceItemFamily.addClassification(Size, Long.toString(readableUserAgent.getOperatingSystem()
+		                                                                          .getFamily()
+		                                                                          .getName()
+		                                                                          .length()), profileSystem, systemID);
 		return ip;
 	}
 
-	public InvolvedParty configureFromHTTPServletRequest(UserDTO<?> dto, HttpServletRequest servletRequest, Enterprise enterprise)
+	InvolvedParty configureFromHTTPServletRequest(Event event, UserDTO<?> dto, InvolvedParty ip, Systems profileSystem, HttpServletRequest servletRequest, Enterprise enterprise)
 	{
 		UUID systemID = ProfileSystem.getSystemTokens()
 		                             .get(enterprise);
 
-		Systems profileSystem = ProfileSystem.getNewSystem().get(enterprise);
-
-		IInvolvedPartyService involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		InvolvedParty ip = involvedPartyService.findByIdentificationType(IdentificationTypeUUID, dto.getIdentityToken()
-		                                                                                            .toString(), profileSystem, systemID);
 		StringBuilder sb = new StringBuilder();
 		Enumeration<String> headerNames = servletRequest.getHeaderNames();
 		while (headerNames.hasMoreElements())
@@ -221,28 +228,26 @@ public class ProfileService
 		AddressService addressService = GuiceContext.get(AddressService.class);
 		Address ipAddress = addressService.addOrFindIPAddress(servletRequest.getRemoteAddr(), profileSystem, systemID);
 		ip.add(ipAddress, profileSystem, systemID);
+		event.add(ipAddress, profileSystem, systemID);
 		Address hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
 		ip.add(hostName, profileSystem, systemID);
+		event.add(hostName, profileSystem, systemID);
 		Address localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
 		ip.add(localIpAddress, profileSystem, systemID);
+		event.add(localIpAddress, profileSystem, systemID);
 		Address localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
 		ip.add(localHostName, profileSystem, systemID);
+		event.add(localHostName, profileSystem, systemID);
 
-		ResourceItemService resourceItemService = GuiceContext.get(ResourceItemService.class);
-		ResourceItem resourceItem = ip.addResourceItem(ResourceItemTypes.BrowserInformation,ResourceItemClassifications.AddedANewDevice,
+		ResourceItem resourceItem = ip.addResourceItem(ResourceItemTypes.BrowserInformation, AddedANewDevice,
 		                                               sb.toString()
 		                                                 .getBytes(),
 		                                               "application/json", profileSystem, systemID);
 		resourceItem.addClassification(ResourceItemClassifications.Size, Long.toString(sb.toString()
 		                                                                                 .length()), profileSystem, systemID);
-
+		event.add(resourceItem,Added, profileSystem, systemID);
 
 		return ip;
-	}
-
-	public UserDTO<?> setReadableUserAgent(UserDTO<?> dto, Enterprise enterprise, HttpServletRequest servletRequest, UUID... identityToken)
-	{
-		return dto;
 	}
 
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS");

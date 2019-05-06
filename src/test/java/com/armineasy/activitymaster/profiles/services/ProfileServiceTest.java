@@ -44,11 +44,6 @@ class ProfileServiceTest
 		//newGuest.setReadableUserAgent()
 		newGuest = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
 		                                                   .get(enterprise));
-		HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
-		ProfileService profileService = GuiceContext.get(ProfileService.class);
-		InvolvedParty ip = profileService.configureFromHTTPServletRequest(newGuest, request, enterprise);
-
-		System.out.println(request);
 	}
 
 	@org.junit.jupiter.api.Test
@@ -76,9 +71,6 @@ class ProfileServiceTest
 		{
 			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
 
-			/*thread.setEnterprise(TestEnterprise);
-			thread.setIdentityToken(ProfileSystem.getSystemTokens()
-			                                     .get(enterprise));*/
 			service = JobService.getInstance()
 			                    .addJob("TestCreate100NewGuests",(Callable) thread);
 		}
@@ -94,10 +86,6 @@ class ProfileServiceTest
 		for (int i = 0; i < 10000; i++)
 		{
 			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
-
-			/*thread.setEnterprise(TestEnterprise);
-			thread.setIdentityToken(ProfileSystem.getSystemTokens()
-			                                     .get(enterprise));*/
 			service = JobService.getInstance()
 			                    .addJob("TestCreate100NewGuests",(Callable<?>) thread);
 		}
