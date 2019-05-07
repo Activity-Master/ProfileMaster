@@ -9,6 +9,7 @@ import com.armineasy.activitymaster.activitymaster.services.classifications.ente
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.GuestDTO;
+import com.google.common.base.Stopwatch;
 import com.jwebmp.guicedinjection.GuiceContext;
 import com.jwebmp.guicedinjection.interfaces.JobService;
 import com.jwebmp.guicedservlets.GuicedServletKeys;
@@ -35,7 +36,8 @@ class ProfileServiceTest
 	public void testCreateNewGuest()
 	{
 		ProfileService ps = get(ProfileService.class);
-
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		log.info("Started creating guest");
 		Enterprise enterprise = get(IEnterpriseService.class)
 				                        .getEnterprise(get(ActivityMasterConfiguration.class).getEnterpriseName());
 
@@ -44,6 +46,7 @@ class ProfileServiceTest
 		//newGuest.setReadableUserAgent()
 		newGuest = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
 		                                                   .get(enterprise));
+		log.info("Created New Guest! Session Returned - " + stopwatch.stop().elapsed(MILLISECONDS));
 	}
 
 	@org.junit.jupiter.api.Test

@@ -1,5 +1,6 @@
 package com.armineasy.activitymaster.profiles.services;
 
+import com.armineasy.activitymaster.activitymaster.ActivityMasterConfiguration;
 import com.armineasy.activitymaster.activitymaster.db.entities.address.Address;
 import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
@@ -17,7 +18,9 @@ import com.armineasy.activitymaster.activitymaster.services.classifications.reso
 import com.armineasy.activitymaster.activitymaster.services.exceptions.ActivityMasterException;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.activitymaster.services.system.IEventService;
+import com.armineasy.activitymaster.activitymaster.services.system.IResourceItemService;
 import com.armineasy.activitymaster.activitymaster.services.system.ISecurityTokenService;
+import com.armineasy.activitymaster.activitymaster.threads.IdentifiedThread;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.GuestDTO;
@@ -47,6 +50,7 @@ import java.util.Enumeration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 
 import static com.armineasy.activitymaster.activitymaster.services.classifications.events.EventInvolvedPartiesClassifications.*;
@@ -77,37 +81,52 @@ public class ProfileService
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
 
-		Event event = get(IEventService.class).createEvent(ProfileEventTypes.SiteVisit, profileSystem);
+		Event event = get(IEventService.class).createEvent(ProfileEventTypes.SiteVisit, profileSystem, profileSystemUUID);
 
-		InvolvedParty newIp = null;
+		InvolvedParty newIp;
 		if (guestExists.isEmpty())
 		{
 			newIp = createNewVisitor(event, guestDTO, enterprise, profileSystem, identityToken);
-			//Create new guest record
 		}
 		else
 		{
 			newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, guestDTO.getWebClientUUID()
 			                                                                                               .toString(), profileSystem, identityToken);
 		}
-		newIp = updateLatestVisit(guestDTO, enterprise, newIp, identityToken);
-
-		try
+		if (ActivityMasterConfiguration.get()
+		                               .isAsyncEnabled())
 		{
+			InvolvedParty ipFinal = newIp;
 			HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
-			newIp = configureFromHTTPServletRequest(event, guestDTO, newIp, profileSystem, request, enterprise);
+			JobService.getInstance()
+			          .addJob("UpdateVisits", new TransactionalIdentifiedThread()
+			                  {
+				                  public void perform()
+				                  {
+					                  updateLatestVisit(guestDTO, enterprise, ipFinal, identityToken);
+					                  configureFromHTTPServletRequest(event, guestDTO, ipFinal, profileSystem, request, enterprise);
+					                  configureFromReadableUserAgent(event, guestDTO, ipFinal, get(ReadableUserAgent.class), profileSystem, enterprise, identityToken);
+				                  }
+			                  }
+			                 );
 		}
-		catch (Throwable T)
+		else
 		{
-			log.log(Level.FINER, "Unable to log servlet requesat information", T);
+			newIp = updateLatestVisit(guestDTO, enterprise, newIp, identityToken);
+			try
+			{
+				HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
+				newIp = configureFromHTTPServletRequest(event, guestDTO, newIp, profileSystem, request, enterprise);
+			}
+			catch (Throwable T)
+			{
+				log.log(Level.FINER, "Unable to log servlet request information", T);
+			}
 		}
-		newIp = configureFromReadableUserAgent(event, guestDTO, newIp, get(ReadableUserAgent.class), profileSystem, enterprise, identityToken);
 		Optional<InvolvedPartyXInvolvedPartyIdentificationType> id = newIp.findIdentificationType(IdentificationTypeUUID, profileSystem, profileSystemUUID);
-		if (id.isPresent())
-		{
-			guestDTO.setIdentityToken(java.util.UUID.fromString(id.get()
-			                                                      .getValue()));
-		}
+		id.ifPresent(involvedPartyXInvolvedPartyIdentificationType -> guestDTO.setIdentityToken(
+				java.util.UUID.fromString(involvedPartyXInvolvedPartyIdentificationType.getValue()))
+		            );
 		return guestDTO;
 	}
 
@@ -133,12 +152,29 @@ public class ProfileService
 		                                                               visitorsGroup,
 		                                                               identityToken);
 		guestDTO.setIdentityToken(java.util.UUID.fromString(myToken.getSecurityToken()));
-
-		newIp.addIdentificationType(IdentificationTypeUUID, profileSystem, myToken.getSecurityToken(), identityToken);
-		newIp.addNameType(PreferredNameType, profileSystem, "Guest", identityToken);
-		newIp.addClassification(CreatedBy, Long.toString(newIp.getId()), profileSystem, identityToken);
-
-		event.add(newIp, PerformedBy, profileSystem, identityToken);
+		if (ActivityMasterConfiguration.get()
+		                               .isAsyncEnabled())
+		{
+			JobService.getInstance()
+			          .addJob("NewVisitorCustomIdentifiersAndItems", new TransactionalIdentifiedThread()
+			                  {
+				                  public void perform()
+				                  {
+					                  newIp.addIdentificationType(IdentificationTypeUUID, profileSystem, myToken.getSecurityToken(), identityToken);
+					                  newIp.addNameType(PreferredNameType, profileSystem, "Guest", identityToken);
+					                  newIp.addClassification(CreatedBy, Long.toString(newIp.getId()), profileSystem, identityToken);
+					                  event.add(newIp, PerformedBy, profileSystem, identityToken);
+				                  }
+			                  }
+			                 );
+		}
+		else
+		{
+			newIp.addIdentificationType(IdentificationTypeUUID, profileSystem, myToken.getSecurityToken(), identityToken);
+			newIp.addNameType(PreferredNameType, profileSystem, "Guest", identityToken);
+			newIp.addClassification(CreatedBy, Long.toString(newIp.getId()), profileSystem, identityToken);
+			event.add(newIp, PerformedBy, profileSystem, identityToken);
+		}
 		return newIp;
 	}
 
@@ -239,13 +275,18 @@ public class ProfileService
 		ip.add(localHostName, profileSystem, systemID);
 		event.add(localHostName, profileSystem, systemID);
 
+		Address webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
+		                                                                      .toString(), profileSystem, systemID);
+		ip.add(webAddress, profileSystem, systemID);
+		event.add(webAddress, profileSystem, systemID);
+
 		ResourceItem resourceItem = ip.addResourceItem(ResourceItemTypes.BrowserInformation, AddedANewDevice,
 		                                               sb.toString()
 		                                                 .getBytes(),
 		                                               "application/json", profileSystem, systemID);
 		resourceItem.addClassification(ResourceItemClassifications.Size, Long.toString(sb.toString()
 		                                                                                 .length()), profileSystem, systemID);
-		event.add(resourceItem,Added, profileSystem, systemID);
+		event.add(resourceItem, Added, profileSystem, systemID);
 
 		return ip;
 	}
