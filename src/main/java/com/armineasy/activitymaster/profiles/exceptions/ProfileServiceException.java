@@ -2,7 +2,8 @@ package com.armineasy.activitymaster.profiles.exceptions;
 
 import com.armineasy.activitymaster.activitymaster.services.exceptions.ActivityMasterException;
 
-public class ProfileServiceException extends ActivityMasterException
+public class ProfileServiceException
+		extends ActivityMasterException
 {
 	public ProfileServiceException()
 	{

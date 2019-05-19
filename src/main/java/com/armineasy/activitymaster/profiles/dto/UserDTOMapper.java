@@ -7,6 +7,7 @@ import org.mapstruct.factory.Mappers;
 public interface UserDTOMapper
 {
 	UserDTOMapper INSTANCE = Mappers.getMapper(UserDTOMapper.class);
+
 	UserProfileBasicDTO<?> downcast(UserDTO<?> userDTO);
 
 }

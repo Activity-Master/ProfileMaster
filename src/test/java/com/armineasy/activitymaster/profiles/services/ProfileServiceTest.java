@@ -3,25 +3,18 @@ package com.armineasy.activitymaster.profiles.services;
 import com.armineasy.activitymaster.activity.configs.DefaultTestConfig;
 import com.armineasy.activitymaster.activitymaster.ActivityMasterConfiguration;
 import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
-import com.armineasy.activitymaster.activitymaster.implementations.SystemsService;
-import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.GuestDTO;
 import com.google.common.base.Stopwatch;
 import com.jwebmp.guicedinjection.GuiceContext;
 import com.jwebmp.guicedinjection.interfaces.JobService;
-import com.jwebmp.guicedservlets.GuicedServletKeys;
 import lombok.extern.java.Log;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.armineasy.activitymaster.activitymaster.DefaultEnterprise.*;
 import static com.jwebmp.guicedinjection.GuiceContext.*;
@@ -45,8 +38,9 @@ class ProfileServiceTest
 		GuestDTO<?> newGuest = new GuestDTO<>().setWebClientUUID(UUID.randomUUID());
 		//newGuest.setReadableUserAgent()
 		newGuest = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
-		                                                   .get(enterprise));
-		log.info("Created New Guest! Session Returned - " + stopwatch.stop().elapsed(MILLISECONDS));
+		                                                                  .get(enterprise));
+		log.info("Created New Guest! Session Returned - " + stopwatch.stop()
+		                                                             .elapsed(MILLISECONDS));
 	}
 
 	@org.junit.jupiter.api.Test
@@ -75,7 +69,7 @@ class ProfileServiceTest
 			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
 
 			service = JobService.getInstance()
-			                    .addJob("TestCreate100NewGuests",(Callable) thread);
+			                    .addJob("TestCreate100NewGuests", (Callable) thread);
 		}
 		JobService.getInstance()
 		          .waitForJob("TestCreate100NewGuests", 5, MINUTES);
@@ -90,7 +84,7 @@ class ProfileServiceTest
 		{
 			NewGuestThread thread = GuiceContext.get(NewGuestThread.class);
 			service = JobService.getInstance()
-			                    .addJob("TestCreate100NewGuests",(Callable<?>) thread);
+			                    .addJob("TestCreate100NewGuests", (Callable<?>) thread);
 		}
 		JobService.getInstance()
 		          .waitForJob("TestCreate100NewGuests", 5, MINUTES);

@@ -10,7 +10,6 @@ public enum ProfileEventTypes
 	UserConfirmedAccount("When the account has been confirmed with the user"),
 
 
-
 	;
 
 	private String description;

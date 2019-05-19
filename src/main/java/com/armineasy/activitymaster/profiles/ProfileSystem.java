@@ -5,10 +5,12 @@ import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterp
 import com.armineasy.activitymaster.activitymaster.db.entities.events.EventType;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
-import com.armineasy.activitymaster.activitymaster.implementations.*;
+import com.armineasy.activitymaster.activitymaster.implementations.ClassificationService;
+import com.armineasy.activitymaster.activitymaster.implementations.EventsService;
+import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
+import com.armineasy.activitymaster.activitymaster.implementations.SystemsService;
 import com.armineasy.activitymaster.activitymaster.services.IActivityMasterProgressMonitor;
 import com.armineasy.activitymaster.activitymaster.systems.SystemsSystem;
-import com.armineasy.activitymaster.profiles.enumerations.ProfileEventTypes;
 import com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.google.inject.Singleton;
 import com.jwebmp.guicedinjection.GuiceContext;
@@ -45,7 +47,7 @@ public class ProfileSystem
 		EventType eType3 = eventsService.createEventType(UserConfirmedAccount, newSystem.get(enterprise), systemTokens.get(enterprise));
 
 		Classification clazz = classificationService.create(LastLoginTime, newSystem.get(enterprise));
-		Classification clazz1 = 		classificationService.create(LastVisitTime, newSystem.get(enterprise));
+		Classification clazz1 = classificationService.create(LastVisitTime, newSystem.get(enterprise));
 		clazz.createDefaultSecurity(activityMasterSystem);
 		clazz1.createDefaultSecurity(activityMasterSystem);
 
@@ -54,8 +56,9 @@ public class ProfileSystem
 		eType3.createDefaultSecurity(activityMasterSystem);
 
 		InvolvedPartyIdentificationType idType = GuiceContext.get(InvolvedPartyService.class)
-		            .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID, "The Web Client UUID stored as a device identifier",
-		                                      systemTokens.get(enterprise));
+		                                                     .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+		                                                                               "The Web Client UUID stored as a device identifier",
+		                                                                               systemTokens.get(enterprise));
 		idType.createDefaultSecurity(activityMasterSystem);
 	}
 

@@ -6,11 +6,12 @@ import com.armineasy.activitymaster.activitymaster.services.classifications.invo
 
 import static com.armineasy.activitymaster.activitymaster.services.concepts.EnterpriseDataConcepts.*;
 
-public enum ProfileClassifications implements IClassificationValue<ProfileClassifications>
-	, IInvolvedPartyClassification<ProfileClassifications>
+public enum ProfileClassifications
+		implements IClassificationValue<ProfileClassifications>
+				           , IInvolvedPartyClassification<ProfileClassifications>
 {
-	LastLoginTime("The last time the Involved Party was logged in",EventXInvolvedParty),
-	LastVisitTime("The last time the Involved Party visited the site",EventXInvolvedParty),
+	LastLoginTime("The last time the Involved Party was logged in", EventXInvolvedParty),
+	LastVisitTime("The last time the Involved Party visited the site", EventXInvolvedParty),
 	;
 
 	private String description;

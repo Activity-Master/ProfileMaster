@@ -1,5 +1,3 @@
-
-
 module com.armineasy.activitymaster.profiles {
 	requires com.armineasy.activitymaster.activitymaster;
 	requires com.google.guice;
@@ -18,8 +16,12 @@ module com.armineasy.activitymaster.profiles {
 
 	exports com.armineasy.activitymaster.profiles.dto;
 	exports com.armineasy.activitymaster.profiles.services;
+	exports com.armineasy.activitymaster.profiles.services.interfaces;
 
 	provides com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem with com.armineasy.activitymaster.profiles.ProfileSystem;
 
 	opens com.armineasy.activitymaster.profiles to com.google.guice, com.armineasy.activitymaster.activitymaster;
+	opens com.armineasy.activitymaster.profiles.events.visits to com.google.guice, com.armineasy.activitymaster.activitymaster;
+	opens com.armineasy.activitymaster.profiles.events to com.google.guice, com.armineasy.activitymaster.activitymaster;
+	opens com.armineasy.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
 }

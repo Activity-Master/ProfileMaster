@@ -1,10 +1,10 @@
 package com.armineasy.activitymaster.profiles.enumerations;
 
 import com.armineasy.activitymaster.activitymaster.services.IIdentificationType;
-import com.armineasy.activitymaster.activitymaster.services.ITypeValue;
 import com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes;
 
-public enum ProfileIdentificationTypes implements IIdentificationType<IdentificationTypes>
+public enum ProfileIdentificationTypes
+		implements IIdentificationType<IdentificationTypes>
 {
 	IdentificationTypeWebClientUUID("Web Client UUID"),
 

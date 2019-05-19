@@ -12,7 +12,7 @@
     <artifactId>profile-master</artifactId>
     <packaging>jar</packaging>
     <name>Profile Master</name>
-	
+
     <dependencies>
         <dependency>
             <groupId>com.armineasy.activitymaster</groupId>
