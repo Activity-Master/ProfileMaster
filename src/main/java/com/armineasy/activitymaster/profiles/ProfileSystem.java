@@ -4,12 +4,12 @@ import com.armineasy.activitymaster.activitymaster.db.entities.classifications.C
 import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.EventType;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyIdentificationType;
-import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
 import com.armineasy.activitymaster.activitymaster.implementations.ClassificationService;
 import com.armineasy.activitymaster.activitymaster.implementations.EventsService;
 import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
 import com.armineasy.activitymaster.activitymaster.implementations.SystemsService;
 import com.armineasy.activitymaster.activitymaster.services.IActivityMasterProgressMonitor;
+import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.systems.SystemsSystem;
 import com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.google.inject.Singleton;
@@ -27,7 +27,7 @@ public class ProfileSystem
 		implements com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem<ProfileSystem>
 {
 	private static final Map<Enterprise, UUID> systemTokens = new HashMap<>();
-	private static final Map<Enterprise, Systems> newSystem = new HashMap<>();
+	private static final Map<Enterprise, ISystems> newSystem = new HashMap<>();
 
 	@Override
 	public void createDefaults(Enterprise enterprise, IActivityMasterProgressMonitor progressMonitor)
@@ -38,7 +38,7 @@ public class ProfileSystem
 	private void createInvolvedPartyClassifications(Enterprise enterprise)
 	{
 		ClassificationService classificationService = GuiceContext.get(ClassificationService.class);
-		Systems activityMasterSystem = GuiceContext.get(SystemsService.class)
+		ISystems activityMasterSystem = GuiceContext.get(SystemsService.class)
 		                                           .getActivityMaster(enterprise);
 
 		EventsService eventsService = GuiceContext.get(EventsService.class);
@@ -48,13 +48,14 @@ public class ProfileSystem
 
 		Classification clazz = classificationService.create(LastLoginTime, newSystem.get(enterprise));
 		Classification clazz1 = classificationService.create(LastVisitTime, newSystem.get(enterprise));
+		Classification userRolesClassification = classificationService.create(UserRoles, newSystem.get(enterprise));
 		clazz.createDefaultSecurity(activityMasterSystem);
 		clazz1.createDefaultSecurity(activityMasterSystem);
+		userRolesClassification.createDefaultSecurity(activityMasterSystem);
 
 		eType.createDefaultSecurity(activityMasterSystem);
 		eType2.createDefaultSecurity(activityMasterSystem);
 		eType3.createDefaultSecurity(activityMasterSystem);
-
 		InvolvedPartyIdentificationType idType = GuiceContext.get(InvolvedPartyService.class)
 		                                                     .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
 		                                                                               "The Web Client UUID stored as a device identifier",
@@ -87,7 +88,7 @@ public class ProfileSystem
 		return systemTokens;
 	}
 
-	public static Map<Enterprise, Systems> getNewSystem()
+	public static Map<Enterprise, ISystems> getNewSystem()
 	{
 		return newSystem;
 	}

@@ -12,6 +12,7 @@ public enum ProfileClassifications
 {
 	LastLoginTime("The last time the Involved Party was logged in", EventXInvolvedParty),
 	LastVisitTime("The last time the Involved Party visited the site", EventXInvolvedParty),
+	UserRoles("A set list of User Roles for an Involved Party", InvolvedPartyXClassification),
 	;
 
 	private String description;

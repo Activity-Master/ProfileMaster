@@ -14,6 +14,10 @@ module com.armineasy.activitymaster.profiles {
 	requires com.jwebmp.guicedpersistence;
 	requires com.jwebmp.guicedservlets;
 
+	requires cache.annotations.ri.common;
+	requires cache.annotations.ri.guice;
+	requires cache.api;
+
 	exports com.armineasy.activitymaster.profiles.dto;
 	exports com.armineasy.activitymaster.profiles.services;
 	exports com.armineasy.activitymaster.profiles.services.interfaces;

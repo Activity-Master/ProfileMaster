@@ -1,21 +1,16 @@
 package com.armineasy.activitymaster.profiles.services;
 
 import com.armineasy.activitymaster.activitymaster.ActivityMasterConfiguration;
-import com.armineasy.activitymaster.activitymaster.db.entities.address.Address;
 import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXInvolvedPartyIdentificationType;
-import com.armineasy.activitymaster.activitymaster.db.entities.resourceitem.ResourceItem;
 import com.armineasy.activitymaster.activitymaster.db.entities.security.SecurityToken;
-import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
-import com.armineasy.activitymaster.activitymaster.implementations.AddressService;
 import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
 import com.armineasy.activitymaster.activitymaster.implementations.SecurityTokenService;
 import com.armineasy.activitymaster.activitymaster.services.IIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
-import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
-import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes;
+import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.services.exceptions.ActivityMasterException;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.activitymaster.services.system.IEventService;
@@ -38,24 +33,19 @@ import com.jwebmp.guicedinjection.pairing.Pair;
 import com.jwebmp.guicedservlets.GuicedServletKeys;
 import lombok.extern.java.Log;
 import net.sf.uadetector.ReadableUserAgent;
-import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import static com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications.*;
 import static com.armineasy.activitymaster.activitymaster.services.classifications.securitytokens.SecurityTokenClassifications.*;
 import static com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes.*;
-import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 import static com.jwebmp.guicedinjection.GuiceContext.*;
 
@@ -70,8 +60,8 @@ public class ProfileService
 		Enterprise enterprise = GuiceContext.get(IEnterpriseService.class)
 		                                    .getEnterprise(enterpriseName);
 
-		Systems profileSystem = ProfileSystem.getNewSystem()
-		                                     .get(enterprise);
+		ISystems profileSystem = ProfileSystem.getNewSystem()
+		                                      .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
 
@@ -109,10 +99,12 @@ public class ProfileService
 		id.ifPresent(involvedPartyXInvolvedPartyIdentificationType -> guestDTO.setIdentityToken(
 				java.util.UUID.fromString(involvedPartyXInvolvedPartyIdentificationType.getValue()))
 		            );
+
+
 		return guestDTO;
 	}
 
-	InvolvedParty createNewVisitor(Event event, GuestDTO<?> guestDTO, Enterprise enterprise, Systems profileSystem, UUID... identityToken)
+	InvolvedParty createNewVisitor(Event event, GuestDTO<?> guestDTO, Enterprise enterprise, ISystems profileSystem, UUID... identityToken)
 	{
 		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
 		InvolvedParty newIp;
@@ -159,7 +151,7 @@ public class ProfileService
 		return newIp;
 	}
 
-	InvolvedParty configureFromReadableUserAgent(Event event, UserDTO<?> dto, InvolvedParty ip, ReadableUserAgent readableUserAgent, Systems profileSystem, Enterprise enterprise, UUID... identityToken)
+	InvolvedParty configureFromReadableUserAgent(Event event, UserDTO<?> dto, InvolvedParty ip, ReadableUserAgent readableUserAgent, ISystems profileSystem, Enterprise enterprise, UUID... identityToken)
 	{
 		ConfigureFromReadableUserAgentEvent ev = GuiceContext.get(ConfigureFromReadableUserAgentEvent.class);
 		ev.setEnterprise(enterprise)
@@ -183,7 +175,7 @@ public class ProfileService
 		return ip;
 	}
 
-	InvolvedParty configureFromHTTPServletRequest(Event event, UserDTO<?> dto, InvolvedParty ip, Systems profileSystem, HttpServletRequest servletRequest, Enterprise enterprise)
+	InvolvedParty configureFromHTTPServletRequest(Event event, UserDTO<?> dto, InvolvedParty ip, ISystems profileSystem, HttpServletRequest servletRequest, Enterprise enterprise)
 	{
 		ConfigureFromServletRequestEvent req = GuiceContext.get(ConfigureFromServletRequestEvent.class);
 		req.setEvent(event)
@@ -241,7 +233,7 @@ public class ProfileService
 
 	public Optional<UserDTO<?>> findByKey(IIdentificationType<?> identificationType, UUID webClientKey, Enterprise enterprise, UUID... identityToken) throws ProfileServiceException
 	{
-		Systems profileSystem = ProfileSystem.getNewSystem()
+		ISystems profileSystem = ProfileSystem.getNewSystem()
 		                                     .get(enterprise);
 		InvolvedPartyService service = GuiceContext.get(InvolvedPartyService.class);
 		try
@@ -278,7 +270,7 @@ public class ProfileService
 		{
 			throw new ProfileServiceException("Passwords cannot be empty");
 		}
-		Systems profileSystem = ProfileSystem.getNewSystem()
+		ISystems profileSystem = ProfileSystem.getNewSystem()
 		                                     .get(enterprise);
 		InvolvedParty ip = ips.findByUsernameAndPassword(userLoginDTO.getUserName(), userLoginDTO.getPassword(), profileSystem, true, identityToken);
 		userLoginDTO = new UserLoginDTO<>().fromIP(ip);

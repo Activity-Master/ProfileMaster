@@ -2,10 +2,11 @@ package com.armineasy.activitymaster.profiles.dto;
 
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXInvolvedPartyIdentificationType;
-import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
+import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
 
@@ -19,11 +20,11 @@ import static com.armineasy.activitymaster.activitymaster.services.types.Identif
 @Data
 @Accessors(chain = true)
 @Log
+@EqualsAndHashCode(of = "identityToken")
 public class UserDTO<J extends UserDTO<J>>
 {
 	private UUID identityToken;
 	private Set<IUserRole<?>> roles;
-
 	@SuppressWarnings("unchecked")
 	public J fromIP(InvolvedParty ip)
 	{
@@ -31,8 +32,8 @@ public class UserDTO<J extends UserDTO<J>>
 		{
 			UUID systemID = ProfileSystem.getSystemTokens()
 			                             .get(ip.getEnterpriseID());
-			Systems profileSystem = ProfileSystem.getNewSystem()
-			                                     .get(ip.getEnterpriseID());
+			ISystems profileSystem = ProfileSystem.getNewSystem()
+			                                      .get(ip.getEnterpriseID());
 			Optional<InvolvedPartyXInvolvedPartyIdentificationType> ipId = ip.findIdentificationType(IdentificationTypeUUID, profileSystem, systemID);
 			if (ipId.isPresent())
 			{

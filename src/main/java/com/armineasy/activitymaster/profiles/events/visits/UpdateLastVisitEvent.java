@@ -3,7 +3,7 @@ package com.armineasy.activitymaster.profiles.events.visits;
 import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
-import com.armineasy.activitymaster.activitymaster.db.entities.systems.Systems;
+import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.GuestDTO;
@@ -35,8 +35,8 @@ public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 	@Override
 	public void perform()
 	{
-		Systems profileSystem = ProfileSystem.getNewSystem()
-		                                     .get(enterprise);
+		ISystems profileSystem = ProfileSystem.getNewSystem()
+		                                      .get(enterprise);
 		//Add last login time
 		String lastVisit = formatter.format(LocalDateTime.now());
 		newIp.addOrUpdateClassification(LastVisitTime,
