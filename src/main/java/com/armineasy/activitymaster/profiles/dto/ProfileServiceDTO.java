@@ -2,16 +2,18 @@ package com.armineasy.activitymaster.profiles.dto;
 
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
-public class GuestDTO<J extends GuestDTO<J>>
+public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		extends UserDTO<J>
 {
 	private UUID webClientUUID;

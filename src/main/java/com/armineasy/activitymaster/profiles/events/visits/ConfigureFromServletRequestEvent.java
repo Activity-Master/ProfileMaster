@@ -1,26 +1,31 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
 import com.armineasy.activitymaster.activitymaster.db.entities.address.Address;
-import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
+
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.db.entities.resourceitem.ResourceItem;
 import com.armineasy.activitymaster.activitymaster.implementations.AddressService;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes;
+import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
 import com.jwebmp.guicedinjection.GuiceContext;
+import com.jwebmp.logger.LogFactory;
 import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import static com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications.*;
 
@@ -36,7 +41,7 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 	private InvolvedParty ip;
 	private ISystems profileSystem;
 	private HttpServletRequest servletRequest;
-	private Enterprise enterprise;
+	private IEnterprise<?> enterprise;
 
 	@Override
 	public void perform()
@@ -56,7 +61,21 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 		}
 
 		AddressService addressService = GuiceContext.get(AddressService.class);
-		Address ipAddress = addressService.addOrFindIPAddress(servletRequest.getRemoteAddr(), profileSystem, systemID);
+		String ipReal = servletRequest.getRemoteAddr();
+		if (ipReal.equalsIgnoreCase("0:0:0:0:0:0:0:1")) {
+			InetAddress inetAddress = null;
+			try
+			{
+				inetAddress = InetAddress.getLocalHost();
+			}
+			catch (UnknownHostException e)
+			{
+				LogFactory.getLog("ConfigureFromServletRequest").log(Level.SEVERE, "Unknown host in getting INet Address for localhost ipv6",e);
+			}
+			String ipAddress = inetAddress.getHostAddress();
+			ipReal = ipAddress;
+		}
+		Address ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
 		ip.add(ipAddress, profileSystem, systemID);
 		event.add(ipAddress, profileSystem, systemID);
 		Address hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
@@ -74,12 +93,12 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 		ip.add(webAddress, profileSystem, systemID);
 		event.add(webAddress, profileSystem, systemID);
 
-		ResourceItem resourceItem = ip.addResourceItem(ResourceItemTypes.BrowserInformation, AddedANewDevice,
-		                                               sb.toString()
+		ResourceItem resourceItem = ip.add(ResourceItemTypes.BrowserInformation, AddedANewDevice,
+		                                   sb.toString()
 		                                                 .getBytes(),
-		                                               "application/json", profileSystem, systemID);
-		resourceItem.addClassification(ResourceItemClassifications.Size, Long.toString(sb.toString()
-		                                                                                 .length()), profileSystem, systemID);
+		                                   "application/json", profileSystem, systemID);
+		resourceItem.add(ResourceItemClassifications.Size, Long.toString(sb.toString()
+		                                                                   .length()), profileSystem, systemID);
 		event.add(resourceItem, Added, profileSystem, systemID);
 	}
 }

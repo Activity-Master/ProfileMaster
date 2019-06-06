@@ -1,10 +1,10 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.db.entities.resourceitem.ResourceItem;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
+import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
@@ -32,7 +32,7 @@ public class ConfigureFromReadableUserAgentEvent
 	private InvolvedParty ip;
 	private ReadableUserAgent readableUserAgent;
 	private ISystems profileSystem;
-	private Enterprise enterprise;
+	private IEnterprise<?> enterprise;
 	private UUID[] identityToken;
 
 	@Override
@@ -40,65 +40,65 @@ public class ConfigureFromReadableUserAgentEvent
 	{
 		UUID systemID = ProfileSystem.getSystemTokens()
 		                             .get(enterprise);
-		ResourceItem resourceItem = ip.addResourceItem(BrowserDeviceCategory, AddedANewDevice,
-		                                               readableUserAgent.getDeviceCategory()
+		ResourceItem resourceItem = ip.add(BrowserDeviceCategory, AddedANewDevice,
+		                                   readableUserAgent.getDeviceCategory()
 		                                                                .getName()
 		                                                                .getBytes(),
-		                                               "application/text", profileSystem, systemID);
+		                                   "application/text", profileSystem, systemID);
 
-		resourceItem.addClassification(AddedANewDevice, BrowserDeviceCategory.classificationName(), profileSystem, systemID);
-		resourceItem.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
-		                                                                                                .getName()
-		                                                                                                .length()), profileSystem, systemID);
+		resourceItem.add(AddedANewDevice, BrowserDeviceCategory.classificationName(), profileSystem, systemID);
+		resourceItem.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
+		                                                                                  .getName()
+		                                                                                  .length()), profileSystem, systemID);
 		event.add(resourceItem, Added, profileSystem, identityToken);
 
-		ResourceItem resourceItemName = ip.addResourceItem(BrowserDeviceName, AddedANewDevice,
-		                                                   readableUserAgent.getDeviceCategory()
+		ResourceItem resourceItemName = ip.add(BrowserDeviceName, AddedANewDevice,
+		                                       readableUserAgent.getDeviceCategory()
 		                                                                    .getCategory()
 		                                                                    .getName()
 		                                                                    .getBytes(),
-		                                                   "application/text", profileSystem, systemID);
+		                                       "application/text", profileSystem, systemID);
 		event.add(resourceItemName, Added, profileSystem, identityToken);
 
-		resourceItemName.addClassification(AddedANewDevice, BrowserDeviceName.classificationName(), profileSystem, systemID);
-		resourceItemName.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
-		                                                                                                    .getName()
-		                                                                                                    .length()), profileSystem, systemID);
+		resourceItemName.add(AddedANewDevice, BrowserDeviceName.classificationName(), profileSystem, systemID);
+		resourceItemName.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
+		                                                                                      .getName()
+		                                                                                      .length()), profileSystem, systemID);
 
-		ResourceItem resourceItemIcon = ip.addResourceItem(BrowserDeviceIcon, AddedANewDevice,
-		                                                   readableUserAgent.getDeviceCategory()
+		ResourceItem resourceItemIcon = ip.add(BrowserDeviceIcon, AddedANewDevice,
+		                                       readableUserAgent.getDeviceCategory()
 		                                                                    .getIcon()
 		                                                                    .getBytes(),
-		                                                   "application/text", profileSystem, systemID);
+		                                       "application/text", profileSystem, systemID);
 		event.add(resourceItemIcon, Added, profileSystem, identityToken);
 
-		resourceItemIcon.addClassification(AddedANewDevice, BrowserDeviceIcon.classificationName(), profileSystem, systemID);
-		resourceItemIcon.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
-		                                                                                                    .getIcon()
-		                                                                                                    .length()), profileSystem, systemID);
+		resourceItemIcon.add(AddedANewDevice, BrowserDeviceIcon.classificationName(), profileSystem, systemID);
+		resourceItemIcon.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
+		                                                                                      .getIcon()
+		                                                                                      .length()), profileSystem, systemID);
 
-		ResourceItem resourceItemOperatingSystem = ip.addResourceItem(OperatingSystem, AddedANewDevice,
-		                                                              readableUserAgent.getOperatingSystem()
+		ResourceItem resourceItemOperatingSystem = ip.add(OperatingSystem, AddedANewDevice,
+		                                                  readableUserAgent.getOperatingSystem()
 		                                                                               .getName()
 		                                                                               .getBytes(),
-		                                                              "application/text", profileSystem, systemID);
+		                                                  "application/text", profileSystem, systemID);
 		event.add(resourceItemOperatingSystem, Added, profileSystem, identityToken);
-		resourceItemOperatingSystem.addClassification(AddedANewDevice, OperatingSystem.classificationName(), profileSystem, systemID);
-		resourceItemOperatingSystem.addClassification(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getOperatingSystem()
-		                                                                                                               .getName()
-		                                                                                                               .length()), profileSystem, systemID);
-		ResourceItem resourceItemFamily = ip.addResourceItem(OperatingSystemFamily, AddedANewDevice,
-		                                                     readableUserAgent.getOperatingSystem()
+		resourceItemOperatingSystem.add(AddedANewDevice, OperatingSystem.classificationName(), profileSystem, systemID);
+		resourceItemOperatingSystem.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getOperatingSystem()
+		                                                                                                 .getName()
+		                                                                                                 .length()), profileSystem, systemID);
+		ResourceItem resourceItemFamily = ip.add(OperatingSystemFamily, AddedANewDevice,
+		                                         readableUserAgent.getOperatingSystem()
 		                                                                      .getFamily()
 		                                                                      .getName()
 		                                                                      .getBytes(),
-		                                                     "application/text", profileSystem, identityToken);
+		                                         "application/text", profileSystem, identityToken);
 		event.add(resourceItemFamily, Added, profileSystem, identityToken);
 
-		resourceItemFamily.addClassification(AddedANewDevice, OperatingSystemFamily.classificationName(), profileSystem, systemID);
-		resourceItemFamily.addClassification(Size, Long.toString(readableUserAgent.getOperatingSystem()
-		                                                                          .getFamily()
-		                                                                          .getName()
-		                                                                          .length()), profileSystem, systemID);
+		resourceItemFamily.add(AddedANewDevice, OperatingSystemFamily.classificationName(), profileSystem, systemID);
+		resourceItemFamily.add(Size, Long.toString(readableUserAgent.getOperatingSystem()
+		                                                            .getFamily()
+		                                                            .getName()
+		                                                            .length()), profileSystem, systemID);
 	}
 }

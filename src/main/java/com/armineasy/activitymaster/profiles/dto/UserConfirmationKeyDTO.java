@@ -8,7 +8,7 @@ import java.util.UUID;
 @Data
 @Accessors(chain = true)
 public class UserConfirmationKeyDTO<J extends UserConfirmationKeyDTO<J>>
-		extends UserDTO<J>
+		extends ProfileServiceDTO<J>
 {
 	private UUID confirmationKey;
 }

@@ -1,12 +1,12 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
+import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
-import com.armineasy.activitymaster.profiles.dto.GuestDTO;
+import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
 import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -27,8 +27,8 @@ public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 	private static final String JobServiceName = "UpdateLastVisitEvent";
 
 	private Event event;
-	private GuestDTO<?> guestDTO;
-	private Enterprise enterprise;
+	private ProfileServiceDTO<?> profileServiceDTO;
+	private IEnterprise<?> enterprise;
 	private InvolvedParty newIp;
 	private UUID[] identityToken;
 
@@ -39,9 +39,9 @@ public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 		                                      .get(enterprise);
 		//Add last login time
 		String lastVisit = formatter.format(LocalDateTime.now());
-		newIp.addOrUpdateClassification(LastVisitTime,
-		                                lastVisit,
-		                                profileSystem,
-		                                identityToken);
+		newIp.addOrUpdate(LastVisitTime,
+		                  lastVisit,
+		                  profileSystem,
+		                  identityToken);
 	}
 }

@@ -1,3 +1,5 @@
+import com.armineasy.activitymaster.profiles.implementations.ProfileServiceBinder;
+
 module com.armineasy.activitymaster.profiles {
 	requires com.armineasy.activitymaster.activitymaster;
 	requires com.google.guice;
@@ -6,6 +8,7 @@ module com.armineasy.activitymaster.profiles {
 	requires com.google.common;
 	requires javax.servlet.api;
 
+	requires com.fasterxml.jackson.databind;
 
 	requires lombok;
 	requires org.mapstruct;
@@ -17,12 +20,15 @@ module com.armineasy.activitymaster.profiles {
 	requires cache.annotations.ri.common;
 	requires cache.annotations.ri.guice;
 	requires cache.api;
+	requires com.fasterxml.jackson.annotation;
 
 	exports com.armineasy.activitymaster.profiles.dto;
-	exports com.armineasy.activitymaster.profiles.services;
+	exports com.armineasy.activitymaster.profiles.exceptions;
+	//exports com.armineasy.activitymaster.profiles.services;
 	exports com.armineasy.activitymaster.profiles.services.interfaces;
 
 	provides com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem with com.armineasy.activitymaster.profiles.ProfileSystem;
+	provides com.jwebmp.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
 
 	opens com.armineasy.activitymaster.profiles to com.google.guice, com.armineasy.activitymaster.activitymaster;
 	opens com.armineasy.activitymaster.profiles.events.visits to com.google.guice, com.armineasy.activitymaster.activitymaster;

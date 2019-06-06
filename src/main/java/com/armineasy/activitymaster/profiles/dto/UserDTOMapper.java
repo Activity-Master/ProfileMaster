@@ -8,6 +8,10 @@ public interface UserDTOMapper
 {
 	UserDTOMapper INSTANCE = Mappers.getMapper(UserDTOMapper.class);
 
+	UserProfileBasicDTO<?> downcast(ProfileServiceDTO<?> userDTO);
+
 	UserProfileBasicDTO<?> downcast(UserDTO<?> userDTO);
+	UserConfirmationKeyDTO<?> downcast(UserRegistrationDTO<?> userDTO);
+	UserRegistrationDTO<?> downcast(UserConfirmationKeyDTO<?> userDTO);
 
 }
