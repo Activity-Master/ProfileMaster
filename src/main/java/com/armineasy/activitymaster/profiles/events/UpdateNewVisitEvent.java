@@ -1,8 +1,8 @@
 package com.armineasy.activitymaster.profiles.events;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
+import com.armineasy.activitymaster.activitymaster.services.dto.IEvent;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
@@ -23,17 +23,17 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 	private static final String JobServiceName = "NewVisitorCustomIdentifiersAndItems";
 
 	private InvolvedParty newIp;
-	private Event event;
+	private IEvent<?> event;
 	private ProfileServiceDTO<?> profileServiceDTO;
 	private IEnterprise<?> enterprise;
-	private ISystems profileSystem;
+	private ISystems<?> profileSystem;
 	private UUID[] identityToken;
 
 	@Override
 	public void perform()
 	{
-		newIp.addNameType(PreferredNameType, profileSystem, "Guest", identityToken);
+		newIp.addOrReuse(PreferredNameType, "Guest",profileSystem, identityToken);
 		newIp.addOrReuse(CreatedBy, Long.toString(newIp.getId()), profileSystem, identityToken);
-		event.add(newIp, PerformedBy, profileSystem, identityToken);
+		event.addOrReuse(PerformedBy,newIp.getSecurityIdentity().toString(),  profileSystem, identityToken);
 	}
 }

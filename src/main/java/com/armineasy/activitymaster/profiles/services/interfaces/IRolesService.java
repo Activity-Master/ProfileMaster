@@ -1,6 +1,7 @@
 package com.armineasy.activitymaster.profiles.services.interfaces;
 
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
+import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 
@@ -12,10 +13,7 @@ import java.util.UUID;
 
 public interface IRolesService
 {
-	@CacheResult(cacheName = "UserRolesService")
-	List<IUserRole<?>> getRoles(@CacheKey UserDTO<?> dto, @CacheKey ISystems systems, @CacheKey UUID... identityToken);
-
-	@CachePut(cacheName = "UserRolesService")
-	@CacheResult(cacheName = "UserRolesService")
-	List<IUserRole<?>> addRole(IUserRole<?> role, @CacheKey UserDTO<?> dto, @CacheKey ISystems systems, @CacheKey UUID... identityToken);
+	List<IUserRole<?>> getRoles(ProfileServiceDTO<?> dto, ISystems<?> systems, UUID... identityToken);
+	List<IUserRole<?>> addRole(IUserRole<?> role, ProfileServiceDTO<?> dto, ISystems<?> systems, UUID... identityToken);
+	List<IUserRole<?>> findAllRoles();
 }

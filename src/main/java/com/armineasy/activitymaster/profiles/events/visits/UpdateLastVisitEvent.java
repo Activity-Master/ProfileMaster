@@ -1,8 +1,9 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.events.Event;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
+import com.armineasy.activitymaster.activitymaster.services.dto.IEvent;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
@@ -26,10 +27,10 @@ public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 	@Getter
 	private static final String JobServiceName = "UpdateLastVisitEvent";
 
-	private Event event;
+	private IEvent<?> event;
 	private ProfileServiceDTO<?> profileServiceDTO;
 	private IEnterprise<?> enterprise;
-	private InvolvedParty newIp;
+	private IInvolvedParty<?> newIp;
 	private UUID[] identityToken;
 
 	@Override

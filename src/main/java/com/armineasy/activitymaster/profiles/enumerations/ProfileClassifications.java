@@ -1,7 +1,7 @@
 package com.armineasy.activitymaster.profiles.enumerations;
 
-import com.armineasy.activitymaster.activitymaster.services.IClassificationValue;
-import com.armineasy.activitymaster.activitymaster.services.IClassificationDataConceptValue;
+import com.armineasy.activitymaster.activitymaster.services.enumtypes.IClassificationValue;
+import com.armineasy.activitymaster.activitymaster.services.enumtypes.IClassificationDataConceptValue;
 import com.armineasy.activitymaster.activitymaster.services.classifications.involvedparty.IInvolvedPartyClassification;
 
 import static com.armineasy.activitymaster.activitymaster.services.concepts.EnterpriseClassificationDataConcepts.*;
@@ -13,7 +13,9 @@ public enum ProfileClassifications
 	LastLoginTime("The last time the Involved Party was logged in", EventXInvolvedParty),
 	LastVisitTime("The last time the Involved Party visited the site", EventXInvolvedParty),
 	UserRoles("A set list of User Roles for an Involved Party", InvolvedPartyXClassification),
-	
+	RememberMe("If the user login must be remembered", InvolvedPartyXClassification),
+	LoggedOn("If the user is logged on", InvolvedPartyXClassification),
+
 	ConfirmationKey("A confirmation key to identify a user registration", InvolvedPartyXClassification),
 	;
 

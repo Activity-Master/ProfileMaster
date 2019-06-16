@@ -1,23 +1,27 @@
 package com.armineasy.activitymaster.profiles;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXClassification;
+import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
 import com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes;
-import com.armineasy.activitymaster.profiles.dto.UserDTO;
-import com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications;
+import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import com.google.inject.Singleton;
+import io.github.classgraph.ClassInfo;
 import lombok.extern.java.Log;
 
 import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CachePut;
+import javax.cache.annotation.CacheRemoveAll;
 import javax.cache.annotation.CacheResult;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.jwebmp.guicedinjection.GuiceContext.*;
 
 @Singleton
@@ -26,27 +30,63 @@ public class RolesService
 		implements IRolesService
 {
 	@Override
-	@CacheResult(cacheName = "UserRolesService")
-	public List<IUserRole<?>> getRoles(@CacheKey UserDTO<?> dto, @CacheKey ISystems systems, @CacheKey UUID... identityToken)
+	@CacheResult(cacheName = "UserRolesGetRoles")
+	public List<IUserRole<?>> getRoles(@CacheKey ProfileServiceDTO<?> dto, @CacheKey ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
-		return null;
+		List<IUserRole<?>> roles = findAllRoles();
+		List<IUserRole<?>> myRoles = new ArrayList<>();
+		List<String> assignedRoles = new ArrayList<>();
+		IInvolvedParty<?> ip = get(IInvolvedPartyService.class).findByIdentificationType(IdentificationTypes.IdentificationTypeUUID, dto.getIdentityToken()
+		                                                                                                                             .toString(), systems, identityToken);
+		for (InvolvedPartyXClassification classification : ip.findAll(UserRoles, systems, identityToken))
+		{
+			assignedRoles.add(classification.getValue());
+		}
+		for (String assignedRole : assignedRoles)
+		{
+			for (IUserRole<?> role : roles)
+			{
+				if(role.toString().equalsIgnoreCase(assignedRole))
+				{
+					myRoles.add(role);
+				}
+			}
+		}
+		dto.setRoles(new HashSet<>(myRoles));
+		return myRoles;
 	}
 
 	@Override
-	@CachePut(cacheName = "UserRolesService")
-	@CacheResult(cacheName = "UserRolesService")
-	public List<IUserRole<?>> addRole(IUserRole<?> role, @CacheKey UserDTO<?> dto, @CacheKey ISystems systems, @CacheKey UUID... identityToken)
+	@CacheRemoveAll(cacheName = "UserRolesGetRoles")
+	public List<IUserRole<?>> addRole(IUserRole<?> role, @CacheKey ProfileServiceDTO<?> dto, @CacheKey ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
-		//List<IUserRole<?>>
-		InvolvedParty ip = get(IInvolvedPartyService.class).findByIdentificationType(IdentificationTypes.IdentificationTypeUUID, dto.getIdentityToken()
+		IEnterprise<?> enterprise = systems.getEnterprise();
+		List<IUserRole<?>> roles = getRoles(dto, systems, identityToken);
+		IInvolvedParty<?> ip = get(IInvolvedPartyService.class).findByIdentificationType(IdentificationTypes.IdentificationTypeUUID, dto.getIdentityToken()
 		                                                                                                                       .toString(), systems, identityToken);
-		if(ip.has(ProfileClassifications.UserRoles, systems, identityToken))
+		if(!roles.contains(role))
 		{
-			for (InvolvedPartyXClassification classification : ip.findAll(ProfileClassifications.UserRoles, systems, identityToken))
-			{
+			ip.add(UserRoles, role.toString(), systems, identityToken);
+			roles.add(role);
+		}
+		return getRoles(dto,systems,identityToken);
+	}
 
+	@CacheResult(cacheName = "RolesServiceFindAllRoles")
+	@Override
+	public List<IUserRole<?>> findAllRoles()
+	{
+		List<IUserRole<?>> roles = new ArrayList<>();
+		for (ClassInfo classInfo : instance().getScanResult()
+		                                     .getClassesImplementing(IUserRole.class.getCanonicalName()))
+		{
+			for (Object enumConstant : classInfo.loadClass()
+			                                    .getEnumConstants())
+			{
+				IUserRole<?> role = (IUserRole<?>) enumConstant;
+				roles.add(role);
 			}
 		}
-		return null;
+		return roles;
 	}
 }

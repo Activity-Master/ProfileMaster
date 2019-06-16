@@ -21,11 +21,13 @@ module com.armineasy.activitymaster.profiles {
 	requires cache.annotations.ri.guice;
 	requires cache.api;
 	requires com.fasterxml.jackson.annotation;
+	requires io.github.classgraph;
 
 	exports com.armineasy.activitymaster.profiles.dto;
 	exports com.armineasy.activitymaster.profiles.exceptions;
 	//exports com.armineasy.activitymaster.profiles.services;
 	exports com.armineasy.activitymaster.profiles.services.interfaces;
+	exports com.armineasy.activitymaster.profiles.services.enumerations;
 
 	provides com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem with com.armineasy.activitymaster.profiles.ProfileSystem;
 	provides com.jwebmp.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;

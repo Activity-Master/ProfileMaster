@@ -1,12 +1,14 @@
 package com.armineasy.activitymaster.profiles.dto;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXInvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
+import com.armineasy.activitymaster.activitymaster.services.dto.IRelationshipValue;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
-import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,30 +21,38 @@ import lombok.experimental.Accessors;
 import lombok.extern.java.Log;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
 import static com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes.*;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 
-@Getter
-@Setter
 @Accessors(chain = true)
 @Log
 @EqualsAndHashCode(of = "identityToken")
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserDTO<J extends UserDTO<J>> implements Serializable
+@JsonAutoDetect(fieldVisibility = ANY,getterVisibility = NONE,setterVisibility = NONE)
+public class UserDTO<J extends UserDTO<J>>
+		implements Serializable
 {
+	@Getter
+	@Setter
 	private UUID identityToken;
+	@JsonIgnore
+	@Getter
+	@Setter
 	private Set<IUserRole<?>> roles;
+	@JsonIgnore
+	@Getter
+	@Setter
 	private IEnterprise<?> enterprise;
 
 	@SuppressWarnings("unchecked")
-	public J fromIP(InvolvedParty ip)
+	public J fromIP(IInvolvedParty<?> ip)
 	{
 		if (identityToken == null)
 		{
@@ -50,18 +60,17 @@ public class UserDTO<J extends UserDTO<J>> implements Serializable
 			                             .get(ip.getEnterpriseID());
 			ISystems profileSystem = ProfileSystem.getNewSystem()
 			                                      .get(ip.getEnterpriseID());
-			Optional<InvolvedPartyXInvolvedPartyIdentificationType> ipId = ip.findIdentificationType(IdentificationTypeUUID, profileSystem, systemID);
+			Optional<IRelationshipValue<?>> ipId = ip.find(IdentificationTypeUUID, profileSystem, systemID);
 			if (ipId.isPresent())
 			{
-				setIdentityToken(UUID.fromString(ipId.get()
-				                                     .getValue()));
+				setIdentityToken(ipId.get().getValueAsUUID());
 			}
 			else
 			{
-				if (ip.hasIdentificationType(IdentificationTypeUUID, profileSystem, systemID))
+				if (!ip.has(IdentificationTypeUUID, profileSystem, systemID))
 				{
 					UUID securityIdentityToken = UUID.randomUUID();
-					ip.addIdentificationType(IdentificationTypeUUID, profileSystem, securityIdentityToken.toString(), systemID);
+					ip.addOrUpdate(IdentificationTypeUUID, securityIdentityToken.toString(), profileSystem, systemID);
 
 				}
 				else
@@ -81,22 +90,10 @@ public class UserDTO<J extends UserDTO<J>> implements Serializable
 	 *
 	 * @return the string
 	 */
-	public String objectAsString(Object o) throws JsonProcessingException
+	private String objectAsString(Object o) throws JsonProcessingException
 	{
 		return GuiceContext.get(ObjectMapper.class)
 		                   .writeValueAsString(o);
-	}
-
-	public Set<IUserRole<?>> findRoles()
-	{
-		if (roles == null)
-		{
-			IRolesService rolesService = GuiceContext.get(IRolesService.class);
-			List<IUserRole<?>> rolesss = rolesService.getRoles(this, ProfileSystem.getNewSystem()
-			                                                                      .get(enterprise), ProfileSystem.getSystemTokens()
-			                                                                                                     .get(enterprise));
-		}
-		return roles;
 	}
 
 	@Override

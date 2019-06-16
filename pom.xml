@@ -13,12 +13,17 @@
     <packaging>jar</packaging>
     <name>Profile Master</name>
 
+    <build>
+        <testSourceDirectory>nope</testSourceDirectory>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>com.armineasy.activitymaster</groupId>
             <artifactId>activity-master</artifactId>
             <version>${project.version}</version>
         </dependency>
+<!--
 
         <dependency>
             <groupId>com.armineasy.activitymaster</groupId>
@@ -27,6 +32,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+-->
 
         <dependency>
             <groupId>com.jwebmp.thirdparty</groupId>

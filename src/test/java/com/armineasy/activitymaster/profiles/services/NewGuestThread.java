@@ -7,6 +7,7 @@ import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifi
 import com.armineasy.activitymaster.profiles.ProfileService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
+import com.armineasy.activitymaster.profiles.dto.UserLoginDTO;
 import lombok.extern.java.Log;
 
 import java.util.UUID;
@@ -22,7 +23,7 @@ public class NewGuestThread
 	public void perform()
 	{
 		ProfileService ps = get(ProfileService.class);
-		ProfileServiceDTO newGuest = new ProfileServiceDTO<>().setWebClientUUID(UUID.randomUUID());
+		UserLoginDTO<?> newGuest = new UserLoginDTO<>().setWebClientUUID(UUID.randomUUID());
 		//newGuest.setReadableUserAgent()
 		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(TestEnterprise);
 		ProfileServiceDTO dto = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()

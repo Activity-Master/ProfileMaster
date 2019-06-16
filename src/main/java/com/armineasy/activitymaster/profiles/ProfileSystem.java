@@ -1,7 +1,5 @@
 package com.armineasy.activitymaster.profiles;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.classifications.Classification;
-import com.armineasy.activitymaster.activitymaster.db.entities.events.EventType;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.implementations.ClassificationService;
 import com.armineasy.activitymaster.activitymaster.implementations.EventsService;
@@ -31,7 +29,7 @@ public class ProfileSystem
 	private static final Map<IEnterprise<?>, ISystems> newSystem = new HashMap<>();
 
 	@Override
-	public void createDefaults(IEnterprise enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void createDefaults(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 
 	}
@@ -43,24 +41,20 @@ public class ProfileSystem
 		                                           .getActivityMaster(enterprise);
 
 		EventsService eventsService = GuiceContext.get(EventsService.class);
-		EventType eType = eventsService.createEventType(SiteVisit, newSystem.get(enterprise), systemTokens.get(enterprise));
-		EventType eType2 = eventsService.createEventType(UserRegistered, newSystem.get(enterprise), systemTokens.get(enterprise));
-		EventType eType3 = eventsService.createEventType(UserConfirmedAccount, newSystem.get(enterprise), systemTokens.get(enterprise));
+		eventsService.createEventType(SiteVisit, newSystem.get(enterprise), systemTokens.get(enterprise));
+		eventsService.createEventType(UserRegistered, newSystem.get(enterprise), systemTokens.get(enterprise));
+		eventsService.createEventType(VisitorRegistered, newSystem.get(enterprise), systemTokens.get(enterprise));
+		eventsService.createEventType(UserConfirmedAccount, newSystem.get(enterprise), systemTokens.get(enterprise));
 
-		Classification clazz = classificationService.create(LastLoginTime, newSystem.get(enterprise));
-		Classification clazz1 = classificationService.create(LastVisitTime, newSystem.get(enterprise));
-		Classification clazz2 = classificationService.create(ConfirmationKey, newSystem.get(enterprise));
-		Classification userRolesClassification = classificationService.create(UserRoles, newSystem.get(enterprise));
-		clazz.createDefaultSecurity(activityMasterSystem);
-		clazz1.createDefaultSecurity(activityMasterSystem);
-		clazz2.createDefaultSecurity(activityMasterSystem);
-		userRolesClassification.createDefaultSecurity(activityMasterSystem);
+		classificationService.create(LastLoginTime, newSystem.get(enterprise));
+		classificationService.create(LastVisitTime, newSystem.get(enterprise));
+		classificationService.create(ConfirmationKey, newSystem.get(enterprise));
+		classificationService.create(UserRoles, newSystem.get(enterprise));
+		classificationService.create(RememberMe, newSystem.get(enterprise));
+		classificationService.create(LoggedOn, newSystem.get(enterprise));
 
-		eType.createDefaultSecurity(activityMasterSystem);
-		eType2.createDefaultSecurity(activityMasterSystem);
-		eType3.createDefaultSecurity(activityMasterSystem);
-		InvolvedPartyIdentificationType idType = GuiceContext.get(InvolvedPartyService.class)
-		                                                     .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+		InvolvedPartyIdentificationType idType = (InvolvedPartyIdentificationType) GuiceContext.get(InvolvedPartyService.class)
+		                                                                                       .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
 		                                                                               "The Web Client UUID stored as a device identifier",
 		                                                                               systemTokens.get(enterprise));
 		idType.createDefaultSecurity(activityMasterSystem);
@@ -74,7 +68,7 @@ public class ProfileSystem
 
 
 	@Override
-	public void postUpdate(IEnterprise enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void postUpdate(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 		newSystem.put(enterprise, GuiceContext.get(SystemsService.class)
 		                                      .create(enterprise, "Profiles System",

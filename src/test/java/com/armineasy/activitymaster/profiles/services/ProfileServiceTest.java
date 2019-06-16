@@ -1,13 +1,11 @@
 package com.armineasy.activitymaster.profiles.services;
 
-import com.armineasy.activitymaster.activity.configs.DefaultTestConfig;
 import com.armineasy.activitymaster.activitymaster.ActivityMasterConfiguration;
-import com.armineasy.activitymaster.activitymaster.db.entities.enterprise.Enterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.profiles.ProfileService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
-import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
+import com.armineasy.activitymaster.profiles.dto.UserLoginDTO;
 import com.google.common.base.Stopwatch;
 import com.jwebmp.guicedinjection.GuiceContext;
 import com.jwebmp.guicedinjection.interfaces.JobService;
@@ -22,7 +20,7 @@ import static com.armineasy.activitymaster.activitymaster.DefaultEnterprise.*;
 import static com.jwebmp.guicedinjection.GuiceContext.*;
 import static java.util.concurrent.TimeUnit.*;
 
-@ExtendWith(DefaultTestConfig.class)
+//@ExtendWith(DefaultTestConfig.class)
 @Log
 class ProfileServiceTest
 {
@@ -37,10 +35,10 @@ class ProfileServiceTest
 				                        .getEnterprise(get(ActivityMasterConfiguration.class).getEnterpriseName());
 
 
-		ProfileServiceDTO<?> newGuest = new ProfileServiceDTO<>().setWebClientUUID(UUID.randomUUID());
+		UserLoginDTO<?> newGuest = new UserLoginDTO<>().setWebClientUUID(UUID.randomUUID());
 		//newGuest.setReadableUserAgent()
-		newGuest = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
-		                                                                  .get(enterprise));
+		newGuest = (UserLoginDTO<?>) ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
+		                                                                                    .get(enterprise));
 		log.info("Created New Guest! Session Returned - " + stopwatch.stop()
 		                                                             .elapsed(MILLISECONDS));
 	}

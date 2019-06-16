@@ -4,6 +4,7 @@ import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.Inv
 import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
 import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
@@ -21,6 +22,10 @@ import java.util.UUID;
 
 public interface IProfileService
 {
+	ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
+
+	ProfileServiceDTO<?> logoutUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
+
 	ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
 
 	default boolean verifyUsernameExists(UserLoginDTO<?> userLoginDTO, IEnterprise<?> enterprise, UUID... identityToken)
@@ -46,8 +51,9 @@ public interface IProfileService
 		}
 		ISystems profileSystem = ProfileSystem.getNewSystem()
 		                                      .get(enterprise);
-		InvolvedParty ip = ips.findByUsernameAndPassword(userLoginDTO.getUserName(), userLoginDTO.getPassword(), profileSystem, true, identityToken);
+		IInvolvedParty<?> ip = ips.findByUsernameAndPassword(userLoginDTO.getUserName(), userLoginDTO.getPassword(), profileSystem, true, identityToken);
 		userLoginDTO = new UserLoginDTO<>().fromIP(ip);
+
 		return userLoginDTO;
 	}
 

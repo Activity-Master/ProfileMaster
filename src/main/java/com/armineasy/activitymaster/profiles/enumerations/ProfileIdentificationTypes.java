@@ -1,6 +1,6 @@
 package com.armineasy.activitymaster.profiles.enumerations;
 
-import com.armineasy.activitymaster.activitymaster.services.IIdentificationType;
+import com.armineasy.activitymaster.activitymaster.services.enumtypes.IIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes;
 
 public enum ProfileIdentificationTypes
