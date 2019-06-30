@@ -77,9 +77,9 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 			loggedOn = newIp.find(LoggedOn, profileSystem, profileSystemUUID)
 			                .get()
 			                .getValueAsBoolean();
-		}catch(NoSuchElementException nsfe)
+		}catch(Exception nsfe)
 		{
-
+			loggedOn = false;
 		}
 
 		if(loggedOn && !asVisitor)
@@ -113,7 +113,6 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		                                                                      .get(getEnterprise()), ProfileSystem.getSystemTokens()
 		                                                                                                          .get(getEnterprise()));
 		setRoles(new LinkedHashSet<>(rolesss));
-
 		return getRoles();
 	}
 

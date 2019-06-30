@@ -9,6 +9,7 @@ import com.armineasy.activitymaster.activitymaster.services.classifications.ente
 import com.armineasy.activitymaster.activitymaster.services.dto.*;
 import com.armineasy.activitymaster.activitymaster.services.enumtypes.IIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.exceptions.SecurityAccessException;
+import com.armineasy.activitymaster.activitymaster.services.security.Passwords;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.activitymaster.services.system.IEventService;
 import com.armineasy.activitymaster.profiles.dto.*;
@@ -27,7 +28,6 @@ import com.jwebmp.guicedinjection.GuiceContext;
 import com.jwebmp.guicedinjection.interfaces.JobService;
 import com.jwebmp.guicedinjection.pairing.Pair;
 import com.jwebmp.guicedservlets.GuicedServletKeys;
-import lombok.extern.java.Log;
 import net.sf.uadetector.ReadableUserAgent;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.armineasy.activitymaster.activitymaster.services.classifications.involvedparty.InvolvedPartyClassifications.*;
 import static com.armineasy.activitymaster.activitymaster.services.classifications.securitytokens.SecurityTokenClassifications.*;
@@ -49,10 +50,11 @@ import static java.time.temporal.ChronoUnit.*;
 
 @SuppressWarnings("Duplicates")
 @Singleton
-@Log
 public class ProfileService
 		implements IProfileService
 {
+	private static final Logger log = Logger.getLogger(ProfileService.class.getName());
+
 	@Override
 	public ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
@@ -78,33 +80,33 @@ public class ProfileService
 		try
 		{
 			IInvolvedParty<?> foundParty = involvedPartyService.findByUsernameAndPassword(profileServiceDTO.getUserName(),
-			                                                                                      profileServiceDTO.getPassword(),
-			                                                                                      profileSystem,
-			                                                                                      true,
-			                                                                                      profileSystemUUID);
+			                                                                              profileServiceDTO.getPassword(),
+			                                                                              profileSystem,
+			                                                                              true,
+			                                                                              profileSystemUUID);
 			profileServiceDTO.setIdentityToken(foundParty.getSecurityIdentity());
-			if(!newIp.equals(foundParty))
+			if (!newIp.equals(foundParty))
 			{
 				foundParty.addOrUpdate(IdentificationTypeWebClientUUID,
-				               profileServiceDTO.getWebClientUUID()
-				                                .toString(),
-				               profileSystem, profileSystemUUID);
+				                       profileServiceDTO.getWebClientUUID()
+				                                        .toString(),
+				                       profileSystem, profileSystemUUID);
 				newIp.archive(IdentificationTypeWebClientUUID, profileSystem, profileSystemUUID);
-				newIp.archive();
+				//newIp.archive();
 				newIp = foundParty;
 			}
 			newIp.addOrUpdate(LoggedOn, "true", profileSystem, profileSystemUUID);
 
 			//newIp.addOrUpdate(RememberMe, profileServiceDTO.isRememberMe() + "", profileSystem, profileSystemUUID);
-			if(newIp.has(IdentificationTypeEnterpriseCreatorRole,profileSystem,profileSystemUUID))
+			if (newIp.has(IdentificationTypeEnterpriseCreatorRole, profileSystem, profileSystemUUID))
 			{
 				get(IRolesService.class).addRole(Administrator, profileServiceDTO, profileSystem, identityToken);
 			}
 		}
 		catch (SecurityAccessException e)
 		{
-		//	newIp.addOrUpdate(LoggedOn, "false", profileSystem, profileSystemUUID);
-		//	newIp.addOrUpdate(RememberMe, "false", profileSystem, profileSystemUUID);
+			//	newIp.addOrUpdate(LoggedOn, "false", profileSystem, profileSystemUUID);
+			//	newIp.addOrUpdate(RememberMe, "false", profileSystem, profileSystemUUID);
 			throw new ProfileServiceException("Invalid username or password");
 		}
 
@@ -172,11 +174,11 @@ public class ProfileService
 			identityToken = new UUID[]{profileSystemUUID};
 		}
 
-		Optional<UserDTO<?>> guestExists = findByKey(IdentificationTypeWebClientUUID, profileServiceDTO.getWebClientUUID(), enterprise, identityToken);
+		IInvolvedParty<?> guestExists = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, profileServiceDTO.getWebClientUUID().toString(), profileSystem, identityToken);
 		final UUID[] identityToken1Final = identityToken;
 		IEvent<?> event = get(IEventService.class).createEvent(ProfileEventTypes.SiteVisit, profileSystem, profileSystemUUID);
 		IInvolvedParty<?> newIp;
-		if (guestExists.isEmpty())
+		if (guestExists == null)
 		{
 			newIp = createNewVisitor(event, profileServiceDTO, enterprise, profileSystem, profileSystemUUID);
 		}
@@ -320,9 +322,12 @@ public class ProfileService
 
 
 		IEvent<?> registerEvent = GuiceContext.get(IEventService.class)
-		                                  .createEvent(UserRegistered, profileSystem, profileSystemUUID);
+		                                      .createEvent(UserRegistered, profileSystem, profileSystemUUID);
 
-		IInvolvedParty<?> ipExists = involvedPartyService.findByIdentificationType(IdentificationTypeEmailAddress, userRegistrationDTO.getUserName(), profileSystem, profileSystemUUID);
+		IInvolvedParty<?> ipExists = involvedPartyService.findByIdentificationType(IdentificationTypeEmailAddress,
+		                                                                           Passwords.integerEncrypt(userRegistrationDTO.getUserName()
+		                                                                                                                       .getBytes())
+				, profileSystem, profileSystemUUID);
 		if (ipExists != null)
 		{
 			if (ipExists.has(ConfirmationKey, profileSystem, identityToken))
@@ -337,14 +342,14 @@ public class ProfileService
 		                                                                                                          .toString(), profileSystem, profileSystemUUID);
 		//ActivityMasterConfiguration.get().setSecurityEnabled(true);
 		newIp.addOrUpdate(IdentificationTypeEmailAddress,
-		                                                                      userRegistrationDTO.getUserName(),
-		                                                                      profileSystem,
-		                                                                      profileSystemUUID);
+		                  Passwords.integerEncrypt(userRegistrationDTO.getUserName().getBytes()),
+		                  profileSystem,
+		                  profileSystemUUID);
 
 		newIp.expire(IdentificationTypeEmailAddress, Duration.of(2, HOURS), profileSystem, profileSystemUUID);
 
 		involvedPartyService.addUpdateUsernamePassword(registerEvent, userRegistrationDTO.getUserName(), userRegistrationDTO.getPassword(), newIp, profileSystem,
-		                                                             profileSystemUUID);
+		                                               profileSystemUUID);
 
 		userRegistrationDTO.setPassword(null);
 		newIp.expire(IdentificationTypeUserName, Duration.of(2, HOURS), profileSystem, profileSystemUUID);
@@ -367,7 +372,7 @@ public class ProfileService
 	}
 
 	IInvolvedParty<?> updateLatestVisit(IEvent<?> event, ProfileServiceDTO<?> profileServiceDTO, IEnterprise<?> enterprise, IInvolvedParty<?> newIp,
-	                                UUID... identityToken)
+	                                    UUID... identityToken)
 	{
 		UpdateLastVisitEvent req = GuiceContext.get(UpdateLastVisitEvent.class);
 		req.setEvent(event)
@@ -389,17 +394,5 @@ public class ProfileService
 		return newIp;
 	}
 
-	public Optional<UserDTO<?>> findByKey(IIdentificationType<?> identificationType, UUID webClientKey, IEnterprise<?> enterprise, UUID... identityToken) throws ProfileServiceException
-	{
-		ISystems profileSystem = ProfileSystem.getNewSystem()
-		                                      .get(enterprise);
-		InvolvedPartyService service = GuiceContext.get(InvolvedPartyService.class);
-		IInvolvedParty<?> ip = service.findByIdentificationType(identificationType, webClientKey.toString(), profileSystem, identityToken);
-		if (ip == null)
-		{
-			return Optional.empty();
-		}
-		return Optional.of(new UserDTO<>().fromIP(ip));
-	}
 
 }

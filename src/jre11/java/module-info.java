@@ -22,6 +22,8 @@ module com.armineasy.activitymaster.profiles {
 	requires cache.api;
 	requires com.fasterxml.jackson.annotation;
 	requires io.github.classgraph;
+	requires com.jwebmp.core;
+	requires java.validation;
 
 	exports com.armineasy.activitymaster.profiles.dto;
 	exports com.armineasy.activitymaster.profiles.exceptions;
@@ -31,9 +33,13 @@ module com.armineasy.activitymaster.profiles {
 
 	provides com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem with com.armineasy.activitymaster.profiles.ProfileSystem;
 	provides com.jwebmp.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
+	provides com.jwebmp.core.events.IEventConfigurator with com.armineasy.activitymaster.profiles.implementations.ProfileEventConfigurator;
 
 	opens com.armineasy.activitymaster.profiles to com.google.guice, com.armineasy.activitymaster.activitymaster;
 	opens com.armineasy.activitymaster.profiles.events.visits to com.google.guice, com.armineasy.activitymaster.activitymaster;
 	opens com.armineasy.activitymaster.profiles.events to com.google.guice, com.armineasy.activitymaster.activitymaster;
 	opens com.armineasy.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
+	opens com.armineasy.activitymaster.profiles.implementations to com.fasterxml.jackson.databind,com.google.guice;
+	exports com.armineasy.activitymaster.profiles.enumerations;
+	exports com.armineasy.activitymaster.profiles.events;
 }

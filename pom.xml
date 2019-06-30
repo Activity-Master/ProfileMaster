@@ -23,6 +23,13 @@
             <artifactId>activity-master</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.jwebmp.core</groupId>
+            <artifactId>jwebmp-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 <!--
 
         <dependency>

@@ -11,7 +11,6 @@ import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import com.google.inject.Singleton;
 import io.github.classgraph.ClassInfo;
-import lombok.extern.java.Log;
 
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheRemoveAll;
@@ -20,15 +19,17 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.jwebmp.guicedinjection.GuiceContext.*;
 
 @Singleton
-@Log
 public class RolesService
 		implements IRolesService
 {
+	private static final Logger log = Logger.getLogger(RolesService.class.getName());
+
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
 	public List<IUserRole<?>> getRoles(@CacheKey ProfileServiceDTO<?> dto, @CacheKey ISystems<?> systems, @CacheKey UUID... identityToken)

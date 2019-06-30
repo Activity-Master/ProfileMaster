@@ -1,6 +1,5 @@
 package com.armineasy.activitymaster.profiles.dto;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXInvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.IRelationshipValue;
@@ -14,24 +13,19 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jwebmp.guicedinjection.GuiceContext;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.extern.java.Log;
 
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes.*;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 
 @Accessors(chain = true)
-@Log
-@EqualsAndHashCode(of = "identityToken")
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -39,16 +33,11 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 public class UserDTO<J extends UserDTO<J>>
 		implements Serializable
 {
-	@Getter
-	@Setter
+	private static final Logger log = Logger.getLogger(UserDTO.class.getName());
 	private UUID identityToken;
 	@JsonIgnore
-	@Getter
-	@Setter
 	private Set<IUserRole<?>> roles;
 	@JsonIgnore
-	@Getter
-	@Setter
 	private IEnterprise<?> enterprise;
 
 	@SuppressWarnings("unchecked")
@@ -108,5 +97,76 @@ public class UserDTO<J extends UserDTO<J>>
 			log.log(Level.SEVERE, "Can't do the string", e);
 		}
 		return "Can't Convert";
+	}
+
+	public boolean equals(final Object o)
+	{
+		if (o == this)
+		{
+			return true;
+		}
+		if (!(o instanceof UserDTO))
+		{
+			return false;
+		}
+		final UserDTO<?> other = (UserDTO<?>) o;
+		if (!other.canEqual((Object) this))
+		{
+			return false;
+		}
+		final Object this$identityToken = this.identityToken;
+		final Object other$identityToken = other.identityToken;
+		if (this$identityToken == null ? other$identityToken != null : !this$identityToken.equals(other$identityToken))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	protected boolean canEqual(final Object other)
+	{
+		return other instanceof UserDTO;
+	}
+
+	public int hashCode()
+	{
+		final int PRIME = 59;
+		int result = 1;
+		final Object $identityToken = this.identityToken;
+		result = result * PRIME + ($identityToken == null ? 43 : $identityToken.hashCode());
+		return result;
+	}
+
+	public UUID getIdentityToken()
+	{
+		return this.identityToken;
+	}
+
+	public Set<IUserRole<?>> getRoles()
+	{
+		return this.roles;
+	}
+
+	public IEnterprise<?> getEnterprise()
+	{
+		return this.enterprise;
+	}
+
+	public UserDTO<J> setIdentityToken(UUID identityToken)
+	{
+		this.identityToken = identityToken;
+		return this;
+	}
+
+	public UserDTO<J> setRoles(Set<IUserRole<?>> roles)
+	{
+		this.roles = roles;
+		return this;
+	}
+
+	public UserDTO<J> setEnterprise(IEnterprise<?> enterprise)
+	{
+		this.enterprise = enterprise;
+		return this;
 	}
 }
