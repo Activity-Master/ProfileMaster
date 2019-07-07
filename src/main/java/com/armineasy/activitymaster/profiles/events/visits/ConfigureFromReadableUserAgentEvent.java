@@ -1,11 +1,8 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.resourceitem.ResourceItem;
+
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
-import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
-import com.armineasy.activitymaster.activitymaster.services.dto.IEvent;
-import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
-import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
+import com.armineasy.activitymaster.activitymaster.services.dto.*;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
@@ -47,63 +44,68 @@ public class ConfigureFromReadableUserAgentEvent
 	{
 		UUID systemID = ProfileSystem.getSystemTokens()
 		                             .get(enterprise);
-		ResourceItem resourceItem = ip.add(AddedANewDevice, BrowserDeviceCategory,
-		                                   readableUserAgent.getDeviceCategory()
+		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?> resourceItem = ip.add(AddedANewDevice, BrowserDeviceCategory,
+		                                       "Device Category",
+		                                       readableUserAgent.getDeviceCategory()
 		                                                    .getName()
 		                                                    .getBytes(),
-		                                   "application/text", profileSystem, systemID);
+		                                       "application/text", profileSystem, systemID);
 
-		resourceItem.add(AddedANewDevice, BrowserDeviceCategory.classificationName(), profileSystem, systemID);
-		resourceItem.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
+		resourceItem.getSecondary().add(AddedANewDevice, BrowserDeviceCategory.classificationName(), profileSystem, systemID);
+		resourceItem.getSecondary().add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
 		                                                                                  .getName()
 		                                                                                  .length()), profileSystem, systemID);
-		event.add(Added, resourceItem, STRING_EMPTY, profileSystem, identityToken);
+		event.add(Added, resourceItem.getSecondary(), STRING_EMPTY, profileSystem, identityToken);
 
-		ResourceItem resourceItemName = ip.add(AddedANewDevice, BrowserDeviceName,
+		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?> resourceItemName = ip.add(AddedANewDevice, BrowserDeviceName
+		                                       ,"Browser Device",
 		                                       readableUserAgent.getDeviceCategory()
 		                                                        .getCategory()
 		                                                        .getName()
 		                                                        .getBytes(),
 		                                       "application/text", profileSystem, systemID);
-		event.add(Added, resourceItemName, STRING_EMPTY, profileSystem, identityToken);
+		event.add(Added, resourceItemName.getSecondary(), STRING_EMPTY, profileSystem, identityToken);
 
-		resourceItemName.add(AddedANewDevice, BrowserDeviceName.classificationName(), profileSystem, systemID);
-		resourceItemName.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
+		resourceItemName.getSecondary().add(AddedANewDevice, BrowserDeviceName.classificationName(), profileSystem, systemID);
+		resourceItemName.getSecondary().add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
 		                                                                                      .getName()
 		                                                                                      .length()), profileSystem, systemID);
 
-		ResourceItem resourceItemIcon = ip.add(AddedANewDevice, BrowserDeviceIcon,
+		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?>resourceItemIcon = ip.add(AddedANewDevice, BrowserDeviceIcon,
+		                                                                                  "Browser Icon",
 		                                       readableUserAgent.getDeviceCategory()
 		                                                        .getIcon()
 		                                                        .getBytes(),
 		                                       "application/text", profileSystem, systemID);
-		event.add(Added, resourceItemIcon, STRING_EMPTY, profileSystem, identityToken);
+		event.add(Added, resourceItemIcon.getSecondary(), STRING_EMPTY, profileSystem, identityToken);
 
-		resourceItemIcon.add(AddedANewDevice, BrowserDeviceIcon.classificationName(), profileSystem, systemID);
-		resourceItemIcon.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
+		resourceItemIcon.getSecondary().add(AddedANewDevice, BrowserDeviceIcon.classificationName(), profileSystem, systemID);
+		resourceItemIcon.getSecondary().add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getDeviceCategory()
 		                                                                                      .getIcon()
 		                                                                                      .length()), profileSystem, systemID);
 
-		ResourceItem resourceItemOperatingSystem = ip.add(AddedANewDevice, OperatingSystem,
+		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?> resourceItemOperatingSystem = ip.add(AddedANewDevice, OperatingSystem,
+		                                                                                              "Operating System",
 		                                                  readableUserAgent.getOperatingSystem()
 		                                                                   .getName()
 		                                                                   .getBytes(),
 		                                                  "application/text", profileSystem, systemID);
-		event.add(Added, resourceItemOperatingSystem, STRING_EMPTY, profileSystem, identityToken);
-		resourceItemOperatingSystem.add(AddedANewDevice, OperatingSystem.classificationName(), profileSystem, systemID);
-		resourceItemOperatingSystem.add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getOperatingSystem()
+		event.add(Added, resourceItemOperatingSystem.getSecondary(), STRING_EMPTY, profileSystem, identityToken);
+		resourceItemOperatingSystem.getSecondary().add(AddedANewDevice, OperatingSystem.classificationName(), profileSystem, systemID);
+		resourceItemOperatingSystem.getSecondary().add(ResourceItemClassifications.Size, Long.toString(readableUserAgent.getOperatingSystem()
 		                                                                                                 .getName()
 		                                                                                                 .length()), profileSystem, systemID);
-		ResourceItem resourceItemFamily = ip.add(AddedANewDevice, OperatingSystemFamily,
+		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?> resourceItemFamily = ip.add(AddedANewDevice, OperatingSystemFamily,
+		                                                                                     "Operating System Family",
 		                                         readableUserAgent.getOperatingSystem()
 		                                                          .getFamily()
 		                                                          .getName()
 		                                                          .getBytes(),
 		                                         "application/text", profileSystem, identityToken);
-		event.add(Added, resourceItemFamily, STRING_EMPTY, profileSystem, identityToken);
+		event.add(Added, resourceItemFamily.getSecondary(), STRING_EMPTY, profileSystem, identityToken);
 
-		resourceItemFamily.add(AddedANewDevice, OperatingSystemFamily.classificationName(), profileSystem, systemID);
-		resourceItemFamily.add(Size, Long.toString(readableUserAgent.getOperatingSystem()
+		resourceItemFamily.getSecondary().add(AddedANewDevice, OperatingSystemFamily.classificationName(), profileSystem, systemID);
+		resourceItemFamily.getSecondary().add(Size, Long.toString(readableUserAgent.getOperatingSystem()
 		                                                            .getFamily()
 		                                                            .getName()
 		                                                            .length()), profileSystem, systemID);

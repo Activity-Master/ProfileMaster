@@ -1,7 +1,6 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
 import com.armineasy.activitymaster.activitymaster.db.entities.address.Address;
-import com.armineasy.activitymaster.activitymaster.db.entities.resourceitem.ResourceItem;
 import com.armineasy.activitymaster.activitymaster.implementations.AddressService;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes;
@@ -94,13 +93,15 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 		ip.add(webAddress, profileSystem, systemID);
 		event.add(webAddress, profileSystem, systemID);
 
-		IResourceItem<?> resourceItem = ip.add(AddedANewDevice, ResourceItemTypes.BrowserInformation,
+		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?> resourceItem = ip.add(AddedANewDevice, ResourceItemTypes.BrowserInformation,
+		                                    "BrowserInformation",
 		                                    sb.toString()
 		                                                 .getBytes(),
 		                                    "application/json", profileSystem, systemID);
-		resourceItem.add(ResourceItemClassifications.Size, Long.toString(sb.toString()
+
+		resourceItem.getSecondary().add(ResourceItemClassifications.Size, Long.toString(sb.toString()
 		                                                                   .length()), profileSystem, systemID);
-		event.add(Added,resourceItem,"",  profileSystem, systemID);
+		event.add(Added,resourceItem.getSecondary(),"BrowserInformation",  profileSystem, systemID);
 	}
 
 	public IEvent<?> getEvent()

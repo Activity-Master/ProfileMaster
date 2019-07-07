@@ -2,6 +2,7 @@ package com.armineasy.activitymaster.profiles;
 
 import com.armineasy.activitymaster.activitymaster.ActivityMasterConfiguration;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
+import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXClassification;
 import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
 import com.armineasy.activitymaster.activitymaster.implementations.SecurityTokenService;
@@ -199,7 +200,7 @@ public class ProfileService
 			log.log(Level.FINER, "Unable to log servlet request information", T);
 		}
 
-		Optional<IRelationshipValue<?>> id = newIp.find(IdentificationTypeUUID, profileSystem, profileSystemUUID);
+		Optional<IRelationshipValue<IInvolvedParty<?>,IInvolvedPartyIdentificationType<?>,?>> id = newIp.find(IdentificationTypeUUID, profileSystem, profileSystemUUID);
 		id.ifPresent(involvedPartyXInvolvedPartyIdentificationType -> profileServiceDTO.setIdentityToken(
 				involvedPartyXInvolvedPartyIdentificationType.getValueAsUUID())
 		            );

@@ -133,9 +133,4 @@ public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 		return result;
 	}
 
-	public String toString()
-	{
-		return "UpdateLastVisitEvent(event=" + this.getEvent() + ", profileServiceDTO=" + this.getProfileServiceDTO() + ", enterprise=" + this.getEnterprise() + ", newIp=" +
-		       this.getNewIp() + ", identityToken=" + java.util.Arrays.deepToString(this.getIdentityToken()) + ")";
-	}
 }

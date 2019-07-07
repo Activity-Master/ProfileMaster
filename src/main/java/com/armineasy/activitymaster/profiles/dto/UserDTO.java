@@ -1,9 +1,6 @@
 package com.armineasy.activitymaster.profiles.dto;
 
-import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
-import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
-import com.armineasy.activitymaster.activitymaster.services.dto.IRelationshipValue;
-import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
+import com.armineasy.activitymaster.activitymaster.services.dto.*;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -49,7 +46,7 @@ public class UserDTO<J extends UserDTO<J>>
 			                             .get(ip.getEnterpriseID());
 			ISystems profileSystem = ProfileSystem.getNewSystem()
 			                                      .get(ip.getEnterpriseID());
-			Optional<IRelationshipValue<?>> ipId = ip.find(IdentificationTypeUUID, profileSystem, systemID);
+			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>,?>> ipId = ip.find(IdentificationTypeUUID, profileSystem, systemID);
 			if (ipId.isPresent())
 			{
 				setIdentityToken(ipId.get().getValueAsUUID());
