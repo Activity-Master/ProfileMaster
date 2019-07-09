@@ -1,10 +1,10 @@
 package com.armineasy.activitymaster.profiles.events.visits;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.address.Address;
-import com.armineasy.activitymaster.activitymaster.implementations.AddressService;
+
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications;
 import com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes;
 import com.armineasy.activitymaster.activitymaster.services.dto.*;
+import com.armineasy.activitymaster.activitymaster.services.system.IAddressService;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
@@ -60,7 +60,7 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 			sb.append(jsonObject.toString());
 		}
 
-		AddressService addressService = GuiceContext.get(AddressService.class);
+		IAddressService<?> addressService = GuiceContext.get(IAddressService.class);
 		String ipReal = servletRequest.getRemoteAddr();
 		if (ipReal.equalsIgnoreCase("0:0:0:0:0:0:0:1")) {
 			InetAddress inetAddress = null;
@@ -75,20 +75,20 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 			String ipAddress = inetAddress.getHostAddress();
 			ipReal = ipAddress;
 		}
-		Address ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
+		IAddress<?> ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
 		ip.add(ipAddress, profileSystem, systemID);
 		event.add(ipAddress, profileSystem, systemID);
-		Address hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
+		IAddress<?> hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
 		ip.add(hostName, profileSystem, systemID);
 		event.add(hostName, profileSystem, systemID);
-		Address localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
+		IAddress<?> localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
 		ip.add(localIpAddress, profileSystem, systemID);
 		event.add(localIpAddress, profileSystem, systemID);
-		Address localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
+		IAddress<?> localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
 		ip.add(localHostName, profileSystem, systemID);
 		event.add(localHostName, profileSystem, systemID);
 
-		Address webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
+		IAddress<?> webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
 		                                                                      .toString(), profileSystem, systemID);
 		ip.add(webAddress, profileSystem, systemID);
 		event.add(webAddress, profileSystem, systemID);

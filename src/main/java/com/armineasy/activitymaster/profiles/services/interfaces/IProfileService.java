@@ -1,10 +1,10 @@
 package com.armineasy.activitymaster.profiles.services.interfaces;
 
-import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
 import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
+import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.armineasy.activitymaster.profiles.dto.UserConfirmationKeyDTO;
@@ -29,7 +29,7 @@ public interface IProfileService
 
 	default boolean verifyUsernameExists(UserLoginDTO<?> userLoginDTO, IEnterprise<?> enterprise, UUID... identityToken)
 	{
-		InvolvedPartyService ips = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> ips = GuiceContext.get(IInvolvedPartyService.class);
 		if (Strings.isNullOrEmpty(userLoginDTO.getUserName()))
 		{
 			throw new ProfileServiceException("Username cannot be empty");
@@ -39,7 +39,7 @@ public interface IProfileService
 
 	default UserLoginDTO<?> verifyPasswordForUser(UserLoginDTO<?> userLoginDTO, IEnterprise<?> enterprise, UUID... identityToken)
 	{
-		InvolvedPartyService ips = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> ips = GuiceContext.get(IInvolvedPartyService.class);
 		if (Objects.isNull(userLoginDTO.getIdentityToken()))
 		{
 			throw new ProfileServiceException("User Login DTO Already needs to have an associated UUID to login with a password");

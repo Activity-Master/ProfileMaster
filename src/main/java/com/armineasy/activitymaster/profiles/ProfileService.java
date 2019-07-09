@@ -1,11 +1,7 @@
 package com.armineasy.activitymaster.profiles;
 
 import com.armineasy.activitymaster.activitymaster.ActivityMasterConfiguration;
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyIdentificationType;
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXClassification;
-import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
-import com.armineasy.activitymaster.activitymaster.implementations.SecurityTokenService;
+
 import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
 import com.armineasy.activitymaster.activitymaster.services.dto.*;
 import com.armineasy.activitymaster.activitymaster.services.enumtypes.IIdentificationType;
@@ -13,6 +9,8 @@ import com.armineasy.activitymaster.activitymaster.services.exceptions.SecurityA
 import com.armineasy.activitymaster.activitymaster.services.security.Passwords;
 import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.activitymaster.services.system.IEventService;
+import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
+import com.armineasy.activitymaster.activitymaster.services.system.ISecurityTokenService;
 import com.armineasy.activitymaster.profiles.dto.*;
 import com.armineasy.activitymaster.profiles.enumerations.ProfileEventTypes;
 import com.armineasy.activitymaster.profiles.events.UpdateNewVisitEvent;
@@ -59,7 +57,7 @@ public class ProfileService
 	@Override
 	public ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
-		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
 		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
 		                                        .getEnterprise(enterpriseName);
 
@@ -128,7 +126,7 @@ public class ProfileService
 	@Override
 	public ProfileServiceDTO<?> logoutUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
-		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
 		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
 		                                        .getEnterprise(enterpriseName);
 
@@ -160,7 +158,7 @@ public class ProfileService
 	@Override
 	public ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
-		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
 		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
 		                                        .getEnterprise(enterpriseName);
 		profileServiceDTO.setEnterprise(enterprise);
@@ -213,7 +211,7 @@ public class ProfileService
 
 	IInvolvedParty<?> createNewVisitor(IEvent<?> event, ProfileServiceDTO<?> profileServiceDTO, IEnterprise<?> enterprise, ISystems<?> profileSystem, UUID... identityToken)
 	{
-		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
 		IInvolvedParty<?> newIp;
 		//Create new guest record
 		Pair<IIdentificationType<?>, String> guestIDType = new Pair<>();
@@ -224,10 +222,10 @@ public class ProfileService
 		newIp = involvedPartyService.create(profileSystem, guestIDType, true, identityToken);
 
 
-		ISecurityToken<?> visitorsGroup = GuiceContext.get(SecurityTokenService.class)
+		ISecurityToken<?> visitorsGroup = GuiceContext.get(ISecurityTokenService.class)
 		                                              .getVisitorsGuestsFolder(enterprise, identityToken);
 
-		ISecurityToken<?> myToken = get(SecurityTokenService.class).create(Identity,
+		ISecurityToken<?> myToken = get(ISecurityTokenService.class).create(Identity,
 		                                                                   profileServiceDTO.getWebClientUUID()
 		                                                                                    .toString(),
 		                                                                   "A new visitor device",
@@ -242,7 +240,7 @@ public class ProfileService
 		          .setEvent(event)
 		          .setProfileServiceDTO(profileServiceDTO)
 		          .setIdentityToken(identityToken)
-		          .setNewIp((InvolvedParty) newIp)
+		          .setNewIp(newIp)
 		          .setProfileSystem(profileSystem);
 
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
@@ -312,7 +310,7 @@ public class ProfileService
 	@Override
 	public UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException
 	{
-		InvolvedPartyService involvedPartyService = GuiceContext.get(InvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
 		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
 		                                        .getEnterprise(enterpriseName);
 
@@ -361,11 +359,10 @@ public class ProfileService
 				                                                                     .setWebClientUUID(userRegistrationDTO.getWebClientUUID())
 				                                                                     .setIdentityToken(userRegistrationDTO.getIdentityToken());
 		confirmationKeyDTO.setConfirmationKey(UUID.randomUUID());
-		InvolvedPartyXClassification x = newIp.addOrUpdate(ConfirmationKey, confirmationKeyDTO.getConfirmationKey()
+		IRelationshipValue<IInvolvedParty<?>,IClassification<?>,?> x = newIp.addOrUpdate(ConfirmationKey, confirmationKeyDTO.getConfirmationKey()
 		                                                                                      .toString(), profileSystem, profileSystemUUID);
-		x.setEffectiveToDate(LocalDateTime.now()
-		                                  .plus(2, HOURS));
-		x.updateNow();
+
+		x.expire(Duration.of(2, HOURS), profileSystem, profileSystemUUID);
 		registerEvent.add(ConfirmationKey, profileSystem, confirmationKeyDTO.getConfirmationKey()
 		                                                                    .toString(), profileSystemUUID);
 

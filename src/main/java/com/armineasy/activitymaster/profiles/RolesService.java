@@ -1,6 +1,5 @@
 package com.armineasy.activitymaster.profiles;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyXClassification;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
@@ -39,9 +38,9 @@ public class RolesService
 		List<String> assignedRoles = new ArrayList<>();
 		IInvolvedParty<?> ip = get(IInvolvedPartyService.class).findByIdentificationType(IdentificationTypes.IdentificationTypeUUID, dto.getIdentityToken()
 		                                                                                                                             .toString(), systems, identityToken);
-		for (InvolvedPartyXClassification classification : ip.findAll(UserRoles, systems, identityToken))
+		for (Object classifications2 : ip.getValues(UserRoles,null, systems, identityToken[0]))
 		{
-			assignedRoles.add(classification.getValue());
+			assignedRoles.add(classifications2.toString());
 		}
 		for (String assignedRole : assignedRoles)
 		{

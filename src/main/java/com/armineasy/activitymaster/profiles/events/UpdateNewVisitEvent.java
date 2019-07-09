@@ -1,8 +1,8 @@
 package com.armineasy.activitymaster.profiles.events;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEvent;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
@@ -18,7 +18,7 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 {
 	private static final String JobServiceName = "NewVisitorCustomIdentifiersAndItems";
 
-	private InvolvedParty newIp;
+	private IInvolvedParty<?> newIp;
 	private IEvent<?> event;
 	private ProfileServiceDTO<?> profileServiceDTO;
 	private IEnterprise<?> enterprise;
@@ -42,7 +42,7 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 		event.addOrReuse(PerformedBy,newIp.getSecurityIdentity().toString(),  profileSystem, identityToken);
 	}
 
-	public InvolvedParty getNewIp()
+	public IInvolvedParty<?> getNewIp()
 	{
 		return this.newIp;
 	}
@@ -72,7 +72,7 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 		return this.identityToken;
 	}
 
-	public UpdateNewVisitEvent setNewIp(InvolvedParty newIp)
+	public UpdateNewVisitEvent setNewIp(IInvolvedParty<?> newIp)
 	{
 		this.newIp = newIp;
 		return this;

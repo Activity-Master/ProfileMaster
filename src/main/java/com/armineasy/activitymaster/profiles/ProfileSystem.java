@@ -1,15 +1,15 @@
 package com.armineasy.activitymaster.profiles;
 
-import com.armineasy.activitymaster.activitymaster.db.entities.involvedparty.InvolvedPartyIdentificationType;
-import com.armineasy.activitymaster.activitymaster.implementations.ClassificationService;
-import com.armineasy.activitymaster.activitymaster.implementations.EventsService;
-import com.armineasy.activitymaster.activitymaster.implementations.InvolvedPartyService;
-import com.armineasy.activitymaster.activitymaster.implementations.SystemsService;
+
 import com.armineasy.activitymaster.activitymaster.services.IActivityMasterProgressMonitor;
 import com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem;
 import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedPartyIdentificationType;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
-import com.armineasy.activitymaster.activitymaster.systems.SystemsSystem;
+import com.armineasy.activitymaster.activitymaster.services.system.IClassificationService;
+import com.armineasy.activitymaster.activitymaster.services.system.IEventService;
+import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
+import com.armineasy.activitymaster.activitymaster.services.system.ISystemsService;
 import com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.google.inject.Singleton;
 import com.jwebmp.guicedinjection.GuiceContext;
@@ -36,11 +36,11 @@ public class ProfileSystem
 
 	private void createInvolvedPartyClassifications(IEnterprise enterprise)
 	{
-		ClassificationService classificationService = GuiceContext.get(ClassificationService.class);
-		ISystems activityMasterSystem = GuiceContext.get(SystemsService.class)
-		                                           .getActivityMaster(enterprise);
+		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
+		ISystems activityMasterSystem = GuiceContext.get(ISystemsService.class)
+		                                            .getActivityMaster(enterprise);
 
-		EventsService eventsService = GuiceContext.get(EventsService.class);
+		IEventService<?> eventsService = GuiceContext.get(IEventService.class);
 		eventsService.createEventType(SiteVisit, newSystem.get(enterprise), systemTokens.get(enterprise));
 		eventsService.createEventType(UserRegistered, newSystem.get(enterprise), systemTokens.get(enterprise));
 		eventsService.createEventType(VisitorRegistered, newSystem.get(enterprise), systemTokens.get(enterprise));
@@ -53,10 +53,11 @@ public class ProfileSystem
 		classificationService.create(RememberMe, newSystem.get(enterprise));
 		classificationService.create(LoggedOn, newSystem.get(enterprise));
 
-		InvolvedPartyIdentificationType idType = (InvolvedPartyIdentificationType) GuiceContext.get(InvolvedPartyService.class)
-		                                                                                       .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
-		                                                                               "The Web Client UUID stored as a device identifier",
-		                                                                               systemTokens.get(enterprise));
+		IInvolvedPartyIdentificationType<?> idType = GuiceContext.get(IInvolvedPartyService.class)
+		                                                         .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+		                                                                                   "The Web Client UUID stored as a device identifier",
+		                                                                                   systemTokens.get(enterprise));
+
 		idType.createDefaultSecurity(activityMasterSystem);
 	}
 
@@ -70,10 +71,10 @@ public class ProfileSystem
 	@Override
 	public void postUpdate(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
-		newSystem.put(enterprise, GuiceContext.get(SystemsService.class)
+		newSystem.put(enterprise, GuiceContext.get(ISystemsService.class)
 		                                      .create(enterprise, "Profiles System",
 		                                              "The system for managing User Profiles", ""));
-		UUID uuid = GuiceContext.get(SystemsSystem.class)
+		UUID uuid = GuiceContext.get(ISystemsService.class)
 		                        .registerNewSystem(enterprise, newSystem.get(enterprise));
 		systemTokens.put(enterprise, uuid);
 
