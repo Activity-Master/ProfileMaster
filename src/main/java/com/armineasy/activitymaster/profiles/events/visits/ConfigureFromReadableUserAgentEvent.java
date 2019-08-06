@@ -6,7 +6,7 @@ import com.armineasy.activitymaster.activitymaster.services.dto.*;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
-import lombok.experimental.Accessors;
+
 import net.sf.uadetector.ReadableUserAgent;
 
 import java.util.Objects;
@@ -16,7 +16,6 @@ import static com.armineasy.activitymaster.activitymaster.services.classificatio
 import static com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemTypes.*;
 import static com.jwebmp.core.utilities.StaticStrings.*;
 
-@Accessors(chain = true)
 public class ConfigureFromReadableUserAgentEvent
 		extends TransactionalIdentifiedThread
 {

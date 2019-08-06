@@ -10,7 +10,6 @@ import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
 import com.jwebmp.guicedinjection.GuiceContext;
 import com.jwebmp.logger.LogFactory;
-import lombok.experimental.Accessors;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +21,7 @@ import java.util.logging.Level;
 
 import static com.armineasy.activitymaster.activitymaster.services.classifications.resourceitems.ResourceItemClassifications.*;
 
-@Accessors(chain = true)
+
 public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThread
 {
 	private static final String JobServiceName = "ConfigureFromServletRequestEvent";

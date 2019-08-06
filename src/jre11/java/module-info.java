@@ -10,7 +10,6 @@ module com.armineasy.activitymaster.profiles {
 
 	requires com.fasterxml.jackson.databind;
 
-	requires lombok;
 	requires org.mapstruct;
 	requires net.sf.uadetector.core;
 	requires org.json;
@@ -39,7 +38,9 @@ module com.armineasy.activitymaster.profiles {
 	opens com.armineasy.activitymaster.profiles.events.visits to com.google.guice, com.armineasy.activitymaster.activitymaster;
 	opens com.armineasy.activitymaster.profiles.events to com.google.guice, com.armineasy.activitymaster.activitymaster;
 	opens com.armineasy.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
+	opens com.armineasy.activitymaster.profiles.deserializers to com.fasterxml.jackson.databind;
 	opens com.armineasy.activitymaster.profiles.implementations to com.fasterxml.jackson.databind,com.google.guice;
+
 	exports com.armineasy.activitymaster.profiles.enumerations;
 	exports com.armineasy.activitymaster.profiles.events;
 }

@@ -1,7 +1,9 @@
 package com.armineasy.activitymaster.profiles.dto;
 
+import com.armineasy.activitymaster.activitymaster.services.dto.IEnterprise;
 import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
+import com.armineasy.activitymaster.activitymaster.services.system.IEnterpriseService;
 import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPartyService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
@@ -9,7 +11,10 @@ import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import com.fasterxml.jackson.annotation.*;
 import com.jwebmp.guicedinjection.GuiceContext;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
@@ -64,28 +69,36 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	@JsonIgnore
 	public boolean isLoggedIn(boolean asVisitor)
 	{
+		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
 		ISystems profileSystem = ProfileSystem.getNewSystem()
-		                                      .get(getEnterprise());
+		                                      .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
-		                                      .get(getEnterprise());
+		                                      .get(enterprise);
 
-		IInvolvedParty<?> newIp = get(IInvolvedPartyService.class).findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
-				                                                                                                                     .toString(), profileSystem, profileSystemUUID);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+
+		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
+				                                                                                                         .toString(),
+		                                                                        profileSystem, profileSystemUUID);
+
+
 		boolean loggedOn = false;
 		try
 		{
 			loggedOn = newIp.find(LoggedOn, profileSystem, profileSystemUUID)
 			                .get()
 			                .getValueAsBoolean();
-		}catch(Exception nsfe)
+		}
+		catch (Exception nsfe)
 		{
 			loggedOn = false;
 		}
 
-		if(loggedOn && !asVisitor)
+		if (loggedOn && !asVisitor)
 		{
 			return true;
-		}else
+		}
+		else
 		{
 
 		}
@@ -104,14 +117,27 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 
 	public Set<IUserRole<?>> findRoles()
 	{
+		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
+		ISystems profileSystem = ProfileSystem.getNewSystem()
+		                                      .get(enterprise);
+		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
+		                                      .get(enterprise);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
+				                                                                                                                     .toString(),
+		                                                                                    profileSystem, profileSystemUUID);
 		if (getRoles() != null)
 		{
 			getRoles().clear();
 		}
+
 		IRolesService rolesService = GuiceContext.get(IRolesService.class);
-		List<IUserRole<?>> rolesss = rolesService.getRoles(this, ProfileSystem.getNewSystem()
-		                                                                      .get(getEnterprise()), ProfileSystem.getSystemTokens()
-		                                                                                                          .get(getEnterprise()));
+		UUID systemUUID = ProfileSystem.getSystemTokens()
+		                               .get(getEnterprise());
+		//involvedPartyService.findByUUID(getIdentityToken(), enterprise, systemUUID);
+		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp,this, ProfileSystem.getNewSystem()
+		                                                                      .get(enterprise), ProfileSystem.getSystemTokens()
+		                                                                                                     .get(getEnterprise()));
 		setRoles(new LinkedHashSet<>(rolesss));
 		return getRoles();
 	}

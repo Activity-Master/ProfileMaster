@@ -6,14 +6,13 @@ import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
-import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
 import static com.armineasy.activitymaster.activitymaster.services.classifications.events.EventInvolvedPartiesClassifications.*;
 import static com.armineasy.activitymaster.activitymaster.services.types.NameTypes.*;
 
-@Accessors(chain = true)
+
 public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 {
 	private static final String JobServiceName = "NewVisitorCustomIdentifiersAndItems";

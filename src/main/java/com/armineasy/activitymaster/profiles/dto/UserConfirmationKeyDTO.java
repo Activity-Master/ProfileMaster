@@ -1,10 +1,8 @@
 package com.armineasy.activitymaster.profiles.dto;
 
-import lombok.experimental.Accessors;
-
 import java.util.UUID;
 
-@Accessors(chain = true)
+
 public class UserConfirmationKeyDTO<J extends UserConfirmationKeyDTO<J>>
 		extends ProfileServiceDTO<J>
 {

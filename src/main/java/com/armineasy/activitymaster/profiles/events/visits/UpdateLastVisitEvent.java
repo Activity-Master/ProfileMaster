@@ -7,7 +7,6 @@ import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
-import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +16,7 @@ import java.util.UUID;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 
 
-@Accessors(chain = true)
+
 public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 {
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS");

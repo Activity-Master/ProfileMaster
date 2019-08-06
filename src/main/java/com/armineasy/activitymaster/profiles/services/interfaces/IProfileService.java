@@ -57,4 +57,6 @@ public interface IProfileService
 	}
 
 	UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException;
+
+	IInvolvedParty<?> findInvolvedParty(UUID identityToken, IEnterpriseName<?> enterpriseName);
 }

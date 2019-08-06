@@ -1,10 +1,8 @@
 package com.armineasy.activitymaster.profiles.dto;
 
-import lombok.experimental.Accessors;
-
 import java.io.Serializable;
 
-@Accessors(chain = true)
+
 public class UserRegistrationDTO<J extends UserRegistrationDTO<J>>
 		extends ProfileServiceDTO<J>
 		implements Serializable

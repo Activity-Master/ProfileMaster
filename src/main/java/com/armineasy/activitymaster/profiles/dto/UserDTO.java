@@ -1,18 +1,24 @@
 package com.armineasy.activitymaster.profiles.dto;
 
-import com.armineasy.activitymaster.activitymaster.services.dto.*;
+import com.armineasy.activitymaster.activitymaster.services.classifications.enterprise.IEnterpriseName;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
+import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedPartyIdentificationType;
+import com.armineasy.activitymaster.activitymaster.services.dto.IRelationshipValue;
+import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
+import com.armineasy.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.jwebmp.guicedinjection.GuiceContext;
-import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -21,8 +27,9 @@ import java.util.logging.Logger;
 
 import static com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes.*;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
+import static com.jwebmp.guicedinjection.interfaces.ObjectBinderKeys.*;
 
-@Accessors(chain = true)
+
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -34,8 +41,12 @@ public class UserDTO<J extends UserDTO<J>>
 	private UUID identityToken;
 	@JsonIgnore
 	private Set<IUserRole<?>> roles;
-	@JsonIgnore
-	private IEnterprise<?> enterprise;
+	@JsonDeserialize(using = IEnterpriseNameDeserializer.class)
+	private IEnterpriseName<?> enterprise;
+
+	private LocalDateTime lastActionTime;
+
+	private boolean loggedIn;
 
 	@SuppressWarnings("unchecked")
 	public J fromIP(IInvolvedParty<?> ip)
@@ -78,7 +89,7 @@ public class UserDTO<J extends UserDTO<J>>
 	 */
 	private String objectAsString(Object o) throws JsonProcessingException
 	{
-		return GuiceContext.get(ObjectMapper.class)
+		return GuiceContext.get(DefaultObjectMapper)
 		                   .writeValueAsString(o);
 	}
 
@@ -96,42 +107,36 @@ public class UserDTO<J extends UserDTO<J>>
 		return "Can't Convert";
 	}
 
-	public boolean equals(final Object o)
+	@Override
+	public boolean equals(Object o)
 	{
-		if (o == this)
+		if (this == o)
 		{
 			return true;
 		}
-		if (!(o instanceof UserDTO))
+		if (o == null || getClass() != o.getClass())
 		{
 			return false;
 		}
-		final UserDTO<?> other = (UserDTO<?>) o;
-		if (!other.canEqual((Object) this))
-		{
-			return false;
-		}
-		final Object this$identityToken = this.identityToken;
-		final Object other$identityToken = other.identityToken;
-		if (this$identityToken == null ? other$identityToken != null : !this$identityToken.equals(other$identityToken))
-		{
-			return false;
-		}
-		return true;
+		UserDTO<?> userDTO = (UserDTO<?>) o;
+		return Objects.equals(getIdentityToken(), userDTO.getIdentityToken());
 	}
 
-	protected boolean canEqual(final Object other)
-	{
-		return other instanceof UserDTO;
-	}
-
+	@Override
 	public int hashCode()
 	{
-		final int PRIME = 59;
-		int result = 1;
-		final Object $identityToken = this.identityToken;
-		result = result * PRIME + ($identityToken == null ? 43 : $identityToken.hashCode());
-		return result;
+		return Objects.hash(getIdentityToken());
+	}
+
+	public LocalDateTime getLastActionTime()
+	{
+		return lastActionTime;
+	}
+
+	public J setLastActionTime(LocalDateTime lastActionTime)
+	{
+		this.lastActionTime = lastActionTime;
+		return (J)this;
 	}
 
 	public UUID getIdentityToken()
@@ -144,7 +149,7 @@ public class UserDTO<J extends UserDTO<J>>
 		return this.roles;
 	}
 
-	public IEnterprise<?> getEnterprise()
+	public IEnterpriseName<?> getEnterprise()
 	{
 		return this.enterprise;
 	}
@@ -152,18 +157,33 @@ public class UserDTO<J extends UserDTO<J>>
 	public UserDTO<J> setIdentityToken(UUID identityToken)
 	{
 		this.identityToken = identityToken;
+		setLastActionTime(LocalDateTime.now());
 		return this;
 	}
 
-	public UserDTO<J> setRoles(Set<IUserRole<?>> roles)
+	public J setRoles(Set<IUserRole<?>> roles)
 	{
 		this.roles = roles;
-		return this;
+		setLastActionTime(LocalDateTime.now());
+		return (J)this;
 	}
 
-	public UserDTO<J> setEnterprise(IEnterprise<?> enterprise)
+	public J setEnterprise(IEnterpriseName<?> enterprise)
 	{
 		this.enterprise = enterprise;
+		setLastActionTime(LocalDateTime.now());
+		return (J)this;
+	}
+
+	public boolean isLoggedIn()
+	{
+		return loggedIn;
+	}
+
+	public UserDTO<J> setLoggedIn(boolean loggedIn)
+	{
+		this.loggedIn = loggedIn;
+		setLastActionTime(LocalDateTime.now());
 		return this;
 	}
 }
