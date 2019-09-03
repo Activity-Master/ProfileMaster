@@ -32,29 +32,6 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	@JsonProperty
 	private UUID webClientUUID;
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public J fromIP(IInvolvedParty<?> ip)
-	{
-		super.fromIP(ip);
-		if (ip.has(IdentificationTypeWebClientUUID,
-		           ProfileSystem.getNewSystem()
-		                        .get(ip.getEnterpriseID()),
-		           ProfileSystem.getSystemTokens()
-		                        .get(ip.getEnterpriseID())
-		          ))
-		{
-			webClientUUID = UUID.fromString(ip.find(IdentificationTypeWebClientUUID,
-			                                        ProfileSystem.getNewSystem()
-			                                                     .get(ip.getEnterpriseID()),
-			                                        ProfileSystem.getSystemTokens()
-			                                                     .get(ip.getEnterpriseID()))
-			                                  .orElseThrow()
-			                                  .getValue());
-		}
-		return (J) this;
-	}
-
 	public UUID getWebClientUUID()
 	{
 		return webClientUUID;
@@ -117,6 +94,23 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 
 	public Set<IUserRole<?>> findRoles()
 	{
+		IInvolvedParty<?> newIp = findInvolvedParty();
+		if (getRoles() != null)
+		{
+			getRoles().clear();
+		}
+		IRolesService rolesService = GuiceContext.get(IRolesService.class);
+		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
+		//involvedPartyService.findByUUID(getIdentityToken(), enterprise, systemUUID);
+		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp, this, ProfileSystem.getNewSystem()
+		                                                                             .get(enterprise), ProfileSystem.getSystemTokens()
+		                                                                                                            .get(enterprise));
+		setRoles(new LinkedHashSet<>(rolesss));
+		return getRoles();
+	}
+
+	public IInvolvedParty<?> findInvolvedParty()
+	{
 		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
 		ISystems profileSystem = ProfileSystem.getNewSystem()
 		                                      .get(enterprise);
@@ -124,22 +118,9 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		                                      .get(enterprise);
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
 		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
-				                                                                                                                     .toString(),
-		                                                                                    profileSystem, profileSystemUUID);
-		if (getRoles() != null)
-		{
-			getRoles().clear();
-		}
+				                                                                                                         .toString(),
+		                                                                        profileSystem, profileSystemUUID);
 
-		IRolesService rolesService = GuiceContext.get(IRolesService.class);
-		UUID systemUUID = ProfileSystem.getSystemTokens()
-		                               .get(getEnterprise());
-		//involvedPartyService.findByUUID(getIdentityToken(), enterprise, systemUUID);
-		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp,this, ProfileSystem.getNewSystem()
-		                                                                      .get(enterprise), ProfileSystem.getSystemTokens()
-		                                                                                                     .get(getEnterprise()));
-		setRoles(new LinkedHashSet<>(rolesss));
-		return getRoles();
+		return newIp;
 	}
-
 }
