@@ -31,6 +31,8 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 {
 	@JsonProperty
 	private UUID webClientUUID;
+	@JsonIgnore
+	private transient IInvolvedParty<?> involvedParty;
 
 	public UUID getWebClientUUID()
 	{
@@ -111,16 +113,24 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 
 	public IInvolvedParty<?> findInvolvedParty()
 	{
-		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-		ISystems profileSystem = ProfileSystem.getNewSystem()
-		                                      .get(enterprise);
-		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
-		                                      .get(enterprise);
-		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
-				                                                                                                         .toString(),
-		                                                                        profileSystem, profileSystemUUID);
+		if (this.involvedParty == null)
+		{
+			IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
+			ISystems profileSystem = ProfileSystem.getNewSystem()
+			                                      .get(enterprise);
+			UUID profileSystemUUID = ProfileSystem.getSystemTokens()
+			                                      .get(enterprise);
+			IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+			this.involvedParty = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
+					                                                                                                    .toString(),
+			                                                                   profileSystem, profileSystemUUID);
+		}
+		return this.involvedParty;
+	}
 
-		return newIp;
+	public J setInvolvedParty(IInvolvedParty<?> involvedParty)
+	{
+		this.involvedParty = involvedParty;
+		return (J) this;
 	}
 }

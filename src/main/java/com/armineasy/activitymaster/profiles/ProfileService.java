@@ -59,7 +59,6 @@ public class ProfileService
 		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
 		                                        .getEnterprise(enterpriseName);
 
-
 		ISystems profileSystem = ProfileSystem.getNewSystem()
 		                                      .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
@@ -200,6 +199,7 @@ public class ProfileService
 		            );
 
 		profileServiceDTO.findRoles();
+		profileServiceDTO.setInvolvedParty(newIp);
 
 		return profileServiceDTO;
 	}
