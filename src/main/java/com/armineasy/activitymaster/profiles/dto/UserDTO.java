@@ -7,11 +7,18 @@ import com.armineasy.activitymaster.activitymaster.services.dto.IRelationshipVal
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
+import com.armineasy.activitymaster.profiles.deserializers.IRolesNameDeserializer;
+import com.armineasy.activitymaster.profiles.deserializers.LocalDateTimeDeserializer;
+import com.armineasy.activitymaster.profiles.deserializers.LocalDateTimeSerializer;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.jwebmp.guicedinjection.GuiceContext;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.guicedee.guicedinjection.GuiceContext;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -24,7 +31,7 @@ import java.util.logging.Logger;
 
 import static com.armineasy.activitymaster.activitymaster.services.types.IdentificationTypes.*;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
-import static com.jwebmp.guicedinjection.interfaces.ObjectBinderKeys.*;
+import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.*;
 
 
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
@@ -37,10 +44,12 @@ public class UserDTO<J extends UserDTO<J>>
 	private static final Logger log = Logger.getLogger(UserDTO.class.getName());
 	private UUID identityToken;
 	@JsonIgnore
+	@JsonDeserialize(using = IRolesNameDeserializer.class)
 	private Set<IUserRole<?>> roles;
 	@JsonDeserialize(using = IEnterpriseNameDeserializer.class)
 	private IEnterpriseName<?> enterprise;
-	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSS")
+	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
+	@JsonSerialize(using = LocalDateTimeSerializer.class)
 	private LocalDateTime lastActionTime;
 	@JsonIgnore
 	private boolean loggedIn;

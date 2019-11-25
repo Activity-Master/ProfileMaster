@@ -21,7 +21,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
-import static com.jwebmp.guicedinjection.GuiceContext.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @Singleton
 public class RolesService

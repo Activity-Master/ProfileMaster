@@ -5,7 +5,7 @@ import com.armineasy.activitymaster.profiles.RolesService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IProfileService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
 import com.google.inject.PrivateModule;
-import com.jwebmp.guicedinjection.interfaces.IGuiceModule;
+import com.guicedee.guicedinjection.interfaces.IGuiceModule;
 
 public class ProfileServiceBinder extends PrivateModule
 		implements IGuiceModule<ProfileServiceBinder>

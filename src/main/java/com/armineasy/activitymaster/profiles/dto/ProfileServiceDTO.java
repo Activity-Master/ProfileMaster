@@ -9,7 +9,7 @@ import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IUserRole;
 import com.fasterxml.jackson.annotation.*;
-import com.jwebmp.guicedinjection.GuiceContext;
+import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.UUID;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
-import static com.jwebmp.guicedinjection.GuiceContext.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)

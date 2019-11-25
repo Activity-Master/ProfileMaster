@@ -14,7 +14,7 @@ import com.armineasy.activitymaster.profiles.exceptions.ProfileServiceException;
 import com.armineasy.activitymaster.profiles.exceptions.UserExistsException;
 import com.armineasy.activitymaster.profiles.exceptions.WaitingForConfirmationKeyException;
 import com.google.common.base.Strings;
-import com.jwebmp.guicedinjection.GuiceContext;
+import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.Objects;
 import java.util.UUID;

@@ -22,10 +22,10 @@ import com.armineasy.activitymaster.profiles.exceptions.WaitingForConfirmationKe
 import com.armineasy.activitymaster.profiles.services.interfaces.IProfileService;
 import com.armineasy.activitymaster.profiles.services.interfaces.IRolesService;
 import com.google.inject.Singleton;
-import com.jwebmp.guicedinjection.GuiceContext;
-import com.jwebmp.guicedinjection.interfaces.JobService;
-import com.jwebmp.guicedinjection.pairing.Pair;
-import com.jwebmp.guicedservlets.GuicedServletKeys;
+import com.guicedee.guicedinjection.GuiceContext;
+import com.guicedee.guicedinjection.interfaces.JobService;
+import com.guicedee.guicedinjection.pairing.Pair;
+import com.guicedee.guicedservlets.GuicedServletKeys;
 import net.sf.uadetector.ReadableUserAgent;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,7 +42,7 @@ import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifi
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileEventTypes.*;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 import static com.armineasy.activitymaster.profiles.services.enumerations.UserRoles.*;
-import static com.jwebmp.guicedinjection.GuiceContext.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 import static java.time.temporal.ChronoUnit.*;
 
 @SuppressWarnings("Duplicates")

@@ -8,8 +8,8 @@ import com.armineasy.activitymaster.activitymaster.services.system.IAddressServi
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserDTO;
-import com.jwebmp.guicedinjection.GuiceContext;
-import com.jwebmp.logger.LogFactory;
+import com.guicedee.guicedinjection.GuiceContext;
+import com.guicedee.logger.LogFactory;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;

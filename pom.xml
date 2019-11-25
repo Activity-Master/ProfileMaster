@@ -13,9 +13,6 @@
     <packaging>jar</packaging>
     <name>Profile Master</name>
 
-    <build>
-        <testSourceDirectory>nope</testSourceDirectory>
-    </build>
 
     <dependencies>
         <dependency>
@@ -30,65 +27,24 @@
             <version>${project.version}</version>
         </dependency>
 
-<!--
-
         <dependency>
-            <groupId>com.armineasy.activitymaster</groupId>
-            <artifactId>activity-master</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
--->
-
-        <dependency>
-            <groupId>com.jwebmp.thirdparty</groupId>
+            <groupId>com.guicedee.services</groupId>
             <artifactId>uadetector-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.jwebmp.guicedee.servlets</groupId>
+            <groupId>com.guicedee.servlets</groupId>
             <artifactId>guiced-servlets</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.jwebmp.guicedee.servlets</groupId>
-            <artifactId>guiced-servlets</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jwebmp.thirdparty</groupId>
+            <groupId>com.guicedee.services</groupId>
             <artifactId>uadetector-resources</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-jdk8</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
         </dependency>
 
     </dependencies>

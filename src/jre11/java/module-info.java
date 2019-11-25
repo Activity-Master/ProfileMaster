@@ -4,7 +4,7 @@ module com.armineasy.activitymaster.profiles {
 	requires com.armineasy.activitymaster.activitymaster;
 	requires com.google.guice;
 
-	requires com.jwebmp.guicedinjection;
+	requires com.guicedee.guicedinjection;
 	requires com.google.common;
 	requires javax.servlet.api;
 
@@ -13,7 +13,7 @@ module com.armineasy.activitymaster.profiles {
 	requires org.mapstruct;
 	requires net.sf.uadetector.core;
 	requires org.json;
-	requires com.jwebmp.guicedpersistence;
+	requires com.guicedee.guicedpersistence;
 	requires com.jwebmp.guicedservlets;
 
 	requires cache.annotations.ri.common;
@@ -31,7 +31,7 @@ module com.armineasy.activitymaster.profiles {
 	exports com.armineasy.activitymaster.profiles.services.enumerations;
 
 	provides com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem with com.armineasy.activitymaster.profiles.ProfileSystem;
-	provides com.jwebmp.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
+	provides com.guicedee.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
 	provides com.jwebmp.core.events.IEventConfigurator with com.armineasy.activitymaster.profiles.implementations.ProfileEventConfigurator;
 
 	opens com.armineasy.activitymaster.profiles to com.google.guice, com.armineasy.activitymaster.activitymaster;

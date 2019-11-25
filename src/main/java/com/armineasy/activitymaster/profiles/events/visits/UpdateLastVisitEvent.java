@@ -6,6 +6,7 @@ import com.armineasy.activitymaster.activitymaster.services.dto.IInvolvedParty;
 import com.armineasy.activitymaster.activitymaster.services.dto.ISystems;
 import com.armineasy.activitymaster.activitymaster.threads.TransactionalIdentifiedThread;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
+import com.armineasy.activitymaster.profiles.deserializers.LocalDateTimeDeserializer;
 import com.armineasy.activitymaster.profiles.dto.ProfileServiceDTO;
 
 import java.time.LocalDateTime;
@@ -16,8 +17,8 @@ import java.util.UUID;
 import static com.armineasy.activitymaster.profiles.enumerations.ProfileClassifications.*;
 
 
-
-public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
+public class UpdateLastVisitEvent
+		extends TransactionalIdentifiedThread
 {
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS");
 	private static final String JobServiceName = "UpdateLastVisitEvent";
@@ -40,10 +41,11 @@ public class UpdateLastVisitEvent extends TransactionalIdentifiedThread
 	@Override
 	public void perform()
 	{
-		ISystems profileSystem = ProfileSystem.getNewSystem()
-		                                      .get(enterprise);
+		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
+		                                         .get(enterprise);
 		//Add last login time
-		String lastVisit = formatter.format(LocalDateTime.now());
+		String lastVisit = DateTimeFormatter.ofPattern(LocalDateTimeDeserializer.LocalDateTimeFormat)
+		                                    .format(LocalDateTime.now());
 		newIp.addOrUpdate(LastVisitTime,
 		                  lastVisit,
 		                  profileSystem,

@@ -12,7 +12,7 @@ import com.armineasy.activitymaster.activitymaster.services.system.IInvolvedPart
 import com.armineasy.activitymaster.activitymaster.services.system.ISystemsService;
 import com.armineasy.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.google.inject.Singleton;
-import com.jwebmp.guicedinjection.GuiceContext;
+import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.HashMap;
 import java.util.Map;

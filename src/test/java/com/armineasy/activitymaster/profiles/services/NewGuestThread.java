@@ -13,7 +13,7 @@ import lombok.extern.java.Log;
 import java.util.UUID;
 
 import static com.armineasy.activitymaster.activitymaster.DefaultEnterprise.*;
-import static com.jwebmp.guicedinjection.GuiceContext.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @Log
 public class NewGuestThread

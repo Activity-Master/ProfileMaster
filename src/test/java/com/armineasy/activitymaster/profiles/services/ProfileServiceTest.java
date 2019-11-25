@@ -7,8 +7,8 @@ import com.armineasy.activitymaster.profiles.ProfileService;
 import com.armineasy.activitymaster.profiles.ProfileSystem;
 import com.armineasy.activitymaster.profiles.dto.UserLoginDTO;
 import com.google.common.base.Stopwatch;
-import com.jwebmp.guicedinjection.GuiceContext;
-import com.jwebmp.guicedinjection.interfaces.JobService;
+import com.guicedee.guicedinjection.GuiceContext;
+import com.guicedee.guicedinjection.interfaces.JobService;
 import lombok.extern.java.Log;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import static com.armineasy.activitymaster.activitymaster.DefaultEnterprise.*;
-import static com.jwebmp.guicedinjection.GuiceContext.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 import static java.util.concurrent.TimeUnit.*;
 
 //@ExtendWith(DefaultTestConfig.class)
