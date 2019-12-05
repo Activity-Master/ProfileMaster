@@ -1,7 +1,9 @@
-import com.armineasy.activitymaster.profiles.implementations.ProfileServiceBinder;
+import com.guicedee.activitymaster.profiles.ProfileSystem;
+import com.guicedee.activitymaster.profiles.implementations.ProfileEventConfigurator;
+import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
 
-module com.armineasy.activitymaster.profiles {
-	requires com.armineasy.activitymaster.activitymaster;
+module com.guicedee.activitymaster.profiles {
+	requires com.guicedee.activitymaster.core;
 	requires com.google.guice;
 
 	requires com.guicedee.guicedinjection;
@@ -10,11 +12,10 @@ module com.armineasy.activitymaster.profiles {
 
 	requires com.fasterxml.jackson.databind;
 
-	requires org.mapstruct;
 	requires net.sf.uadetector.core;
 	requires org.json;
 	requires com.guicedee.guicedpersistence;
-	requires com.jwebmp.guicedservlets;
+	requires com.guicedee.guicedservlets;
 
 	requires cache.annotations.ri.common;
 	requires cache.annotations.ri.guice;
@@ -24,23 +25,23 @@ module com.armineasy.activitymaster.profiles {
 	requires com.jwebmp.core;
 	requires java.validation;
 
-	exports com.armineasy.activitymaster.profiles.dto;
-	exports com.armineasy.activitymaster.profiles.exceptions;
-	//exports com.armineasy.activitymaster.profiles.services;
-	exports com.armineasy.activitymaster.profiles.services.interfaces;
-	exports com.armineasy.activitymaster.profiles.services.enumerations;
+	exports com.guicedee.activitymaster.profiles.dto;
+	exports com.guicedee.activitymaster.profiles.exceptions;
+	//exports com.guicedee.activitymaster.profiles.services;
+	exports com.guicedee.activitymaster.profiles.services.interfaces;
+	exports com.guicedee.activitymaster.profiles.services.enumerations;
 
-	provides com.armineasy.activitymaster.activitymaster.services.IActivityMasterSystem with com.armineasy.activitymaster.profiles.ProfileSystem;
+	provides com.guicedee.activitymaster.core.services.IActivityMasterSystem with ProfileSystem;
 	provides com.guicedee.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
-	provides com.jwebmp.core.events.IEventConfigurator with com.armineasy.activitymaster.profiles.implementations.ProfileEventConfigurator;
+	provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
 
-	opens com.armineasy.activitymaster.profiles to com.google.guice, com.armineasy.activitymaster.activitymaster;
-	opens com.armineasy.activitymaster.profiles.events.visits to com.google.guice, com.armineasy.activitymaster.activitymaster;
-	opens com.armineasy.activitymaster.profiles.events to com.google.guice, com.armineasy.activitymaster.activitymaster;
-	opens com.armineasy.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
-	opens com.armineasy.activitymaster.profiles.deserializers to com.fasterxml.jackson.databind;
-	opens com.armineasy.activitymaster.profiles.implementations to com.fasterxml.jackson.databind,com.google.guice;
+	opens com.guicedee.activitymaster.profiles to com.google.guice, com.guicedee.activitymaster.core;
+	opens com.guicedee.activitymaster.profiles.events.visits to com.google.guice, com.guicedee.activitymaster.core;
+	opens com.guicedee.activitymaster.profiles.events to com.google.guice, com.guicedee.activitymaster.core;
+	opens com.guicedee.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
+	opens com.guicedee.activitymaster.profiles.deserializers to com.fasterxml.jackson.databind;
+	opens com.guicedee.activitymaster.profiles.implementations to com.fasterxml.jackson.databind,com.google.guice;
 
-	exports com.armineasy.activitymaster.profiles.enumerations;
-	exports com.armineasy.activitymaster.profiles.events;
+	exports com.guicedee.activitymaster.profiles.enumerations;
+	exports com.guicedee.activitymaster.profiles.events;
 }
