@@ -61,7 +61,7 @@ public class UserDTO<J extends UserDTO<J>>
 		{
 			UUID systemID = ProfileSystem.getSystemTokens()
 			                             .get(ip.getEnterpriseID());
-			ISystems profileSystem = ProfileSystem.getNewSystem()
+			ISystems<?> profileSystem = ProfileSystem.getNewSystem()
 			                                      .get(ip.getEnterpriseID());
 			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>,?>> ipId = ip.find(IdentificationTypeUUID, profileSystem, systemID);
 			if (ipId.isPresent())
