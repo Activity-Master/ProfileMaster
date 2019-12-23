@@ -9,6 +9,7 @@ public enum UserRoles
 {
 	EnterpriseCreator,
 	Administrator,
+	Guest,
 	Visitor,
 	None,
 	;

@@ -43,5 +43,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.armineasy.activitymaster</groupId>
+            <artifactId>session-master</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
 </project>

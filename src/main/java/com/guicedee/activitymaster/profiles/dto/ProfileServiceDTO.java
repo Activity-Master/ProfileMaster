@@ -9,8 +9,10 @@ import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import com.fasterxml.jackson.annotation.*;
+import com.guicedee.activitymaster.sessions.services.ISession;
 import com.guicedee.guicedinjection.GuiceContext;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,7 +51,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	public boolean isLoggedIn(boolean asVisitor)
 	{
 		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-		ISystems profileSystem = ProfileSystem.getNewSystem()
+		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
 		                                      .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
@@ -60,13 +62,20 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 				                                                                                                         .toString(),
 		                                                                        profileSystem, profileSystemUUID);
 
+		ISession<?> session = GuiceContext.get(ISession.class);
+		if(!session.hasValue("user-security"))
+			return false;
+
+		UserSecurity us = session.as("user-security", UserSecurity.class);
+		if(us == null || us.getLoginExpiresOn() == null || us.getLoginExpiresOn().isBefore(LocalDateTime.now()))
+		{
+			return false;
+		}
 
 		boolean loggedOn = false;
 		try
 		{
-			loggedOn = newIp.find(LoggedOn, profileSystem, profileSystemUUID)
-			                .get()
-			                .getValueAsBoolean();
+			loggedOn = us.isLoggedIn();
 		}
 		catch (Exception nsfe)
 		{
@@ -77,19 +86,10 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		{
 			return true;
 		}
-		else
-		{
 
-		}
-
-		if (newIp.has(RememberMe, profileSystem, profileSystemUUID))
+		if (us.isRememberMe())
 		{
-			if (newIp.find(RememberMe, profileSystem, profileSystemUUID)
-			         .get()
-			         .getValueAsBoolean())
-			{
-				return loggedOn;
-			}
+			return loggedOn;
 		}
 		return false;
 	}
@@ -97,18 +97,12 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	public Set<IUserRole<?>> findRoles()
 	{
 		IInvolvedParty<?> newIp = findInvolvedParty();
-		if (getRoles() != null)
-		{
-			getRoles().clear();
-		}
 		IRolesService rolesService = GuiceContext.get(IRolesService.class);
 		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-		//involvedPartyService.findByUUID(getIdentityToken(), enterprise, systemUUID);
 		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp, this, ProfileSystem.getNewSystem()
 		                                                                             .get(enterprise), ProfileSystem.getSystemTokens()
 		                                                                                                            .get(enterprise));
-		setRoles(new LinkedHashSet<>(rolesss));
-		return getRoles();
+		return new LinkedHashSet<>(rolesss);
 	}
 
 	public IInvolvedParty<?> findInvolvedParty()
@@ -116,7 +110,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		if (this.involvedParty == null)
 		{
 			IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-			ISystems profileSystem = ProfileSystem.getNewSystem()
+			ISystems<?> profileSystem = ProfileSystem.getNewSystem()
 			                                      .get(enterprise);
 			UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 			                                      .get(enterprise);

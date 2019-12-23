@@ -1,10 +1,12 @@
-package com.guicedee.activitymaster.profiles.dto;
+package com.guicedee.activitymaster.profiles.webdto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 
@@ -56,55 +58,29 @@ public class UserLoginDTO<J extends UserLoginDTO<J>>
 		return this;
 	}
 
-	public boolean equals(final Object o)
+	@Override
+	public boolean equals(Object o)
 	{
-		if (o == this)
+		if (this == o)
 		{
 			return true;
 		}
-		if (!(o instanceof UserLoginDTO))
+		if (o == null || getClass() != o.getClass())
 		{
 			return false;
 		}
-		final UserLoginDTO<?> other = (UserLoginDTO<?>) o;
-		if (!other.canEqual((Object) this))
+		if (!super.equals(o))
 		{
 			return false;
 		}
-		final Object this$userName = this.getUserName();
-		final Object other$userName = other.getUserName();
-		if (this$userName == null ? other$userName != null : !this$userName.equals(other$userName))
-		{
-			return false;
-		}
-		final Object this$password = this.getPassword();
-		final Object other$password = other.getPassword();
-		if (this$password == null ? other$password != null : !this$password.equals(other$password))
-		{
-			return false;
-		}
-		if (this.isRememberMe() != other.isRememberMe())
-		{
-			return false;
-		}
-		return true;
+		UserLoginDTO<?> that = (UserLoginDTO<?>) o;
+		return Objects.equals(getUserName(), that.getUserName());
 	}
 
-	protected boolean canEqual(final Object other)
-	{
-		return other instanceof UserLoginDTO;
-	}
-
+	@Override
 	public int hashCode()
 	{
-		final int PRIME = 59;
-		int result = 1;
-		final Object $userName = this.getUserName();
-		result = result * PRIME + ($userName == null ? 43 : $userName.hashCode());
-		final Object $password = this.getPassword();
-		result = result * PRIME + ($password == null ? 43 : $password.hashCode());
-		result = result * PRIME + (this.isRememberMe() ? 79 : 97);
-		return result;
+		return Objects.hash(super.hashCode(), getUserName());
 	}
 
 	public String toString()

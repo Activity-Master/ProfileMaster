@@ -1,5 +1,10 @@
 package com.guicedee.activitymaster.profiles.dto;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedPartyIdentificationType;
@@ -7,24 +12,11 @@ import com.guicedee.activitymaster.core.services.dto.IRelationshipValue;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
-import com.guicedee.activitymaster.profiles.deserializers.IRolesNameDeserializer;
-import com.guicedee.activitymaster.profiles.deserializers.LocalDateTimeDeserializer;
-import com.guicedee.activitymaster.profiles.deserializers.LocalDateTimeSerializer;
-import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.guicedee.guicedinjection.GuiceContext;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,16 +35,9 @@ public class UserDTO<J extends UserDTO<J>>
 {
 	private static final Logger log = Logger.getLogger(UserDTO.class.getName());
 	private UUID identityToken;
-	@JsonIgnore
-	@JsonDeserialize(using = IRolesNameDeserializer.class)
-	private Set<IUserRole<?>> roles;
+
 	@JsonDeserialize(using = IEnterpriseNameDeserializer.class)
 	private IEnterpriseName<?> enterprise;
-	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
-	@JsonSerialize(using = LocalDateTimeSerializer.class)
-	private LocalDateTime lastActionTime;
-	@JsonIgnore
-	private boolean loggedIn;
 
 	@SuppressWarnings("unchecked")
 	public J fromIP(IInvolvedParty<?> ip)
@@ -134,25 +119,10 @@ public class UserDTO<J extends UserDTO<J>>
 		return Objects.hash(getIdentityToken());
 	}
 
-	public LocalDateTime getLastActionTime()
-	{
-		return lastActionTime;
-	}
-
-	public J setLastActionTime(LocalDateTime lastActionTime)
-	{
-		this.lastActionTime = lastActionTime;
-		return (J)this;
-	}
 
 	public UUID getIdentityToken()
 	{
 		return this.identityToken;
-	}
-
-	public Set<IUserRole<?>> getRoles()
-	{
-		return this.roles;
 	}
 
 	public IEnterpriseName<?> getEnterprise()
@@ -163,33 +133,12 @@ public class UserDTO<J extends UserDTO<J>>
 	public UserDTO<J> setIdentityToken(UUID identityToken)
 	{
 		this.identityToken = identityToken;
-		setLastActionTime(LocalDateTime.now());
 		return this;
-	}
-
-	public J setRoles(Set<IUserRole<?>> roles)
-	{
-		this.roles = roles;
-		setLastActionTime(LocalDateTime.now());
-		return (J)this;
 	}
 
 	public J setEnterprise(IEnterpriseName<?> enterprise)
 	{
 		this.enterprise = enterprise;
-		setLastActionTime(LocalDateTime.now());
 		return (J)this;
-	}
-
-	public boolean isLoggedIn()
-	{
-		return loggedIn;
-	}
-
-	public UserDTO<J> setLoggedIn(boolean loggedIn)
-	{
-		this.loggedIn = loggedIn;
-		setLastActionTime(LocalDateTime.now());
-		return this;
 	}
 }

@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import io.github.classgraph.ClassInfo;
 
 import javax.cache.annotation.CacheKey;
+import javax.cache.annotation.CacheRemove;
 import javax.cache.annotation.CacheRemoveAll;
 import javax.cache.annotation.CacheResult;
 import java.util.ArrayList;
@@ -28,12 +29,12 @@ public class RolesService
 
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
-	public List<IUserRole<?>> getRoles(@CacheKey IInvolvedParty<?> ip, @CacheKey ProfileServiceDTO<?> dto, @CacheKey ISystems<?> systems, @CacheKey UUID... identityToken)
+	public List<IUserRole<?>> getRoles(@CacheKey IInvolvedParty<?> ip, ProfileServiceDTO<?> dto, ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
 		List<IUserRole<?>> roles = findAllRoles();
 		List<IUserRole<?>> myRoles = new ArrayList<>();
 		List<String> assignedRoles = new ArrayList<>();
-		for (Object classifications2 : ip.getValues(UserRoles,null, systems, identityToken[0]))
+		for (Object classifications2 : ip.getValues(UserRoles, null, systems, identityToken[0]))
 		{
 			assignedRoles.add(classifications2.toString());
 		}
@@ -41,28 +42,29 @@ public class RolesService
 		{
 			for (IUserRole<?> role : roles)
 			{
-				if(role.toString().equalsIgnoreCase(assignedRole))
+				if (role.toString()
+				        .equalsIgnoreCase(assignedRole))
 				{
 					myRoles.add(role);
 				}
 			}
 		}
-
-		dto.setRoles(new HashSet<>(myRoles));
 		return myRoles;
 	}
 
 	@Override
-	@CacheRemoveAll(cacheName = "UserRolesGetRoles")
-	public List<IUserRole<?>> addRole( @CacheKey IInvolvedParty<?> ip,IUserRole<?> role, @CacheKey ProfileServiceDTO<?> dto, @CacheKey ISystems<?> systems, @CacheKey UUID... identityToken)
+	@CacheResult(cacheName = "UserRolesGetRoles",
+			skipGet = true)
+	public List<IUserRole<?>> addRole(
+			@CacheKey IInvolvedParty<?> ip, IUserRole<?> role, ProfileServiceDTO<?> dto, ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
-		List<IUserRole<?>> roles = getRoles(ip,dto, systems, identityToken);
-		if(!roles.contains(role))
+		List<IUserRole<?>> roles = getRoles(ip, dto, systems, identityToken);
+		if (!roles.contains(role))
 		{
 			ip.add(UserRoles, role.toString(), systems, identityToken);
 			roles.add(role);
 		}
-		return getRoles(ip,dto,systems,identityToken);
+		return roles;
 	}
 
 	@CacheResult(cacheName = "RolesServiceFindAllRoles")

@@ -5,7 +5,7 @@ import com.guicedee.activitymaster.core.services.dto.IEnterprise;
 import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
 import com.guicedee.activitymaster.profiles.ProfileService;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
-import com.guicedee.activitymaster.profiles.dto.UserLoginDTO;
+import com.guicedee.activitymaster.profiles.webdto.UserLoginDTO;
 import com.google.common.base.Stopwatch;
 import com.guicedee.guicedinjection.interfaces.JobService;
 import lombok.extern.java.Log;

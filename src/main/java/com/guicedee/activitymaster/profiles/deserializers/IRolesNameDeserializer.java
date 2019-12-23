@@ -1,5 +1,6 @@
 package com.guicedee.activitymaster.profiles.deserializers;
 
+import com.guicedee.activitymaster.profiles.services.enumerations.UserRoles;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +18,10 @@ public class IRolesNameDeserializer
 	public IUserRole<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException
 	{
 		String name = p.getValueAsString();
+		if (name == null)
+		{
+			return UserRoles.Visitor;
+		}
 		for (ClassInfo classInfo : GuiceContext.instance()
 		                                       .getScanResult()
 		                                       .getClassesImplementing(IUserRole.class.getCanonicalName()))
@@ -25,10 +30,13 @@ public class IRolesNameDeserializer
 			for (Object enumConstant : clazz.getEnumConstants())
 			{
 				IUserRole<?> role = (IUserRole<?>) enumConstant;
-				if(role.name().equals(name))
+				if (role.name()
+				        .equals(name))
+				{
 					return role;
+				}
 			}
 		}
-		throw new JsonProcessingException("Unable to find IUserRole with value " + name){};
+		throw new JsonProcessingException("Unable to find IUserRole with value " + name) {};
 	}
 }

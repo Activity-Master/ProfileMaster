@@ -1,4 +1,6 @@
-package com.guicedee.activitymaster.profiles.dto;
+package com.guicedee.activitymaster.profiles.webdto;
+
+import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 
 import java.io.Serializable;
 

@@ -24,6 +24,7 @@ module com.guicedee.activitymaster.profiles {
 	requires io.github.classgraph;
 	requires com.jwebmp.core;
 	requires java.validation;
+	requires com.guicedee.activitymaster.sessions;
 
 	exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
@@ -39,9 +40,11 @@ module com.guicedee.activitymaster.profiles {
 	opens com.guicedee.activitymaster.profiles.events.visits to com.google.guice, com.guicedee.activitymaster.core;
 	opens com.guicedee.activitymaster.profiles.events to com.google.guice, com.guicedee.activitymaster.core;
 	opens com.guicedee.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
+	opens com.guicedee.activitymaster.profiles.webdto to com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.deserializers to com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.implementations to com.fasterxml.jackson.databind,com.google.guice;
 
 	exports com.guicedee.activitymaster.profiles.enumerations;
 	exports com.guicedee.activitymaster.profiles.events;
+	exports com.guicedee.activitymaster.profiles.webdto;
 }
