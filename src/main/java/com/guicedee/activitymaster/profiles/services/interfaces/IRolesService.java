@@ -9,7 +9,9 @@ import java.util.UUID;
 
 public interface IRolesService
 {
-	List<IUserRole<?>> getRoles(IInvolvedParty<?> ip,ProfileServiceDTO<?> dto, ISystems<?> systems, UUID... identityToken);
-	List<IUserRole<?>> addRole( IInvolvedParty<?> ip,IUserRole<?> role, ProfileServiceDTO<?> dto, ISystems<?> systems, UUID... identityToken);
+	List<IUserRole<?>> getRoles(IInvolvedParty<?> ip, ISystems<?> systems, UUID... identityToken);
+
+	List<IUserRole<?>> addRole(IInvolvedParty<?> ip, IUserRole<?> role, ProfileServiceDTO<?> dto, ISystems<?> systems, UUID... identityToken);
+
 	List<IUserRole<?>> findAllRoles();
 }

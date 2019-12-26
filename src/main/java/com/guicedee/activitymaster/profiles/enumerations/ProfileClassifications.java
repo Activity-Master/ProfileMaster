@@ -10,6 +10,7 @@ public enum ProfileClassifications
 		implements IClassificationValue<ProfileClassifications>
 				           , IInvolvedPartyClassification<ProfileClassifications>
 {
+	LogonDetails("Details for Login", EventXInvolvedParty),
 	LastLoginTime("The last time the Involved Party was logged in", EventXInvolvedParty),
 	LastVisitTime("The last time the Involved Party visited the site", EventXInvolvedParty),
 	UserRoles("A set list of User Roles for an Involved Party", InvolvedPartyXClassification),

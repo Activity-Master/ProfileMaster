@@ -1,6 +1,6 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
-
+import com.guicedee.activitymaster.core.services.classifications.address.AddressLocalSystemClassifications;
 import com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemClassifications;
 import com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemTypes;
 import com.guicedee.activitymaster.core.services.dto.*;
@@ -10,6 +10,7 @@ import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.logger.LogFactory;
+import com.jwebmp.core.SessionHelper;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,16 +20,21 @@ import java.util.Enumeration;
 import java.util.UUID;
 import java.util.logging.Level;
 
+import static com.guicedee.activitymaster.core.services.classifications.address.AddressLocalSystemClassifications.*;
+import static com.guicedee.activitymaster.core.services.classifications.address.AddressRemoteSystemClassifications.*;
+import static com.guicedee.activitymaster.core.services.classifications.address.AddressWebClassifications.*;
+import static com.guicedee.activitymaster.core.services.classifications.events.EventAddressClassifications.*;
 import static com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemClassifications.*;
 
-public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThread
+public class ConfigureFromServletRequestEvent
+		extends TransactionalIdentifiedThread
 {
 	private static final String JobServiceName = "ConfigureFromServletRequestEvent";
 
 	private IEvent<?> event;
 	private UserDTO<?> dto;
 	private IInvolvedParty<?> ip;
-	private ISystems profileSystem;
+	private ISystems<?> profileSystem;
 	private HttpServletRequest servletRequest;
 	private IEnterprise<?> enterprise;
 
@@ -60,7 +66,8 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 
 		IAddressService<?> addressService = GuiceContext.get(IAddressService.class);
 		String ipReal = servletRequest.getRemoteAddr();
-		if (ipReal.equalsIgnoreCase("0:0:0:0:0:0:0:1")) {
+		if (ipReal.equalsIgnoreCase("0:0:0:0:0:0:0:1"))
+		{
 			InetAddress inetAddress = null;
 			try
 			{
@@ -68,38 +75,39 @@ public class ConfigureFromServletRequestEvent extends TransactionalIdentifiedThr
 			}
 			catch (UnknownHostException e)
 			{
-				LogFactory.getLog("ConfigureFromServletRequest").log(Level.SEVERE, "Unknown host in getting INet Address for localhost ipv6",e);
+				LogFactory.getLog("ConfigureFromServletRequest")
+				          .log(Level.SEVERE, "Unknown host in getting INet Address for localhost ipv6", e);
 			}
 			String ipAddress = inetAddress.getHostAddress();
 			ipReal = ipAddress;
 		}
 		IAddress<?> ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
-		ip.add(ipAddress, profileSystem, systemID);
-		event.add(ipAddress, profileSystem, systemID);
+		ip.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
+		event.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
 		IAddress<?> hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
-		ip.add(hostName, profileSystem, systemID);
-		event.add(hostName, profileSystem, systemID);
+		ip.add(hostName, RemoteAddressHostName, profileSystem, systemID);
+		event.add(hostName, RemoteAddressHostName, profileSystem, systemID);
 		IAddress<?> localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
-		ip.add(localIpAddress, profileSystem, systemID);
-		event.add(localIpAddress, profileSystem, systemID);
+		ip.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
+		event.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
 		IAddress<?> localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
-		ip.add(localHostName, profileSystem, systemID);
-		event.add(localHostName, profileSystem, systemID);
+		ip.add(localHostName, LocalAddressHostName, profileSystem, systemID);
+		event.add(localHostName, LocalAddressHostName, profileSystem, systemID);
 
 		IAddress<?> webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
-		                                                                      .toString(), profileSystem, systemID);
-		ip.add(webAddress, profileSystem, systemID);
-		event.add(webAddress, profileSystem, systemID);
+		                                                                          .toString(), profileSystem, systemID);
+		ip.add(webAddress, WebAddress, profileSystem, systemID);
+		event.add(webAddress, WebAddress, profileSystem, systemID);
 
-		IRelationshipValue<IInvolvedParty<?>,IResourceItem<?>,?> resourceItem = ip.add(AddedANewDevice, ResourceItemTypes.BrowserInformation,
-		                                                                               "BrowserInformation",
-		                                                                               sb.toString()
-		                                                 .getBytes(),
-		                                                                               "application/json", profileSystem, systemID);
-
-		resourceItem.getSecondary().add(ResourceItemClassifications.Size, Long.toString(sb.toString()
+		IRelationshipValue<IInvolvedParty<?>, IResourceItem<?>, ?> resourceItem = ip.add(AddedANewDevice, ResourceItemTypes.BrowserInformation,
+		                                                                                 "BrowserInformation",
+		                                                                                 sb.toString()
+		                                                                                   .getBytes(),
+		                                                                                 "application/json", profileSystem, systemID);
+		resourceItem.getSecondary()
+		            .add(ResourceItemClassifications.Size, Long.toString(sb.toString()
 		                                                                   .length()), profileSystem, systemID);
-		event.add(Added,resourceItem.getSecondary(),"BrowserInformation",  profileSystem, systemID);
+		event.add(Added, resourceItem.getSecondary(), "BrowserInformation", profileSystem, systemID);
 	}
 
 	public IEvent<?> getEvent()

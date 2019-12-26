@@ -6,6 +6,8 @@ import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import com.google.inject.Singleton;
+import com.guicedee.activitymaster.sessions.services.ISession;
+import com.guicedee.guicedinjection.GuiceContext;
 import io.github.classgraph.ClassInfo;
 
 import javax.cache.annotation.CacheKey;
@@ -29,11 +31,15 @@ public class RolesService
 
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
-	public List<IUserRole<?>> getRoles(@CacheKey IInvolvedParty<?> ip, ProfileServiceDTO<?> dto, ISystems<?> systems, @CacheKey UUID... identityToken)
+	public List<IUserRole<?>> getRoles(@CacheKey IInvolvedParty<?> ip, ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
 		List<IUserRole<?>> roles = findAllRoles();
 		List<IUserRole<?>> myRoles = new ArrayList<>();
 		List<String> assignedRoles = new ArrayList<>();
+		if (ip == null)
+		{
+			return new ArrayList<>();
+		}
 		for (Object classifications2 : ip.getValues(UserRoles, null, systems, identityToken[0]))
 		{
 			assignedRoles.add(classifications2.toString());
@@ -58,7 +64,7 @@ public class RolesService
 	public List<IUserRole<?>> addRole(
 			@CacheKey IInvolvedParty<?> ip, IUserRole<?> role, ProfileServiceDTO<?> dto, ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
-		List<IUserRole<?>> roles = getRoles(ip, dto, systems, identityToken);
+		List<IUserRole<?>> roles = getRoles(ip, systems, identityToken);
 		if (!roles.contains(role))
 		{
 			ip.add(UserRoles, role.toString(), systems, identityToken);

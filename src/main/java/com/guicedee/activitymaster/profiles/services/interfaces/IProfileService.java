@@ -23,7 +23,7 @@ public interface IProfileService
 {
 	ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
 
-	ProfileServiceDTO<?> logoutUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
+	ProfileServiceDTO<?> logoutUser(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
 
 	ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
 
@@ -48,7 +48,7 @@ public interface IProfileService
 		{
 			throw new ProfileServiceException("Passwords cannot be empty");
 		}
-		ISystems profileSystem = ProfileSystem.getNewSystem()
+		ISystems profileSystem = ProfileSystem.getSystemsMap()
 		                                      .get(enterprise);
 		IInvolvedParty<?> ip = ips.findByUsernameAndPassword(userLoginDTO.getUserName(), userLoginDTO.getPassword(), profileSystem, true, identityToken);
 		userLoginDTO = new UserLoginDTO<>().fromIP(ip);

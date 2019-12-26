@@ -3,6 +3,9 @@ import com.guicedee.activitymaster.profiles.implementations.ProfileEventConfigur
 import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
 
 module com.guicedee.activitymaster.profiles {
+
+	requires static lombok;
+
 	requires com.guicedee.activitymaster.core;
 	requires com.google.guice;
 
@@ -42,7 +45,7 @@ module com.guicedee.activitymaster.profiles {
 	opens com.guicedee.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.webdto to com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.deserializers to com.fasterxml.jackson.databind;
-	opens com.guicedee.activitymaster.profiles.implementations to com.fasterxml.jackson.databind,com.google.guice;
+	opens com.guicedee.activitymaster.profiles.implementations to com.fasterxml.jackson.databind, com.google.guice;
 
 	exports com.guicedee.activitymaster.profiles.enumerations;
 	exports com.guicedee.activitymaster.profiles.events;

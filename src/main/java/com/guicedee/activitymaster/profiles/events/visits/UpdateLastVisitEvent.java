@@ -41,7 +41,7 @@ public class UpdateLastVisitEvent
 	@Override
 	public void perform()
 	{
-		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
+		ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
 		                                         .get(enterprise);
 		//Add last login time
 		String lastVisit = DateTimeFormatter.ofPattern(LocalDateTimeDeserializer.LocalDateTimeFormat)

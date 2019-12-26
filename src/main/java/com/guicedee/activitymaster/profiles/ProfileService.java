@@ -34,7 +34,6 @@ import com.guicedee.guicedservlets.GuicedServletKeys;
 import net.sf.uadetector.ReadableUserAgent;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -61,12 +60,12 @@ public class ProfileService
 	@Override
 	public ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
-		                                        .getEnterprise(enterpriseName);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+		IEnterprise<?> enterprise = get(IEnterpriseService.class)
+				                            .getEnterprise(enterpriseName);
 
-		ISystems profileSystem = ProfileSystem.getNewSystem()
-		                                      .get(enterprise);
+		ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
+		                                         .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
 
@@ -86,7 +85,9 @@ public class ProfileService
 			                                                                              true,
 			                                                                              profileSystemUUID);
 			profileServiceDTO.setIdentityToken(foundParty.getSecurityIdentity());
-			if (!newIp.equals(foundParty))
+			newIp = foundParty;
+
+		/*	if (!newIp.equals(foundParty))
 			{
 				foundParty.addOrUpdate(IdentificationTypeWebClientUUID,
 				                       profileServiceDTO.getWebClientUUID()
@@ -95,8 +96,8 @@ public class ProfileService
 				newIp.archive(IdentificationTypeWebClientUUID, profileSystem, profileSystemUUID);
 				//newIp.archive();
 				newIp = foundParty;
-			}
-			ISession<?> iSess = GuiceContext.get(ISession.class);
+			}*/
+			ISession<?> iSess = get(ISession.class);
 			UserSecurity us = null;
 			if (iSess.hasValue("user-security"))
 			{
@@ -108,23 +109,27 @@ public class ProfileService
 				us = iSess.as("user-security", UserSecurity.class);
 			}
 			us.setLoggedIn(true)
-			  .setLastIpAddress(GuiceContext.get(HttpServletRequest.class)
-			                                .getRemoteAddr())
+			  .setLastIpAddress(get(HttpServletRequest.class)
+					                    .getRemoteAddr())
 			  .setLoginExpiresOn(profileServiceDTO.isRememberMe()
 			                     ? LocalDateTime.MAX
 			                     : LocalDateTime.now()
 			                                    .plusMinutes(20))
 			  .setRememberMe(profileServiceDTO.isRememberMe());
 			iSess.addValue("user-security", us);
-
+			iSess.setInvolvedParty(newIp);
 			if (newIp.has(IdentificationTypeEnterpriseCreatorRole, profileSystem, profileSystemUUID))
 			{
-				GuiceContext.get(IRolesService.class)
-				            .addRole(newIp, Administrator, profileServiceDTO, profileSystem, identityToken);
+				get(IRolesService.class)
+						.addRole(newIp, Administrator, profileServiceDTO, profileSystem, identityToken);
 				iSess.removeValue("user-roles");
-				iSess.addValue("user-roles", GuiceContext.get(IRolesService.class)
-				                                         .getRoles(newIp, profileServiceDTO, profileSystem, identityToken));
+				iSess.addValue("user-roles", get(IRolesService.class)
+						                             .getRoles(newIp, profileSystem, identityToken));
 			}
+		/*	if (!newIp.equals(original))
+			{
+				original.move(newIp);
+			}*/
 		}
 		catch (SecurityAccessException e)
 		{
@@ -135,14 +140,14 @@ public class ProfileService
 	}
 
 	@Override
-	public ProfileServiceDTO<?> logoutUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
+	public ProfileServiceDTO<?> logoutUser(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
-		                                        .getEnterprise(enterpriseName);
+		//	IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+		IEnterprise<?> enterprise = get(IEnterpriseService.class)
+				                            .getEnterprise(enterpriseName);
 
-		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
-		                                         .get(enterprise);
+	/*	ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
+		                                         .get(enterprise);*/
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
 
@@ -151,34 +156,27 @@ public class ProfileService
 			identityToken = new UUID[]{profileSystemUUID};
 		}
 
-		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, profileServiceDTO.getWebClientUUID()
-		                                                                                                                          .toString(), profileSystem, profileSystemUUID);
-
-		ISession<?> iSess = GuiceContext.get(ISession.class);
+		//		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, profileServiceDTO.getWebClientUUID()
+		//		                                                                                                                          .toString(), profileSystem, profileSystemUUID);
+		ISession<?> iSess = get(ISession.class);
 		UserSecurity us = iSess.as("user-security", UserSecurity.class);
 		us.setRememberMe(false);
 		us.setLoggedIn(false);
 		us.setLoginExpiresOn(LocalDateTime.now());
 		iSess.addValue("user-security", us);
-
 		iSess.removeValue("user-roles");
-
-		profileServiceDTO.setUserName(null);
-		profileServiceDTO.setPassword(null);
-		profileServiceDTO.setRememberMe(false);
-
 		return profileServiceDTO;
 	}
 
 	@Override
 	public ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
 	{
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
-		                                        .getEnterprise(enterpriseName);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+		IEnterprise<?> enterprise = get(IEnterpriseService.class)
+				                            .getEnterprise(enterpriseName);
 		profileServiceDTO.setEnterprise(enterpriseName);
 
-		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
+		ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
 		                                         .get(enterprise);
 
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
@@ -204,9 +202,10 @@ public class ProfileService
 			                                                                                                        .toString(), profileSystem, profileSystemUUID);
 		}
 		newIp = updateLatestVisit(event, profileServiceDTO, enterprise, newIp, identityToken);
+
 		try
 		{
-			HttpServletRequest request = GuiceContext.get(GuicedServletKeys.getHttpServletRequestKey());
+			HttpServletRequest request = get(GuicedServletKeys.getHttpServletRequestKey());
 			newIp = configureFromHTTPServletRequest(event, profileServiceDTO, newIp, profileSystem, request, enterprise);
 			configureFromReadableUserAgent(event, profileServiceDTO, newIp, get(ReadableUserAgent.class), profileSystem, enterprise, identityToken1Final);
 		}
@@ -222,13 +221,24 @@ public class ProfileService
 
 		profileServiceDTO.setInvolvedParty(newIp);
 
-		ISession<?> session = GuiceContext.get(ISession.class);
+		ISession<?> session = get(ISession.class);
+		session.setInvolvedParty(newIp);
 		List<IUserRole<?>> roles = new ArrayList<>();
-		UserSecurity us = session.as("user-security", UserSecurity.class);
+		session.setInvolvedParty(newIp);
+		UserSecurity us;
+		if (session.hasValue("user-security"))
+		{
+			us = session.as("user-security", UserSecurity.class);
+		}
+		else
+		{
+			us = new UserSecurity();
+		}
+
 		if (us.isLoggedIn())
 		{
-			IRolesService rolesService = GuiceContext.get(IRolesService.class);
-			roles.addAll(rolesService.getRoles(session.getInvolvedParty(), profileServiceDTO, profileSystem, profileSystemUUID));
+			IRolesService rolesService = get(IRolesService.class);
+			roles.addAll(rolesService.getRoles(session.getInvolvedParty(), profileSystem, profileSystemUUID));
 			if (!roles.contains(Administrator) && newIp.has(IdentificationTypeEnterpriseCreatorRole, profileSystem, profileSystemUUID))
 			{
 				session.getInvolvedParty()
@@ -241,24 +251,15 @@ public class ProfileService
 		{
 			roles.addAll(List.of(Visitor));
 		}
-
+		session.setEnterpriseName(enterpriseName);
 		session.addValue("user-roles", roles);
-
-		if (session.hasValue("user-security"))
-		{
-			us = session.as("user-security", UserSecurity.class);
-		}
-		else
-		{
-			session.addValue("user-security", new UserSecurity());
-			us = session.as("user-security", UserSecurity.class);
-		}
+		session.addValue("user-security", us);
 		return profileServiceDTO;
 	}
 
 	IInvolvedParty<?> createNewVisitor(IEvent<?> event, ProfileServiceDTO<?> profileServiceDTO, IEnterprise<?> enterprise, ISystems<?> profileSystem, UUID... identityToken)
 	{
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
 		IInvolvedParty<?> newIp;
 		//Create new guest record
 		Pair<IIdentificationType<?>, String> guestIDType = new Pair<>();
@@ -268,8 +269,8 @@ public class ProfileService
 
 		newIp = involvedPartyService.create(profileSystem, guestIDType, true, identityToken);
 
-		ISecurityToken<?> visitorsGroup = GuiceContext.get(ISecurityTokenService.class)
-		                                              .getVisitorsGuestsFolder(enterprise, identityToken);
+		ISecurityToken<?> visitorsGroup = get(ISecurityTokenService.class)
+				                                  .getVisitorsGuestsFolder(enterprise, identityToken);
 
 		ISecurityToken<?> myToken = get(ISecurityTokenService.class).create(Identity,
 		                                                                    profileServiceDTO.getWebClientUUID()
@@ -281,7 +282,7 @@ public class ProfileService
 		newIp.addOrUpdate(IdentificationTypeUUID, myToken.getSecurityToken(), profileSystem, identityToken);
 
 		profileServiceDTO.setIdentityToken(java.util.UUID.fromString(myToken.getSecurityToken()));
-		UpdateNewVisitEvent visitEvent = GuiceContext.get(UpdateNewVisitEvent.class);
+		UpdateNewVisitEvent visitEvent = get(UpdateNewVisitEvent.class);
 		visitEvent.setEnterprise(enterprise)
 		          .setEvent(event)
 		          .setProfileServiceDTO(profileServiceDTO)
@@ -309,7 +310,7 @@ public class ProfileService
 
 	IInvolvedParty<?> configureFromReadableUserAgent(IEvent<?> event, UserDTO<?> dto, IInvolvedParty<?> ip, ReadableUserAgent readableUserAgent, ISystems<?> profileSystem, IEnterprise<?> enterprise, UUID... identityToken)
 	{
-		ConfigureFromReadableUserAgentEvent ev = GuiceContext.get(ConfigureFromReadableUserAgentEvent.class);
+		ConfigureFromReadableUserAgentEvent ev = get(ConfigureFromReadableUserAgentEvent.class);
 		ev.setEnterprise(enterprise)
 		  .setEvent(event)
 		  .setDto(dto)
@@ -333,7 +334,7 @@ public class ProfileService
 
 	IInvolvedParty<?> configureFromHTTPServletRequest(IEvent<?> event, UserDTO<?> dto, IInvolvedParty<?> ip, ISystems<?> profileSystem, HttpServletRequest servletRequest, IEnterprise<?> enterprise)
 	{
-		ConfigureFromServletRequestEvent req = GuiceContext.get(ConfigureFromServletRequestEvent.class);
+		ConfigureFromServletRequestEvent req = get(ConfigureFromServletRequestEvent.class);
 		req.setEvent(event)
 		   .setDto(dto)
 		   .setIp(ip)
@@ -356,17 +357,17 @@ public class ProfileService
 	@Override
 	public UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException
 	{
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
-		                                        .getEnterprise(enterpriseName);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+		IEnterprise<?> enterprise = get(IEnterpriseService.class)
+				                            .getEnterprise(enterpriseName);
 
-		ISystems profileSystem = ProfileSystem.getNewSystem()
+		ISystems profileSystem = ProfileSystem.getSystemsMap()
 		                                      .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
 
-		IEvent<?> registerEvent = GuiceContext.get(IEventService.class)
-		                                      .createEvent(UserRegistered, profileSystem, profileSystemUUID);
+		IEvent<?> registerEvent = get(IEventService.class)
+				                          .createEvent(UserRegistered, profileSystem, profileSystemUUID);
 
 		IInvolvedParty<?> ipExists = involvedPartyService.findByIdentificationType(IdentificationTypeEmailAddress,
 		                                                                           new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
@@ -418,7 +419,7 @@ public class ProfileService
 	IInvolvedParty<?> updateLatestVisit(IEvent<?> event, ProfileServiceDTO<?> profileServiceDTO, IEnterprise<?> enterprise, IInvolvedParty<?> newIp,
 	                                    UUID... identityToken)
 	{
-		UpdateLastVisitEvent req = GuiceContext.get(UpdateLastVisitEvent.class);
+		UpdateLastVisitEvent req = get(UpdateLastVisitEvent.class);
 		req.setEvent(event)
 		   .setProfileServiceDTO(profileServiceDTO)
 		   .setEnterprise(enterprise)
@@ -441,11 +442,11 @@ public class ProfileService
 	@Override
 	public IInvolvedParty<?> findInvolvedParty(UUID webClientToken, IEnterpriseName<?> enterpriseName)
 	{
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = GuiceContext.get(IEnterpriseService.class)
-		                                        .getEnterprise(enterpriseName);
+		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+		IEnterprise<?> enterprise = get(IEnterpriseService.class)
+				                            .getEnterprise(enterpriseName);
 
-		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
+		ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
 		                                         .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);

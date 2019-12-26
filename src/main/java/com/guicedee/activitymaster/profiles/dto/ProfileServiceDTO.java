@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
@@ -50,9 +49,11 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	@JsonIgnore
 	public boolean isLoggedIn(boolean asVisitor)
 	{
-		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-		ISystems<?> profileSystem = ProfileSystem.getNewSystem()
-		                                      .get(enterprise);
+		ISession<?> session = get(ISession.class);
+
+		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(session.getEnterpriseName());
+		ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
+		                                         .get(enterprise);
 		UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 		                                      .get(enterprise);
 
@@ -61,13 +62,16 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
 				                                                                                                         .toString(),
 		                                                                        profileSystem, profileSystemUUID);
-
-		ISession<?> session = GuiceContext.get(ISession.class);
-		if(!session.hasValue("user-security"))
+		if (!session.hasValue("user-security"))
+		{
 			return false;
+		}
 
 		UserSecurity us = session.as("user-security", UserSecurity.class);
-		if(us == null || us.getLoginExpiresOn() == null || us.getLoginExpiresOn().isBefore(LocalDateTime.now()))
+		if (us == null ||
+		    us.getLoginExpiresOn() == null ||
+		    us.getLoginExpiresOn()
+		      .isBefore(LocalDateTime.now()))
 		{
 			return false;
 		}
@@ -96,12 +100,13 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 
 	public Set<IUserRole<?>> findRoles()
 	{
+		ISession<?> session = get(ISession.class);
 		IInvolvedParty<?> newIp = findInvolvedParty();
 		IRolesService rolesService = GuiceContext.get(IRolesService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp, this, ProfileSystem.getNewSystem()
-		                                                                             .get(enterprise), ProfileSystem.getSystemTokens()
-		                                                                                                            .get(enterprise));
+		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(session.getEnterpriseName());
+		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp, ProfileSystem.getSystemsMap()
+		                                                                       .get(enterprise), ProfileSystem.getSystemTokens()
+		                                                                                                      .get(enterprise));
 		return new LinkedHashSet<>(rolesss);
 	}
 
@@ -109,9 +114,10 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	{
 		if (this.involvedParty == null)
 		{
-			IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(getEnterprise());
-			ISystems<?> profileSystem = ProfileSystem.getNewSystem()
-			                                      .get(enterprise);
+			ISession<?> session = get(ISession.class);
+			IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(session.getEnterpriseName());
+			ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
+			                                         .get(enterprise);
 			UUID profileSystemUUID = ProfileSystem.getSystemTokens()
 			                                      .get(enterprise);
 			IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
