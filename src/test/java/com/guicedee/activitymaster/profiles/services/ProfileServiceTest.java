@@ -1,12 +1,13 @@
 package com.guicedee.activitymaster.profiles.services;
 
+import com.google.common.base.Stopwatch;
 import com.guicedee.activitymaster.core.ActivityMasterConfiguration;
 import com.guicedee.activitymaster.core.services.dto.IEnterprise;
+import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
 import com.guicedee.activitymaster.profiles.ProfileService;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.webdto.UserLoginDTO;
-import com.google.common.base.Stopwatch;
 import com.guicedee.guicedinjection.interfaces.JobService;
 import lombok.extern.java.Log;
 
@@ -30,13 +31,15 @@ class ProfileServiceTest
 		Stopwatch stopwatch = Stopwatch.createStarted();
 		log.info("Started creating guest");
 		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				                        .getEnterprise(get(ActivityMasterConfiguration.class).getEnterpriseName());
-
+				                            .getEnterprise(get(ActivityMasterConfiguration.class).getEnterpriseName());
 
 		UserLoginDTO<?> newGuest = new UserLoginDTO<>().setWebClientUUID(UUID.randomUUID());
 		//newGuest.setReadableUserAgent()
-		newGuest = (UserLoginDTO<?>) ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
-		                                                                                    .get(enterprise));
+		ISystems<?> profileSystem = get(ProfileSystem.class)
+				                            .getSystem(enterprise);
+		UUID profileSystemUUID = get(ProfileSystem.class)
+				                         .getSystemToken(enterprise);
+		newGuest = (UserLoginDTO<?>) ps.loginVisitor(newGuest, TestEnterprise, profileSystemUUID);
 		log.info("Created New Guest! Session Returned - " + stopwatch.stop()
 		                                                             .elapsed(MILLISECONDS));
 	}

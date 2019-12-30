@@ -1,6 +1,7 @@
 package com.guicedee.activitymaster.profiles.services;
 
 import com.guicedee.activitymaster.core.services.dto.IEnterprise;
+import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
 import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileService;
@@ -19,16 +20,18 @@ public class NewGuestThread
 		extends TransactionalIdentifiedThread
 {
 
+	@Override
 	public void perform()
 	{
 		ProfileService ps = get(ProfileService.class);
 		UserLoginDTO<?> newGuest = new UserLoginDTO<>().setWebClientUUID(UUID.randomUUID());
 		//newGuest.setReadableUserAgent()
 		IEnterprise<?> enterprise = get(IEnterpriseService.class).getEnterprise(TestEnterprise);
-		ProfileServiceDTO dto = ps.loginVisitor(newGuest, TestEnterprise, ProfileSystem.getSystemTokens()
-		                                                                               .get(enterprise));
-
-
+		ISystems<?> profileSystem = get(ProfileSystem.class)
+				                            .getSystem(enterprise);
+		UUID profileSystemUUID = get(ProfileSystem.class)
+				                         .getSystemToken(enterprise);
+		ProfileServiceDTO dto = ps.loginVisitor(newGuest, TestEnterprise, profileSystemUUID);
 		log.info("Created Guest : " + newGuest.getWebClientUUID());
 	}
 }

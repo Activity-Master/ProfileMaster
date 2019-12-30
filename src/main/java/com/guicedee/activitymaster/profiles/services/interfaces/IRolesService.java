@@ -7,7 +7,7 @@ import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import java.util.List;
 import java.util.UUID;
 
-public interface IRolesService
+public interface IRolesService<J extends IRolesService<J>>
 {
 	List<IUserRole<?>> getRoles(IInvolvedParty<?> ip, ISystems<?> systems, UUID... identityToken);
 

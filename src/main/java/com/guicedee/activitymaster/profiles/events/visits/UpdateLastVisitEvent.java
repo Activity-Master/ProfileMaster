@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
-
+import static com.guicedee.guicedinjection.GuiceContext.*;
 
 public class UpdateLastVisitEvent
 		extends TransactionalIdentifiedThread
@@ -41,8 +41,8 @@ public class UpdateLastVisitEvent
 	@Override
 	public void perform()
 	{
-		ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
-		                                         .get(enterprise);
+		ISystems<?> profileSystem = get(ProfileSystem.class)
+				                            .getSystem(enterprise);
 		//Add last login time
 		String lastVisit = DateTimeFormatter.ofPattern(LocalDateTimeDeserializer.LocalDateTimeFormat)
 		                                    .format(LocalDateTime.now());
@@ -57,30 +57,15 @@ public class UpdateLastVisitEvent
 		return this.event;
 	}
 
-	public ProfileServiceDTO<?> getProfileServiceDTO()
-	{
-		return this.profileServiceDTO;
-	}
-
-	public IEnterprise<?> getEnterprise()
-	{
-		return this.enterprise;
-	}
-
-	public IInvolvedParty<?> getNewIp()
-	{
-		return this.newIp;
-	}
-
-	public UUID[] getIdentityToken()
-	{
-		return this.identityToken;
-	}
-
 	public UpdateLastVisitEvent setEvent(IEvent<?> event)
 	{
 		this.event = event;
 		return this;
+	}
+
+	public ProfileServiceDTO<?> getProfileServiceDTO()
+	{
+		return this.profileServiceDTO;
 	}
 
 	public UpdateLastVisitEvent setProfileServiceDTO(ProfileServiceDTO<?> profileServiceDTO)
@@ -89,21 +74,25 @@ public class UpdateLastVisitEvent
 		return this;
 	}
 
+	public IEnterprise<?> getEnterprise()
+	{
+		return this.enterprise;
+	}
+
 	public UpdateLastVisitEvent setEnterprise(IEnterprise<?> enterprise)
 	{
 		this.enterprise = enterprise;
 		return this;
 	}
 
+	public IInvolvedParty<?> getNewIp()
+	{
+		return this.newIp;
+	}
+
 	public UpdateLastVisitEvent setNewIp(IInvolvedParty<?> newIp)
 	{
 		this.newIp = newIp;
-		return this;
-	}
-
-	public UpdateLastVisitEvent setIdentityToken(UUID[] identityToken)
-	{
-		this.identityToken = identityToken;
 		return this;
 	}
 
@@ -124,6 +113,17 @@ public class UpdateLastVisitEvent
 		}
 		UpdateLastVisitEvent that = (UpdateLastVisitEvent) o;
 		return Arrays.equals(getIdentityToken(), that.getIdentityToken());
+	}
+
+	public UUID[] getIdentityToken()
+	{
+		return this.identityToken;
+	}
+
+	public UpdateLastVisitEvent setIdentityToken(UUID[] identityToken)
+	{
+		this.identityToken = identityToken;
+		return this;
 	}
 
 	@Override

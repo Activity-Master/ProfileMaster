@@ -1,5 +1,6 @@
 package com.guicedee.activitymaster.profiles.services.interfaces;
 
+import com.google.common.base.Strings;
 import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
 import com.guicedee.activitymaster.core.services.dto.IEnterprise;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
@@ -7,17 +8,18 @@ import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
-import com.guicedee.activitymaster.profiles.webdto.UserConfirmationKeyDTO;
-import com.guicedee.activitymaster.profiles.webdto.UserLoginDTO;
-import com.guicedee.activitymaster.profiles.webdto.UserRegistrationDTO;
 import com.guicedee.activitymaster.profiles.exceptions.ProfileServiceException;
 import com.guicedee.activitymaster.profiles.exceptions.UserExistsException;
 import com.guicedee.activitymaster.profiles.exceptions.WaitingForConfirmationKeyException;
-import com.google.common.base.Strings;
+import com.guicedee.activitymaster.profiles.webdto.UserConfirmationKeyDTO;
+import com.guicedee.activitymaster.profiles.webdto.UserLoginDTO;
+import com.guicedee.activitymaster.profiles.webdto.UserRegistrationDTO;
 import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.guicedee.guicedinjection.GuiceContext.*;
 
 public interface IProfileService
 {
@@ -48,8 +50,8 @@ public interface IProfileService
 		{
 			throw new ProfileServiceException("Passwords cannot be empty");
 		}
-		ISystems profileSystem = ProfileSystem.getSystemsMap()
-		                                      .get(enterprise);
+		ISystems<?> profileSystem = get(ProfileSystem.class)
+				                            .getSystem(enterprise);
 		IInvolvedParty<?> ip = ips.findByUsernameAndPassword(userLoginDTO.getUserName(), userLoginDTO.getPassword(), profileSystem, true, identityToken);
 		userLoginDTO = new UserLoginDTO<>().fromIP(ip);
 

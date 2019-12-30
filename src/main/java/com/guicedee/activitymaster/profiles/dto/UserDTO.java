@@ -12,7 +12,6 @@ import com.guicedee.activitymaster.core.services.dto.IRelationshipValue;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
-import com.guicedee.guicedinjection.GuiceContext;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -23,13 +22,15 @@ import java.util.logging.Logger;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 import static com.guicedee.activitymaster.core.services.types.IdentificationTypes.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.*;
-
 
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonAutoDetect(fieldVisibility = ANY,getterVisibility = NONE,setterVisibility = NONE)
+@JsonAutoDetect(fieldVisibility = ANY,
+		getterVisibility = NONE,
+		setterVisibility = NONE)
 public class UserDTO<J extends UserDTO<J>>
 		implements Serializable
 {
@@ -44,14 +45,13 @@ public class UserDTO<J extends UserDTO<J>>
 	{
 		if (identityToken == null)
 		{
-			UUID systemID = ProfileSystem.getSystemTokens()
-			                             .get(ip.getEnterpriseID());
-			ISystems<?> profileSystem = ProfileSystem.getSystemsMap()
-			                                      .get(ip.getEnterpriseID());
-			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>,?>> ipId = ip.find(IdentificationTypeUUID, profileSystem, systemID);
+			UUID systemID = get(ProfileSystem.class).getSystemToken(enterprise);
+			ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(enterprise);
+			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> ipId = ip.find(IdentificationTypeUUID, profileSystem, systemID);
 			if (ipId.isPresent())
 			{
-				setIdentityToken(ipId.get().getValueAsUUID());
+				setIdentityToken(ipId.get()
+				                     .getValueAsUUID());
 			}
 			else
 			{
@@ -70,32 +70,10 @@ public class UserDTO<J extends UserDTO<J>>
 		return (J) this;
 	}
 
-	/**
-	 * Returns the object presented as a JSON strong
-	 *
-	 * @param o
-	 * 		An object to represent
-	 *
-	 * @return the string
-	 */
-	private String objectAsString(Object o) throws JsonProcessingException
-	{
-		return GuiceContext.get(DefaultObjectMapper)
-		                   .writeValueAsString(o);
-	}
-
 	@Override
-	public String toString()
+	public int hashCode()
 	{
-		try
-		{
-			return objectAsString(this);
-		}
-		catch (JsonProcessingException e)
-		{
-			log.log(Level.SEVERE, "Can't do the string", e);
-		}
-		return "Can't Convert";
+		return Objects.hash(getIdentityToken());
 	}
 
 	@Override
@@ -114,20 +92,36 @@ public class UserDTO<J extends UserDTO<J>>
 	}
 
 	@Override
-	public int hashCode()
+	public String toString()
 	{
-		return Objects.hash(getIdentityToken());
+		try
+		{
+			return objectAsString(this);
+		}
+		catch (JsonProcessingException e)
+		{
+			log.log(Level.SEVERE, "Can't do the string", e);
+		}
+		return "Can't Convert";
 	}
 
+	/**
+	 * Returns the object presented as a JSON strong
+	 *
+	 * @param o
+	 * 		An object to represent
+	 *
+	 * @return the string
+	 */
+	private String objectAsString(Object o) throws JsonProcessingException
+	{
+		return get(DefaultObjectMapper)
+				       .writeValueAsString(o);
+	}
 
 	public UUID getIdentityToken()
 	{
 		return this.identityToken;
-	}
-
-	public IEnterpriseName<?> getEnterprise()
-	{
-		return this.enterprise;
 	}
 
 	public UserDTO<J> setIdentityToken(UUID identityToken)
@@ -136,9 +130,14 @@ public class UserDTO<J extends UserDTO<J>>
 		return this;
 	}
 
+	public IEnterpriseName<?> getEnterprise()
+	{
+		return this.enterprise;
+	}
+
 	public J setEnterprise(IEnterpriseName<?> enterprise)
 	{
 		this.enterprise = enterprise;
-		return (J)this;
+		return (J) this;
 	}
 }

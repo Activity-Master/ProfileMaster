@@ -5,14 +5,10 @@ import com.guicedee.activitymaster.core.services.dto.IEnterprise;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
-import com.guicedee.activitymaster.core.services.types.NameTypes;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
-import com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications;
-import com.guicedee.activitymaster.profiles.services.enumerations.UserRoles;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.guicedee.guicedinjection.GuiceContext;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -21,6 +17,7 @@ import java.util.StringTokenizer;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.core.services.types.NameTypes.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @Data
 @Accessors(chain = true)
@@ -34,13 +31,10 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 
 	public UserProfileBasicDTO<?> from(IInvolvedParty<?> involvedParty, IEnterpriseName<?> enterpriseName)
 	{
-		IEnterpriseService enterpriseService = GuiceContext.get(IEnterpriseService.class);
+		IEnterpriseService enterpriseService = get(IEnterpriseService.class);
 		IEnterprise<?> enterprise = enterpriseService.getIEnterpriseFromName(enterpriseName);
-		ISystems<?> originatingSystem =
-				ProfileSystem.getSystemsMap()
-				             .get(enterprise);
-		UUID identityToken = ProfileSystem.getSystemTokens()
-		                                  .get(enterprise);
+		ISystems<?> originatingSystem = get(ProfileSystem.class).getSystem(enterprise);
+		UUID identityToken = get(ProfileSystem.class).getSystemToken(enterprise);
 
 		if (involvedParty.has(CommonNameType, originatingSystem, identityToken))
 		{
@@ -97,8 +91,8 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 			fullName = "Guest";
 		}
 
-		roles = GuiceContext.get(IRolesService.class)
-		                    .getRoles(involvedParty, originatingSystem, identityToken);
+		roles = get(IRolesService.class)
+				        .getRoles(involvedParty, originatingSystem, identityToken);
 		return this;
 	}
 }
