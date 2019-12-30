@@ -248,7 +248,7 @@ public class ProfileService
 
 		if (us.isLoggedIn())
 		{
-			IRolesService rolesService = get(IRolesService.class);
+			IRolesService<?> rolesService = get(IRolesService.class);
 			roles.addAll(rolesService.getRoles(session.getInvolvedParty(), profileSystem, profileSystemUUID));
 			if (!roles.contains(Administrator) && newIp.has(IdentificationTypeEnterpriseCreatorRole, profileSystem, profileSystemUUID))
 			{
