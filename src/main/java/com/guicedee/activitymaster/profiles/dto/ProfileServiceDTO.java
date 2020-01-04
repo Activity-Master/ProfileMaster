@@ -11,12 +11,11 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import com.guicedee.activitymaster.sessions.services.ISession;
 import com.guicedee.guicedinjection.GuiceContext;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
@@ -34,6 +33,10 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	private UUID webClientUUID;
 	@JsonIgnore
 	private transient IInvolvedParty<?> involvedParty;
+	@JsonIgnore
+	@Getter
+	@Setter
+	private transient Map<String, Object> sessionUpdates;
 
 	@JsonIgnore
 	public boolean isLoggedIn(boolean asVisitor)

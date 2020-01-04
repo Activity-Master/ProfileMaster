@@ -231,7 +231,6 @@ public class ProfileService
 		}
 
 		profileServiceDTO.setInvolvedParty(newIp);
-
 		ISession<?> session = get(ISession.class);
 		session.setInvolvedParty(newIp);
 		List<IUserRole<?>> roles = new ArrayList<>();
