@@ -50,4 +50,5 @@ module com.guicedee.activitymaster.profiles {
 	exports com.guicedee.activitymaster.profiles.enumerations;
 	exports com.guicedee.activitymaster.profiles.events;
 	exports com.guicedee.activitymaster.profiles.webdto;
+	exports com.guicedee.activitymaster.profiles.deserializers;
 }

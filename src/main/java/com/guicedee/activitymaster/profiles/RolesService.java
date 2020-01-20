@@ -1,21 +1,16 @@
 package com.guicedee.activitymaster.profiles;
 
+import com.google.inject.Singleton;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.google.inject.Singleton;
-import com.guicedee.activitymaster.sessions.services.ISession;
-import com.guicedee.guicedinjection.GuiceContext;
 import io.github.classgraph.ClassInfo;
 
 import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CacheRemove;
-import javax.cache.annotation.CacheRemoveAll;
 import javax.cache.annotation.CacheResult;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -36,11 +31,15 @@ public class RolesService
 		List<IUserRole<?>> roles = findAllRoles();
 		List<IUserRole<?>> myRoles = new ArrayList<>();
 		List<String> assignedRoles = new ArrayList<>();
+		if (systems == null)
+		{
+			systems = get(ProfileSystem.class).getSystem(ip.getEnterprise());
+		}
 		if (ip == null)
 		{
 			return new ArrayList<>();
 		}
-		for (Object classifications2 : ip.getValues(UserRoles, null, systems, identityToken[0]))
+		for (Object classifications2 : ip.getValues(UserRoles, null, systems, identityToken))
 		{
 			assignedRoles.add(classifications2.toString());
 		}

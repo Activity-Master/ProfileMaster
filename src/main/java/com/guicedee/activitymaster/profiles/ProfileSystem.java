@@ -5,9 +5,11 @@ import com.guicedee.activitymaster.core.services.IActivityMasterProgressMonitor;
 import com.guicedee.activitymaster.core.services.IActivityMasterSystem;
 import com.guicedee.activitymaster.core.services.dto.IEnterprise;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
-import com.guicedee.activitymaster.core.services.dto.IInvolvedPartyIdentificationType;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
-import com.guicedee.activitymaster.core.services.system.*;
+import com.guicedee.activitymaster.core.services.system.ActivityMasterDefaultSystem;
+import com.guicedee.activitymaster.core.services.system.IClassificationService;
+import com.guicedee.activitymaster.core.services.system.IEventService;
+import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
@@ -68,27 +70,26 @@ public class ProfileSystem
 	private void createInvolvedPartyClassifications(IEnterprise<?> enterprise)
 	{
 		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
-		ISystems activityMasterSystem = GuiceContext.get(ISystemsService.class)
-		                                            .getActivityMaster(enterprise);
+		ISystems<?> profileSystem = getSystem(enterprise);
 
 		IEventService<?> eventsService = GuiceContext.get(IEventService.class);
-		eventsService.createEventType(SiteVisit, getSystem(enterprise), getSystemToken(enterprise));
-		eventsService.createEventType(UserRegistered, getSystem(enterprise), getSystemToken(enterprise));
-		eventsService.createEventType(VisitorRegistered, getSystem(enterprise), getSystemToken(enterprise));
-		eventsService.createEventType(UserConfirmedAccount, getSystem(enterprise), getSystemToken(enterprise));
+		eventsService.createEventType(SiteVisit, profileSystem, getSystemToken(enterprise));
+		eventsService.createEventType(UserRegistered, profileSystem, getSystemToken(enterprise));
+		eventsService.createEventType(VisitorRegistered, profileSystem, getSystemToken(enterprise));
+		eventsService.createEventType(UserConfirmedAccount, profileSystem, getSystemToken(enterprise));
 
-		classificationService.create(LogonDetails, getSystem(enterprise));
-		classificationService.create(LastLoginTime, getSystem(enterprise), LogonDetails);
-		classificationService.create(LastVisitTime, getSystem(enterprise), LogonDetails);
-		classificationService.create(ConfirmationKey, getSystem(enterprise), LogonDetails);
-		classificationService.create(UserRoles, getSystem(enterprise), LogonDetails);
-		classificationService.create(RememberMe, getSystem(enterprise), LogonDetails);
-		classificationService.create(LoggedOn, getSystem(enterprise), LogonDetails);
+		classificationService.create(LogonDetails, profileSystem);
+		classificationService.create(LastLoginTime, profileSystem, LogonDetails);
+		classificationService.create(LastVisitTime, profileSystem, LogonDetails);
+		classificationService.create(ConfirmationKey, profileSystem, LogonDetails);
+		classificationService.create(UserRoles, profileSystem, LogonDetails);
+		classificationService.create(RememberMe, profileSystem, LogonDetails);
+		classificationService.create(LoggedOn, profileSystem, LogonDetails);
 
-		IInvolvedPartyIdentificationType<?> idType = GuiceContext.get(IInvolvedPartyService.class)
-		                                                         .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
-		                                                                                   "The Web Client UUID stored as a device identifier",
-		                                                                                   getSystemToken(enterprise));
+		GuiceContext.get(IInvolvedPartyService.class)
+		            .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+		                                      "The Web Client UUID stored as a device identifier",
+		                                      getSystemToken(enterprise));
 	}
 
 	@Override
