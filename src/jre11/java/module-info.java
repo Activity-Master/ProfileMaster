@@ -11,7 +11,7 @@ module com.guicedee.activitymaster.profiles {
 
 	requires com.guicedee.guicedinjection;
 	requires com.google.common;
-	requires javax.servlet.api;
+	requires java.servlet;
 
 	requires com.fasterxml.jackson.databind;
 
