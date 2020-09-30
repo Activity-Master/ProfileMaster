@@ -22,10 +22,8 @@ import static com.guicedee.guicedinjection.GuiceContext.*;
 public class RolesService
 		implements IRolesService<RolesService>
 {
-	private static final Logger log = Logger.getLogger(RolesService.class.getName());
-
 	@Override
-	//@CacheResult(cacheName = "UserRolesGetRoles")
+	@CacheResult(cacheName = "UserRolesGetRoles")
 	public List<IUserRole<?>> getRoles(@CacheKey IInvolvedParty<?> ip, ISystems<?> systems, @CacheKey UUID... identityToken)
 	{
 		List<IUserRole<?>> roles = findAllRoles();

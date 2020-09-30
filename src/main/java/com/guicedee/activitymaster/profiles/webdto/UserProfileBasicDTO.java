@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
+import static com.guicedee.activitymaster.core.services.classifications.classification.Classifications.*;
 import static com.guicedee.activitymaster.core.services.types.NameTypes.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
@@ -36,9 +37,9 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 		ISystems<?> originatingSystem = get(ProfileSystem.class).getSystem(enterprise);
 		UUID identityToken = get(ProfileSystem.class).getSystemToken(enterprise);
 
-		if (involvedParty.has(CommonNameType, originatingSystem, identityToken))
+		if (involvedParty.hasNameType(CommonNameType,null, originatingSystem, identityToken))
 		{
-			fullName = involvedParty.find(CommonNameType, originatingSystem, identityToken)
+			fullName = involvedParty.findNameType(CommonNameType,NoClassification.name(), enterprise, identityToken)
 			                        .get()
 			                        .getValue();
 			if (fullName.contains(" "))
@@ -52,9 +53,9 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 				}
 			}
 		}
-		else if (involvedParty.has(PreferredNameType, originatingSystem, identityToken))
+		else if (involvedParty.hasNameType(PreferredNameType,null, originatingSystem, identityToken))
 		{
-			fullName = involvedParty.find(PreferredNameType, originatingSystem, identityToken)
+			fullName = involvedParty.findNameType(PreferredNameType,NoClassification.name(), enterprise, identityToken)
 			                        .get()
 			                        .getValue();
 			if (fullName.contains(" "))
@@ -68,20 +69,20 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 				}
 			}
 		}
-		else if (involvedParty.has(FullNameType, originatingSystem, identityToken))
+		else if (involvedParty.hasNameType(FullNameType,null, originatingSystem, identityToken))
 		{
-			fullName = involvedParty.find(FullNameType, originatingSystem, identityToken)
+			fullName = involvedParty.findNameType(FullNameType, NoClassification.name(),enterprise, identityToken)
 			                        .get()
 			                        .getValue();
 		}
-		else if (involvedParty.has(FirstNameType, originatingSystem, identityToken))
+		else if (involvedParty.hasNameType(FirstNameType,null, originatingSystem, identityToken))
 		{
-			fullName = involvedParty.find(FirstNameType, originatingSystem, identityToken)
+			fullName = involvedParty.findNameType(FirstNameType, NoClassification.name(),enterprise, identityToken)
 			                        .get()
 			                        .getValue();
-			if (involvedParty.has(SurnameType, originatingSystem, identityToken))
+			if (involvedParty.hasNameType(SurnameType,null, originatingSystem, identityToken))
 			{
-				fullName += " " + involvedParty.find(SurnameType, originatingSystem, identityToken)
+				fullName += " " + involvedParty.findNameType(SurnameType, NoClassification.name(),enterprise, identityToken)
 				                               .get()
 				                               .getValue();
 			}

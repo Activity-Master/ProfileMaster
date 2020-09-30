@@ -1,7 +1,5 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
-import com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemClassifications;
-import com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemTypes;
 import com.guicedee.activitymaster.core.services.dto.*;
 import com.guicedee.activitymaster.core.services.system.IAddressService;
 import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
@@ -22,6 +20,8 @@ import static com.guicedee.activitymaster.core.services.classifications.address.
 import static com.guicedee.activitymaster.core.services.classifications.address.AddressRemoteSystemClassifications.*;
 import static com.guicedee.activitymaster.core.services.classifications.address.AddressWebClassifications.*;
 import static com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemClassifications.*;
+import static com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemTypes.BrowserInformation;
+import static com.guicedee.guicedinjection.json.StaticStrings.STRING_EMPTY;
 
 public class ConfigureFromServletRequestEvent
 		extends TransactionalIdentifiedThread
@@ -79,32 +79,24 @@ public class ConfigureFromServletRequestEvent
 			ipReal = ipAddress;
 		}
 		IAddress<?> ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
-		ip.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
+		ip.addOrReuse(RemoteAddressIPAddress,ipAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
 		event.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
 		IAddress<?> hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
-		ip.add(hostName, RemoteAddressHostName, profileSystem, systemID);
+		ip.addOrReuse(RemoteAddressHostName,hostName,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
 		event.add(hostName, RemoteAddressHostName, profileSystem, systemID);
 		IAddress<?> localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
-		ip.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
+		ip.addOrReuse(LocalAddressIPAddress,localIpAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
 		event.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
 		IAddress<?> localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
-		ip.add(localHostName, LocalAddressHostName, profileSystem, systemID);
+		ip.addOrReuse(LocalAddressHostName,localHostName,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
 		event.add(localHostName, LocalAddressHostName, profileSystem, systemID);
-
 		IAddress<?> webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
 		                                                                          .toString(), profileSystem, systemID);
-		ip.add(webAddress, WebAddress, profileSystem, systemID);
+		ip.addOrReuse(WebAddress,webAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
 		event.add(webAddress, WebAddress, profileSystem, systemID);
 
-		IRelationshipValue<IInvolvedParty<?>, IResourceItem<?>, ?> resourceItem = ip.add(AddedANewDevice, ResourceItemTypes.BrowserInformation,
-		                                                                                 "BrowserInformation",
-		                                                                                 sb.toString()
-		                                                                                   .getBytes(),
-		                                                                                 "application/json", profileSystem, systemID);
-		resourceItem.getSecondary()
-		            .add(ResourceItemClassifications.Size, Long.toString(sb.toString()
-		                                                                   .length()), profileSystem, systemID);
-		event.add(Added, resourceItem.getSecondary(), "BrowserInformation", profileSystem, systemID);
+		event.addResourceItem(Added, BrowserInformation, "", sb.toString()
+		                                                       .getBytes(), "application/json", profileSystem, systemID);
 	}
 
 	@Override

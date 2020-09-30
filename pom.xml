@@ -2,17 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
+      <parent>
         <groupId>com.armineasy.activitymaster</groupId>
         <artifactId>activitymaster-group</artifactId>
         <version>0.0.0_0-SNAPSHOT</version>
     </parent>
 
-
     <artifactId>profile-master</artifactId>
     <packaging>jar</packaging>
     <name>Profile Master</name>
-
 
     <dependencies>
         <dependency>
@@ -37,16 +35,21 @@
         </dependency>
 
         <dependency>
-            <groupId>com.guicedee.services</groupId>
-            <artifactId>uadetector-resources</artifactId>
-            <type>jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.armineasy.activitymaster</groupId>
             <artifactId>session-master</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.guicedee.services</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.guicedee.persistence</groupId>
+            <artifactId>guiced-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.guicedee.services</groupId>
+            <artifactId>cache-annotations-ri-guice</artifactId>
         </dependency>
 
     </dependencies>

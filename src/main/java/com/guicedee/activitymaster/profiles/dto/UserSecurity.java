@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.guicedee.activitymaster.profiles.deserializers.LocalDateTimeDeserializer;
-import com.guicedee.activitymaster.profiles.deserializers.LocalDateTimeSerializer;
+import com.guicedee.guicedinjection.json.LocalDateTimeDeserializer;
+import com.guicedee.guicedinjection.json.LocalDateTimeSerializer;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

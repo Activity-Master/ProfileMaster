@@ -21,6 +21,7 @@ import java.util.UUID;
 import static com.guicedee.activitymaster.core.services.types.IdentificationTypes.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileEventTypes.*;
+import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.*;
 import static com.guicedee.activitymaster.profiles.services.enumerations.UserRoles.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
@@ -66,6 +67,7 @@ public class ProfileSystem
 	public void loadUpdates(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 		createInvolvedPartyClassifications(enterprise);
+		createSiteDetailsClassifications(enterprise);
 	}
 
 	private void createInvolvedPartyClassifications(IEnterprise<?> enterprise)
@@ -91,6 +93,20 @@ public class ProfileSystem
 		            .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
 		                                      "The Web Client UUID stored as a device identifier",
 		                                      getSystemToken(enterprise));
+	}
+
+	private void createSiteDetailsClassifications(IEnterprise<?> enterprise)
+	{
+		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
+		ISystems<?> profileSystem = getSystem(enterprise);
+
+		classificationService.create(ClientConnectionDetails, profileSystem);
+		classificationService.create(BrowserDeviceCategory, profileSystem,ClientConnectionDetails);
+		classificationService.create(OperatingSystemFamily, profileSystem, ClientConnectionDetails);
+		classificationService.create(BrowserDeviceCategory, profileSystem, ClientConnectionDetails);
+		classificationService.create(BrowserDevice, profileSystem, ClientConnectionDetails);
+		classificationService.create(BrowserIcon, profileSystem, ClientConnectionDetails);
+		classificationService.create(OperatingSystem, profileSystem, ClientConnectionDetails);
 	}
 
 	@Override

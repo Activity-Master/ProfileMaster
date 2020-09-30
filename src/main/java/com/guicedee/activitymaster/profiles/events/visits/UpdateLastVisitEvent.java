@@ -6,8 +6,8 @@ import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
-import com.guicedee.activitymaster.profiles.deserializers.LocalDateTimeDeserializer;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
+import com.guicedee.guicedinjection.json.LocalDateTimeDeserializer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,8 +44,7 @@ public class UpdateLastVisitEvent
 		ISystems<?> profileSystem = get(ProfileSystem.class)
 				                            .getSystem(enterprise);
 		//Add last login time
-		String lastVisit = DateTimeFormatter.ofPattern(LocalDateTimeDeserializer.LocalDateTimeFormat)
-		                                    .format(LocalDateTime.now());
+		String lastVisit = LocalDateTimeDeserializer.formats[0].format(LocalDateTime.now());
 		newIp.addOrUpdate(LastVisitTime,
 		                  lastVisit,
 		                  profileSystem,
