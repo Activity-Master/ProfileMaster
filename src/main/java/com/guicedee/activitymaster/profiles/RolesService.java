@@ -8,8 +8,8 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import io.github.classgraph.ClassInfo;
 
-import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CacheResult;
+import jakarta.cache.annotation.CacheKey;
+import jakarta.cache.annotation.CacheResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

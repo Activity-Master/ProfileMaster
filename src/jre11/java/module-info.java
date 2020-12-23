@@ -11,7 +11,6 @@ module com.guicedee.activitymaster.profiles {
 
 	requires com.guicedee.guicedinjection;
 	requires com.google.common;
-	requires java.servlet;
 
 	requires com.fasterxml.jackson.databind;
 
@@ -26,7 +25,7 @@ module com.guicedee.activitymaster.profiles {
 	requires com.fasterxml.jackson.annotation;
 	requires io.github.classgraph;
 	requires com.jwebmp.core;
-	requires java.validation;
+	requires jakarta.validation;
 	requires com.guicedee.activitymaster.sessions;
 
 	exports com.guicedee.activitymaster.profiles.dto;

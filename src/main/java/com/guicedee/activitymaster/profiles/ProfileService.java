@@ -34,7 +34,7 @@ import com.guicedee.guicedinjection.pairing.Pair;
 import com.guicedee.guicedservlets.GuicedServletKeys;
 import net.sf.uadetector.ReadableUserAgent;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
