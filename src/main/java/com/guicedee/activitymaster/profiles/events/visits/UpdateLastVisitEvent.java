@@ -46,6 +46,7 @@ public class UpdateLastVisitEvent
 		//Add last login time
 		String lastVisit = LocalDateTimeDeserializer.formats[0].format(LocalDateTime.now());
 		newIp.addOrUpdate(LastVisitTime,
+				null,
 		                  lastVisit,
 		                  profileSystem,
 		                  identityToken);

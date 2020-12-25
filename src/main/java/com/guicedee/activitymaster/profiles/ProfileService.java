@@ -428,7 +428,7 @@ public class ProfileService
 				.setWebClientUUID(userRegistrationDTO.getWebClientUUID())
 				.setIdentityToken(userRegistrationDTO.getIdentityToken());
 		confirmationKeyDTO.setConfirmationKey(UUID.randomUUID());
-		IRelationshipValue<IInvolvedParty<?>, IClassification<?>, ?> x = newIp.addOrUpdate(ConfirmationKey, confirmationKeyDTO.getConfirmationKey()
+		IRelationshipValue<IInvolvedParty<?>, IClassification<?>, ?> x = newIp.addOrUpdate(ConfirmationKey,null, confirmationKeyDTO.getConfirmationKey()
 		                                                                                                                      .toString(), profileSystem, profileSystemUUID);
 		
 		x.expire(Duration.of(2, HOURS), profileSystem, profileSystemUUID);
