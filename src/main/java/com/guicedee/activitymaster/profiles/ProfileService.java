@@ -56,7 +56,6 @@ import static com.guicedee.guicedinjection.GuiceContext.*;
 import static java.time.temporal.ChronoUnit.*;
 
 @SuppressWarnings("Duplicates")
-@Singleton
 public class ProfileService
 		implements IProfileService
 {

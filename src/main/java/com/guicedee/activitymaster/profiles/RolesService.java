@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
-@Singleton
 public class RolesService
 		implements IRolesService<RolesService>
 {
