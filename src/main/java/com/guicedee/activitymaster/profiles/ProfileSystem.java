@@ -59,56 +59,9 @@ public class ProfileSystem
 			{
 				roles.addAll(rolesService.addRole(ip, Administrator, null, system, token));
 			}
-
 		}
 	}
-
-	@Override
-	public void loadUpdates(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
-	{
-		createInvolvedPartyClassifications(enterprise);
-		createSiteDetailsClassifications(enterprise);
-	}
-
-	private void createInvolvedPartyClassifications(IEnterprise<?> enterprise)
-	{
-		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
-		ISystems<?> profileSystem = getSystem(enterprise);
-
-		IEventService<?> eventsService = GuiceContext.get(IEventService.class);
-		eventsService.createEventType(SiteVisit, profileSystem, getSystemToken(enterprise));
-		eventsService.createEventType(UserRegistered, profileSystem, getSystemToken(enterprise));
-		eventsService.createEventType(VisitorRegistered, profileSystem, getSystemToken(enterprise));
-		eventsService.createEventType(UserConfirmedAccount, profileSystem, getSystemToken(enterprise));
-
-		classificationService.create(LogonDetails, profileSystem);
-		classificationService.create(LastLoginTime, profileSystem, LogonDetails);
-		classificationService.create(LastVisitTime, profileSystem, LogonDetails);
-		classificationService.create(ConfirmationKey, profileSystem, LogonDetails);
-		classificationService.create(UserRoles, profileSystem, LogonDetails);
-		classificationService.create(RememberMe, profileSystem, LogonDetails);
-		classificationService.create(LoggedOn, profileSystem, LogonDetails);
-
-		GuiceContext.get(IInvolvedPartyService.class)
-		            .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
-		                                      "The Web Client UUID stored as a device identifier",
-		                                      getSystemToken(enterprise));
-	}
-
-	private void createSiteDetailsClassifications(IEnterprise<?> enterprise)
-	{
-		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
-		ISystems<?> profileSystem = getSystem(enterprise);
-
-		classificationService.create(ClientConnectionDetails, profileSystem);
-		classificationService.create(BrowserDeviceCategory, profileSystem,ClientConnectionDetails);
-		classificationService.create(OperatingSystemFamily, profileSystem, ClientConnectionDetails);
-		classificationService.create(BrowserDeviceCategory, profileSystem, ClientConnectionDetails);
-		classificationService.create(BrowserDevice, profileSystem, ClientConnectionDetails);
-		classificationService.create(BrowserIcon, profileSystem, ClientConnectionDetails);
-		classificationService.create(OperatingSystem, profileSystem, ClientConnectionDetails);
-	}
-
+	
 	@Override
 	public String getSystemName()
 	{
