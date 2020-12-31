@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.guicedee.guicedinjection.json.LocalDateTimeDeserializer;
 import com.guicedee.guicedinjection.json.LocalDateTimeSerializer;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -20,6 +21,7 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 		setterVisibility = NONE)
 public class UserSecurity implements Serializable
 {
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private boolean loggedIn;

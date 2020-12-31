@@ -37,7 +37,7 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 	@Override
 	public void perform()
 	{
-		newIp.addOrReuseNameType(PreferredNameType,NoClassification.name(), "Guest", enterprise, identityToken);
+		newIp.addOrReuseNameType(PreferredNameType,NoClassification.name(), "Guest", profileSystem, identityToken);
 		newIp.addOrReuse(CreatedBy, newIp.getId().toString(), profileSystem, identityToken);
 		event.addOrReuse(PerformedBy,
 		                 newIp.getSecurityIdentity()

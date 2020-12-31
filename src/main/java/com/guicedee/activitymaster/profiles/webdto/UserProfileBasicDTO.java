@@ -34,12 +34,12 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 	{
 		IEnterpriseService enterpriseService = get(IEnterpriseService.class);
 		IEnterprise<?> enterprise = enterpriseService.getIEnterpriseFromName(enterpriseName);
-		ISystems<?> originatingSystem = get(ProfileSystem.class).getSystem(enterprise);
+		ISystems<?> system = get(ProfileSystem.class).getSystem(enterprise);
 		UUID identityToken = get(ProfileSystem.class).getSystemToken(enterprise);
 
-		if (involvedParty.hasNameType(CommonNameType,null, originatingSystem, identityToken))
+		if (involvedParty.hasNameType(CommonNameType,null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(CommonNameType,NoClassification.name(), enterprise, identityToken)
+			fullName = involvedParty.findNameType(CommonNameType,NoClassification.name(), system, identityToken)
 			                        .get()
 			                        .getValue();
 			if (fullName.contains(" "))
@@ -53,9 +53,9 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 				}
 			}
 		}
-		else if (involvedParty.hasNameType(PreferredNameType,null, originatingSystem, identityToken))
+		else if (involvedParty.hasNameType(PreferredNameType,null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(PreferredNameType,NoClassification.name(), enterprise, identityToken)
+			fullName = involvedParty.findNameType(PreferredNameType,NoClassification.name(), system, identityToken)
 			                        .get()
 			                        .getValue();
 			if (fullName.contains(" "))
@@ -69,20 +69,20 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 				}
 			}
 		}
-		else if (involvedParty.hasNameType(FullNameType,null, originatingSystem, identityToken))
+		else if (involvedParty.hasNameType(FullNameType,null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(FullNameType, NoClassification.name(),enterprise, identityToken)
+			fullName = involvedParty.findNameType(FullNameType, NoClassification.name(),system, identityToken)
 			                        .get()
 			                        .getValue();
 		}
-		else if (involvedParty.hasNameType(FirstNameType,null, originatingSystem, identityToken))
+		else if (involvedParty.hasNameType(FirstNameType,null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(FirstNameType, NoClassification.name(),enterprise, identityToken)
+			fullName = involvedParty.findNameType(FirstNameType, NoClassification.name(),system, identityToken)
 			                        .get()
 			                        .getValue();
-			if (involvedParty.hasNameType(SurnameType,null, originatingSystem, identityToken))
+			if (involvedParty.hasNameType(SurnameType,null, system, identityToken))
 			{
-				fullName += " " + involvedParty.findNameType(SurnameType, NoClassification.name(),enterprise, identityToken)
+				fullName += " " + involvedParty.findNameType(SurnameType, NoClassification.name(),system, identityToken)
 				                               .get()
 				                               .getValue();
 			}
@@ -93,7 +93,7 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 		}
 
 		roles = get(IRolesService.class)
-				        .getRoles(involvedParty, originatingSystem, identityToken);
+				        .getRoles(involvedParty, system, identityToken);
 		return this;
 	}
 }

@@ -1,6 +1,5 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.google.inject.Singleton;
 import com.guicedee.activitymaster.core.ActivityMasterConfiguration;
 import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
 import com.guicedee.activitymaster.core.services.dto.*;
@@ -35,6 +34,7 @@ import com.guicedee.guicedservlets.GuicedServletKeys;
 import net.sf.uadetector.ReadableUserAgent;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -83,25 +83,25 @@ public class ProfileService
 		try
 		{
 			IInvolvedParty<?> foundParty = involvedPartyService.findByUsernameAndPassword(profileServiceDTO.getUserName(),
-			                                                                              profileServiceDTO.getPassword(),
-			                                                                              profileSystem,
-			                                                                              true,
-			                                                                              profileSystemUUID);
+					profileServiceDTO.getPassword(),
+					profileSystem,
+					true,
+					profileSystemUUID);
 			profileServiceDTO.setIdentityToken(foundParty.getSecurityIdentity());
 			newIp = foundParty;
 			
 			if (currentIp != null && !currentIp.equals(newIp))
 			{
-				var idWebClient = currentIp.findIdentificationType(IdentificationTypeWebClientUUID, enterprise,
-				                                                   profileSystemUUID);
+				var idWebClient = currentIp.findIdentificationType(IdentificationTypeWebClientUUID, profileSystem,
+						profileSystemUUID);
 				
 				if (idWebClient.isPresent() &&
 						!currentIp.getId()
 						          .equals(newIp.getId()))
 				{
 					currentIp.moveWebClientUUIDToNewInvolvedParty(newIp,
-					                                              idWebClient.get()
-					                                                         .getValueAsUUID());
+							idWebClient.get()
+							           .getValueAsUUID());
 				}
 			}
 			setUserLoggedIn(newIp, profileServiceDTO, profileServiceDTO.isRememberMe(), enterpriseName, profileSystemUUID);
@@ -197,21 +197,21 @@ public class ProfileService
 			log.log(Level.FINER, "Unable to log servlet request information", T);
 		}
 		
-		Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> id = newIp.findIdentificationType(IdentificationTypeUUID, enterprise, profileSystemUUID);
+		Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> id = newIp.findIdentificationType(IdentificationTypeUUID, profileSystem, profileSystemUUID);
 		id.ifPresent(involvedPartyXInvolvedPartyIdentificationType -> profileServiceDTO.setIdentityToken(
 				involvedPartyXInvolvedPartyIdentificationType.getValueAsUUID())
-		);
+		            );
 		
 		if (guestExists != null && !guestExists.equals(newIp))
 		{
-			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> idWebClient = guestExists.findIdentificationType(IdentificationTypeWebClientUUID, enterprise,
-			                                                                                                                                         profileSystemUUID);
+			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> idWebClient = guestExists.findIdentificationType(IdentificationTypeWebClientUUID, profileSystem,
+					profileSystemUUID);
 			if (idWebClient.isPresent())
 			{
 				idWebClient.get()
 				           .expire();
 				newIp.addIdentificationType(IdentificationTypeWebClientUUID, idWebClient.get()
-				                                                                        .getValue(), enterprise, profileSystemUUID);
+				                                                                        .getValue(), profileSystem, profileSystemUUID);
 			}
 		}
 		profileServiceDTO.setInvolvedParty(newIp);
@@ -262,13 +262,13 @@ public class ProfileService
 				.getVisitorsGuestsFolder(enterprise, identityToken);
 		
 		ISecurityToken<?> myToken = get(ISecurityTokenService.class).create(Identity,
-		                                                                    profileServiceDTO.getWebClientUUID()
-		                                                                                     .toString(),
-		                                                                    "A new visitor device",
-		                                                                    profileSystem,
-		                                                                    visitorsGroup,
-		                                                                    identityToken);
-		newIp.addOrUpdateIdentificationType(IdentificationTypeUUID, myToken.getSecurityToken(), enterprise, identityToken);
+				profileServiceDTO.getWebClientUUID()
+				                 .toString(),
+				"A new visitor device",
+				profileSystem,
+				visitorsGroup,
+				identityToken);
+		newIp.addOrUpdateIdentificationType(IdentificationTypeUUID, myToken.getSecurityToken(), profileSystem, identityToken);
 		
 		profileServiceDTO.setIdentityToken(java.util.UUID.fromString(myToken.getSecurityToken()));
 		UpdateNewVisitEvent visitEvent = get(UpdateNewVisitEvent.class);
@@ -381,8 +381,8 @@ public class ProfileService
 				.createEvent(UserRegistered, profileSystem, profileSystemUUID);
 		
 		IInvolvedParty<?> ipExists = involvedPartyService.findByIdentificationType(IdentificationTypeEmailAddress,
-		                                                                           new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
-		                                                                                                                             .getBytes())
+				new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
+				                                                  .getBytes())
 				, profileSystem, profileSystemUUID);
 		if (ipExists != null)
 		{
@@ -399,25 +399,25 @@ public class ProfileService
 		//ActivityMasterConfiguration.get().setSecurityEnabled(true);
 		var idType
 				= newIp.addOrUpdateIdentificationType(IdentificationTypeEmailAddress,
-				                                      NoClassification.classificationName(),
-				                                      new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
-				                                                                                        .getBytes()),
-				                                      enterprise,
-				                                      profileSystemUUID);
+				NoClassification.classificationName(),
+				new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
+				                                                  .getBytes()),
+				profileSystem,
+				profileSystemUUID);
 		
 		newIp.expireIdentificationType(idType, Duration.of(2, HOURS));
 		
 		involvedPartyService.addUpdateUsernamePassword(registerEvent, userRegistrationDTO.getUserName(), userRegistrationDTO.getPassword(), newIp, profileSystem,
-		                                                                                  profileSystemUUID);
+				profileSystemUUID);
 		
 		userRegistrationDTO.setPassword(null);
 		var idUserNameType
 				= newIp.addOrUpdateIdentificationType(IdentificationTypeUserName,
-				                                      NoClassification.classificationName(),
-				                                      new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
-				                                                                                        .getBytes()),
-				                                      enterprise,
-				                                      profileSystemUUID);
+				NoClassification.classificationName(),
+				new Passwords().integerEncrypt(userRegistrationDTO.getUserName()
+				                                                  .getBytes()),
+				profileSystem,
+				profileSystemUUID);
 		newIp.expireIdentificationType(idUserNameType, Duration.of(2, HOURS));
 		
 		newIp.expire(SecurityPassword, Duration.of(2, HOURS), profileSystem, profileSystemUUID);
@@ -427,12 +427,12 @@ public class ProfileService
 				.setWebClientUUID(userRegistrationDTO.getWebClientUUID())
 				.setIdentityToken(userRegistrationDTO.getIdentityToken());
 		confirmationKeyDTO.setConfirmationKey(UUID.randomUUID());
-		IRelationshipValue<IInvolvedParty<?>, IClassification<?>, ?> x = newIp.addOrUpdate(ConfirmationKey,null, confirmationKeyDTO.getConfirmationKey()
-		                                                                                                                      .toString(), profileSystem, profileSystemUUID);
+		IRelationshipValue<IInvolvedParty<?>, IClassification<?>, ?> x = newIp.addOrUpdate(ConfirmationKey, null, confirmationKeyDTO.getConfirmationKey()
+		                                                                                                                            .toString(), profileSystem, profileSystemUUID);
 		
 		x.expire(Duration.of(2, HOURS), profileSystem, profileSystemUUID);
-		registerEvent.add(ConfirmationKey, profileSystem, confirmationKeyDTO.getConfirmationKey()
-		                                                                    .toString(), profileSystemUUID);
+		registerEvent.addInvolvedParty(ConfirmationKey, profileSystem, confirmationKeyDTO.getConfirmationKey()
+		                                                                                 .toString(), profileSystemUUID);
 		
 		return confirmationKeyDTO;
 	}
@@ -448,9 +448,9 @@ public class ProfileService
 		UUID profileSystemUUID = get(ProfileSystem.class)
 				.getSystemToken(enterprise);
 		IInvolvedParty<?> party = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID,
-		                                                                        webClientToken.toString(),
-		                                                                        profileSystem,
-		                                                                        profileSystemUUID);
+				webClientToken.toString(),
+				profileSystem,
+				profileSystemUUID);
 		return party;
 	}
 	
@@ -482,11 +482,11 @@ public class ProfileService
 		}
 		us.setLoggedIn(true)
 		  .setLastIpAddress(get(HttpServletRequest.class)
-				                    .getRemoteAddr())
+				  .getRemoteAddr())
 		  .setLoginExpiresOn(rememberMe
-				                     ? LocalDateTime.MAX
-				                     : LocalDateTime.now()
-				                                    .plusMinutes(20))
+				  ? LocalDateTime.MAX
+				  : LocalDateTime.now()
+				                 .plusMinutes(20))
 		  .setRememberMe(rememberMe);
 		iSess.addValue("user-security", us);
 		IRolesService<?> rolesService = get(IRolesService.class);

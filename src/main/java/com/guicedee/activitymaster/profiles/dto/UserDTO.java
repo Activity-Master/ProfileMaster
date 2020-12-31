@@ -13,6 +13,7 @@ import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class UserDTO<J extends UserDTO<J>>
 		implements Serializable
 {
 	private static final Logger log = Logger.getLogger(UserDTO.class.getName());
+	@Serial
 	private static final long serialVersionUID = 4346902954717740631L;
 	private UUID identityToken;
 	
@@ -49,7 +51,8 @@ public class UserDTO<J extends UserDTO<J>>
 		{
 			UUID systemID = get(ProfileSystem.class).getSystemToken(enterprise);
 			ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(enterprise);
-			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> ipId = ip.findIdentificationType(IdentificationTypeUUID, profileSystem.getEnterprise(), systemID);
+			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> ipId = ip.findIdentificationType(IdentificationTypeUUID, profileSystem,
+					systemID);
 			if (ipId.isPresent())
 			{
 				setIdentityToken(ipId.get()
@@ -60,7 +63,7 @@ public class UserDTO<J extends UserDTO<J>>
 				if (!ip.hasIdentificationType(IdentificationTypeUUID,null, profileSystem, systemID))
 				{
 					UUID securityIdentityToken = UUID.randomUUID();
-					ip.addOrUpdateIdentificationType(IdentificationTypeUUID, securityIdentityToken.toString(), profileSystem.getEnterprise(), systemID);
+					ip.addOrUpdateIdentificationType(IdentificationTypeUUID, securityIdentityToken.toString(), profileSystem, systemID);
 					
 				}
 				else
