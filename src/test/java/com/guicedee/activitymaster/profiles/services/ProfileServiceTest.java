@@ -39,7 +39,7 @@ class ProfileServiceTest
 				                            .getSystem(enterprise);
 		UUID profileSystemUUID = get(ProfileSystem.class)
 				                         .getSystemToken(enterprise);
-		newGuest = (UserLoginDTO<?>) ps.loginVisitor(newGuest, TestEnterprise, profileSystemUUID);
+		newGuest = (UserLoginDTO<?>) ps.loginVisitor(newGuest, profileSystem, profileSystemUUID);
 		log.info("Created New Guest! Session Returned - " + stopwatch.stop()
 		                                                             .elapsed(MILLISECONDS));
 	}

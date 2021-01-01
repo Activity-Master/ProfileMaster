@@ -23,22 +23,22 @@ import static com.guicedee.guicedinjection.GuiceContext.*;
 
 public interface IProfileService
 {
-	ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
-
-	ProfileServiceDTO<?> logoutUser(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
-
-	ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException;
-
-	default boolean verifyUsernameExists(UserLoginDTO<?> userLoginDTO, IEnterprise<?> enterprise, UUID... identityToken)
+	ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, ISystems<?> system, UUID... identityToken) throws ProfileServiceException;
+	
+	ProfileServiceDTO<?> logoutUser(ProfileServiceDTO<?> profileServiceDTO, ISystems<?> system, UUID... identityToken) throws ProfileServiceException;
+	
+	ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, ISystems<?> system, UUID... identityToken) throws ProfileServiceException;
+	
+	default boolean verifyUsernameExists(UserLoginDTO<?> userLoginDTO, ISystems<?> system, UUID... identityToken)
 	{
 		IInvolvedPartyService<?> ips = GuiceContext.get(IInvolvedPartyService.class);
 		if (Strings.isNullOrEmpty(userLoginDTO.getUserName()))
 		{
 			throw new ProfileServiceException("Username cannot be empty");
 		}
-		return ips.doesUsernameExist(userLoginDTO.getUserName(), enterprise);
+		return ips.doesUsernameExist(userLoginDTO.getUserName(), system);
 	}
-
+	
 	default UserLoginDTO<?> verifyPasswordForUser(UserLoginDTO<?> userLoginDTO, IEnterprise<?> enterprise, UUID... identityToken)
 	{
 		IInvolvedPartyService<?> ips = GuiceContext.get(IInvolvedPartyService.class);
@@ -51,14 +51,14 @@ public interface IProfileService
 			throw new ProfileServiceException("Passwords cannot be empty");
 		}
 		ISystems<?> profileSystem = get(ProfileSystem.class)
-				                            .getSystem(enterprise);
+				.getSystem(enterprise);
 		IInvolvedParty<?> ip = ips.findByUsernameAndPassword(userLoginDTO.getUserName(), userLoginDTO.getPassword(), profileSystem, true, identityToken);
 		userLoginDTO = new UserLoginDTO<>().fromIP(ip);
-
+		
 		return userLoginDTO;
 	}
-
-	UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException;
-
-	IInvolvedParty<?> findInvolvedParty(UUID identityToken, IEnterpriseName<?> enterpriseName);
+	
+	UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, ISystems<?> system, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException;
+	
+	IInvolvedParty<?> findInvolvedParty(UUID identityToken, ISystems<?> system);
 }

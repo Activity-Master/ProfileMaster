@@ -50,7 +50,7 @@ public class ProfileMasterInstall implements ISystemUpdate
 		classificationService.create(LoggedOn, profileSystem, LogonDetails);
 		
 		GuiceContext.get(IInvolvedPartyService.class)
-		            .createIdentificationType(enterprise, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+		            .createIdentificationType(profileSystem, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
 				            "The Web Client UUID stored as a device identifier",
 				            system.getSystemToken(enterprise));
 	}

@@ -1,12 +1,10 @@
 package com.guicedee.activitymaster.profiles;
 
 import com.guicedee.activitymaster.core.ActivityMasterConfiguration;
-import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
 import com.guicedee.activitymaster.core.services.dto.*;
 import com.guicedee.activitymaster.core.services.enumtypes.IIdentificationType;
 import com.guicedee.activitymaster.core.services.exceptions.SecurityAccessException;
 import com.guicedee.activitymaster.core.services.security.Passwords;
-import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
 import com.guicedee.activitymaster.core.services.system.IEventService;
 import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
 import com.guicedee.activitymaster.core.services.system.ISecurityTokenService;
@@ -62,11 +60,10 @@ public class ProfileService
 	private static final Logger log = Logger.getLogger(ProfileService.class.getName());
 	
 	@Override
-	public ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
+	public ProfileServiceDTO<?> loginUser(UserLoginDTO<?> profileServiceDTO, ISystems<?> system, UUID... identityToken) throws ProfileServiceException
 	{
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				.getEnterprise(enterpriseName);
+		IEnterprise<?> enterprise = system.getEnterprise();
 		
 		ISystems<?> profileSystem = get(ProfileSystem.class)
 				.getSystem(enterprise);
@@ -104,7 +101,7 @@ public class ProfileService
 							           .getValueAsUUID());
 				}
 			}
-			setUserLoggedIn(newIp, profileServiceDTO, profileServiceDTO.isRememberMe(), enterpriseName, profileSystemUUID);
+			setUserLoggedIn(newIp, profileServiceDTO, profileServiceDTO.isRememberMe(), system, profileSystemUUID);
 		}
 		catch (SecurityAccessException e)
 		{
@@ -115,11 +112,10 @@ public class ProfileService
 	}
 	
 	@Override
-	public ProfileServiceDTO<?> logoutUser(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
+	public ProfileServiceDTO<?> logoutUser(ProfileServiceDTO<?> profileServiceDTO, ISystems<?> system, UUID... identityToken) throws ProfileServiceException
 	{
 		//	IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				.getEnterprise(enterpriseName);
+		IEnterprise<?> enterprise = system.getEnterprise();
 		UUID profileSystemUUID = get(ProfileSystem.class)
 				.getSystemToken(enterprise);
 		
@@ -141,12 +137,11 @@ public class ProfileService
 	}
 	
 	@Override
-	public ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws ProfileServiceException
+	public ProfileServiceDTO<?> loginVisitor(ProfileServiceDTO<?> profileServiceDTO, ISystems<?> system, UUID... identityToken) throws ProfileServiceException
 	{
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				.getEnterprise(enterpriseName);
-		profileServiceDTO.setEnterprise(enterpriseName);
+		IEnterprise<?> enterprise = system.getEnterprise();
+
 		ISystems<?> profileSystem = get(ProfileSystem.class)
 				.getSystem(enterprise);
 		UUID profileSystemUUID = get(ProfileSystem.class)
@@ -216,7 +211,7 @@ public class ProfileService
 		}
 		profileServiceDTO.setInvolvedParty(newIp);
 		ISession<?> session = get(ISession.class);
-		session.setEnterpriseName(enterpriseName);
+		session.setSystem(system);
 		session.setInvolvedParty(newIp);
 		List<IUserRole<?>> roles = new ArrayList<>();
 		session.setInvolvedParty(newIp);
@@ -232,7 +227,7 @@ public class ProfileService
 		
 		if (us.isLoggedIn())
 		{
-			setUserLoggedIn(newIp, profileServiceDTO, us.isRememberMe(), enterpriseName, identityToken);
+			setUserLoggedIn(newIp, profileServiceDTO, us.isRememberMe(), system, identityToken);
 			IRolesService<?> rolesService = get(IRolesService.class);
 			roles.addAll(rolesService.getRoles(session.getInvolvedParty(), profileSystem, profileSystemUUID));
 		}
@@ -240,7 +235,7 @@ public class ProfileService
 		{
 			roles.addAll(List.of(Visitor));
 		}
-		session.setEnterpriseName(enterpriseName);
+		session.setSystem(system);
 		session.addValue("user-roles", roles);
 		session.addValue("user-security", us);
 		return profileServiceDTO;
@@ -259,7 +254,7 @@ public class ProfileService
 		newIp = involvedPartyService.create(profileSystem, guestIDType, true, identityToken);
 		
 		ISecurityToken<?> visitorsGroup = get(ISecurityTokenService.class)
-				.getVisitorsGuestsFolder(enterprise, identityToken);
+				.getVisitorsGuestsFolder(profileSystem, identityToken);
 		
 		ISecurityToken<?> myToken = get(ISecurityTokenService.class).create(Identity,
 				profileServiceDTO.getWebClientUUID()
@@ -367,11 +362,10 @@ public class ProfileService
 	}
 	
 	@Override
-	public UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, IEnterpriseName<?> enterpriseName, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException
+	public UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, ISystems<?> system, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException
 	{
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				.getEnterprise(enterpriseName);
+		IEnterprise<?> enterprise = system.getEnterprise();
 		ISystems<?> profileSystem = get(ProfileSystem.class)
 				.getSystem(enterprise);
 		UUID profileSystemUUID = get(ProfileSystem.class)
@@ -438,11 +432,10 @@ public class ProfileService
 	}
 	
 	@Override
-	public IInvolvedParty<?> findInvolvedParty(UUID webClientToken, IEnterpriseName<?> enterpriseName)
+	public IInvolvedParty<?> findInvolvedParty(UUID webClientToken, ISystems<?> system)
 	{
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				.getEnterprise(enterpriseName);
+		IEnterprise<?> enterprise = system.getEnterprise();
 		ISystems<?> profileSystem = get(ProfileSystem.class)
 				.getSystem(enterprise);
 		UUID profileSystemUUID = get(ProfileSystem.class)
@@ -454,11 +447,10 @@ public class ProfileService
 		return party;
 	}
 	
-	private void setUserLoggedIn(IInvolvedParty<?> newIp, ProfileServiceDTO<?> profileServiceDTO, boolean rememberMe, IEnterpriseName<?> enterpriseName, UUID... identityToken)
+	private void setUserLoggedIn(IInvolvedParty<?> newIp, ProfileServiceDTO<?> profileServiceDTO, boolean rememberMe, ISystems<?> system, UUID... identityToken)
 	{
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IEnterprise<?> enterprise = get(IEnterpriseService.class)
-				.getEnterprise(enterpriseName);
+		IEnterprise<?> enterprise = system.getEnterprise();
 		ISystems<?> profileSystem = get(ProfileSystem.class)
 				.getSystem(enterprise);
 		UUID profileSystemUUID = get(ProfileSystem.class)

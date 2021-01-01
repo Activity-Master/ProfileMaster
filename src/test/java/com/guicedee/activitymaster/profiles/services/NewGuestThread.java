@@ -31,7 +31,7 @@ public class NewGuestThread
 				                            .getSystem(enterprise);
 		UUID profileSystemUUID = get(ProfileSystem.class)
 				                         .getSystemToken(enterprise);
-		ProfileServiceDTO dto = ps.loginVisitor(newGuest, TestEnterprise, profileSystemUUID);
+		ProfileServiceDTO dto = ps.loginVisitor(newGuest, profileSystem, profileSystemUUID);
 		log.info("Created Guest : " + newGuest.getWebClientUUID());
 	}
 }
