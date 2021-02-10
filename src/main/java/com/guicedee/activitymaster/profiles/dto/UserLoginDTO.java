@@ -1,9 +1,8 @@
-package com.guicedee.activitymaster.profiles.webdto;
+package com.guicedee.activitymaster.profiles.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 
 import java.io.Serializable;
 import java.util.Objects;

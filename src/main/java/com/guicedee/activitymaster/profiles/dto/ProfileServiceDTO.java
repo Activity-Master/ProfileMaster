@@ -32,6 +32,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	private UUID webClientUUID;
 	@JsonIgnore
 	private transient IInvolvedParty<?> involvedParty;
+	
 	@JsonIgnore
 	@Getter
 	@Setter
@@ -56,7 +57,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 			return false;
 		}
 		
-		UserSecurity us = session.as("user-security", UserSecurity.class);
+		UserSecurityDTO us = session.as("user-security", UserSecurityDTO.class);
 		if (us == null ||
 				us.getLoginExpiresOn() == null ||
 				us.getLoginExpiresOn()
@@ -98,32 +99,55 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		return (J) this;
 	}
 	
-	public Set<IUserRole<?>> findRoles()
+	public Set<String> findRoles()
 	{
-		ISession<?> session = get(ISession.class);
-		IInvolvedParty<?> newIp = findInvolvedParty();
+		ISystems<?> system = get(ProfileSystem.class).getSystem((IEnterprise<?>) getEnterprise());
+		UUID systemToken = get(ProfileSystem.class).getSystemToken((IEnterprise<?>) getEnterprise());
+		
+		if (this.involvedParty == null)
+		{
+			this.involvedParty = findInvolvedParty(system, systemToken);
+		}
+		
 		IRolesService<?> rolesService = GuiceContext.get(IRolesService.class);
-		ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(session.getInvolvedParty()
-		                                                                      .getEnterprise());
-		UUID profileSystemUUID = get(ProfileSystem.class).getSystemToken(session.getInvolvedParty()
-		                                                                        .getEnterprise());
-		List<IUserRole<?>> rolesss = rolesService.getRoles(newIp, profileSystem, profileSystemUUID);
-		return new LinkedHashSet<>(rolesss);
+		Set<String> rolesss = rolesService.getRoles(this.involvedParty, system, systemToken);
+		
+		return rolesss;
+	}
+	
+	public IInvolvedParty<?> findInvolvedParty(ISystems<?> system, UUID identityToken)
+	{
+		if (this.involvedParty == null)
+		{
+			IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
+			if (webClientUUID != null)
+			{
+				this.involvedParty = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
+								.toString(),
+						system, identityToken);
+				
+				setIdentityToken(involvedParty.getId());
+			}
+			setEnterprise(this.involvedParty.getEnterprise());
+		}
+		return this.involvedParty;
 	}
 	
 	public IInvolvedParty<?> findInvolvedParty()
 	{
 		if (this.involvedParty == null)
 		{
-			ISession<?> session = get(ISession.class);
-			ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(session.getInvolvedParty()
-			                                                                      .getEnterprise());
-			UUID profileSystemUUID = get(ProfileSystem.class).getSystemToken(session.getInvolvedParty()
-			                                                                        .getEnterprise());
 			IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-			this.involvedParty = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
-							.toString(),
-					profileSystem, profileSystemUUID);
+			if (webClientUUID != null)
+			{
+				this.involvedParty = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID.toString(), getWebClientUUID().toString());
+				if (this.involvedParty == null)
+				{
+					return null;
+				}
+				setIdentityToken(involvedParty.getId());
+			}
+			setEnterprise(this.involvedParty.getEnterprise());
 		}
 		return this.involvedParty;
 	}

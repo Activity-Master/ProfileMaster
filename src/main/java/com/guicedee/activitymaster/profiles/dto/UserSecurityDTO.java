@@ -19,7 +19,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 @JsonAutoDetect(fieldVisibility = ANY,
 		getterVisibility = NONE,
 		setterVisibility = NONE)
-public class UserSecurity implements Serializable
+public class UserSecurityDTO
+		implements Serializable
 {
 	@Serial
 	private static final long serialVersionUID = 1L;
@@ -32,7 +33,7 @@ public class UserSecurity implements Serializable
 	private LocalDateTime loginExpiresOn= LocalDateTime.now()
 	                                                   .plusMinutes(20);
 
-	public UserSecurity()
+	public UserSecurityDTO()
 	{
 		//No config required
 	}
@@ -42,7 +43,7 @@ public class UserSecurity implements Serializable
 		return loggedIn;
 	}
 
-	public UserSecurity setLoggedIn(boolean loggedIn)
+	public UserSecurityDTO setLoggedIn(boolean loggedIn)
 	{
 		this.loggedIn = loggedIn;
 		return this;
@@ -53,7 +54,7 @@ public class UserSecurity implements Serializable
 		return rememberMe;
 	}
 
-	public UserSecurity setRememberMe(boolean rememberMe)
+	public UserSecurityDTO setRememberMe(boolean rememberMe)
 	{
 		this.rememberMe = rememberMe;
 		return this;
@@ -64,7 +65,7 @@ public class UserSecurity implements Serializable
 		return lastIpAddress;
 	}
 
-	public UserSecurity setLastIpAddress(String lastIpAddress)
+	public UserSecurityDTO setLastIpAddress(String lastIpAddress)
 	{
 		this.lastIpAddress = lastIpAddress;
 		return this;
@@ -75,7 +76,7 @@ public class UserSecurity implements Serializable
 		return loginExpiresOn;
 	}
 
-	public UserSecurity setLoginExpiresOn(LocalDateTime loginExpiresOn)
+	public UserSecurityDTO setLoginExpiresOn(LocalDateTime loginExpiresOn)
 	{
 		this.loginExpiresOn = loginExpiresOn;
 		return this;

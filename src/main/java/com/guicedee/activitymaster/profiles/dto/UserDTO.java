@@ -39,6 +39,7 @@ public class UserDTO<J extends UserDTO<J>>
 	private static final Logger log = Logger.getLogger(UserDTO.class.getName());
 	@Serial
 	private static final long serialVersionUID = 4346902954717740631L;
+	
 	private UUID identityToken;
 	
 	@JsonDeserialize(using = IEnterpriseNameDeserializer.class)
@@ -49,28 +50,12 @@ public class UserDTO<J extends UserDTO<J>>
 	{
 		if (identityToken == null)
 		{
-			UUID systemID = get(ProfileSystem.class).getSystemToken(enterprise);
-			ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(enterprise);
+			UUID systemID = get(ProfileSystem.class).getSystemToken(enterprise.name());
+			ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(enterprise.name());
 			Optional<IRelationshipValue<IInvolvedParty<?>, IInvolvedPartyIdentificationType<?>, ?>> ipId = ip.findIdentificationType(IdentificationTypeUUID, profileSystem,
 					systemID);
-			if (ipId.isPresent())
-			{
-				setIdentityToken(ipId.get()
-				                     .getValueAsUUID());
-			}
-			else
-			{
-				if (!ip.hasIdentificationType(IdentificationTypeUUID,null, profileSystem, systemID))
-				{
-					UUID securityIdentityToken = UUID.randomUUID();
-					ip.addOrUpdateIdentificationType(IdentificationTypeUUID, securityIdentityToken.toString(), profileSystem, systemID);
-					
-				}
-				else
-				{
-					log.log(Level.WARNING, "Involved Party Does Not Exist with token?!?" + ip.getId());
-				}
-			}
+			ipId.ifPresent(ipFound -> setIdentityToken(ipFound.getPrimary()
+			                                                  .getId()));
 		}
 		return (J) this;
 	}
@@ -114,6 +99,7 @@ public class UserDTO<J extends UserDTO<J>>
 	 * Returns the object presented as a JSON strong
 	 *
 	 * @param o An object to represent
+	 *
 	 * @return the string
 	 */
 	private String objectAsString(Object o) throws JsonProcessingException

@@ -7,7 +7,7 @@ import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileService;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
-import com.guicedee.activitymaster.profiles.webdto.UserLoginDTO;
+import com.guicedee.activitymaster.profiles.dto.UserLoginDTO;
 import lombok.extern.java.Log;
 
 import java.util.UUID;

@@ -1,7 +1,6 @@
 package com.guicedee.activitymaster.profiles.services.interfaces;
 
 import com.google.common.base.Strings;
-import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
 import com.guicedee.activitymaster.core.services.dto.IEnterprise;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
@@ -12,7 +11,7 @@ import com.guicedee.activitymaster.profiles.exceptions.ProfileServiceException;
 import com.guicedee.activitymaster.profiles.exceptions.UserExistsException;
 import com.guicedee.activitymaster.profiles.exceptions.WaitingForConfirmationKeyException;
 import com.guicedee.activitymaster.profiles.webdto.UserConfirmationKeyDTO;
-import com.guicedee.activitymaster.profiles.webdto.UserLoginDTO;
+import com.guicedee.activitymaster.profiles.dto.UserLoginDTO;
 import com.guicedee.activitymaster.profiles.webdto.UserRegistrationDTO;
 import com.guicedee.guicedinjection.GuiceContext;
 
@@ -61,4 +60,6 @@ public interface IProfileService
 	UserConfirmationKeyDTO<?> registerVisitor(UserRegistrationDTO<?> userRegistrationDTO, ISystems<?> system, UUID... identityToken) throws UserExistsException, WaitingForConfirmationKeyException;
 	
 	IInvolvedParty<?> findInvolvedParty(UUID identityToken, ISystems<?> system);
+	
+	IInvolvedParty<?> findInvolvedParty(UUID webClientToken);
 }

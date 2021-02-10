@@ -16,6 +16,7 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.core.services.types.IdentificationTypes.*;
@@ -34,30 +35,30 @@ public class ProfileSystem
 	public void createDefaults(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 	}
-
+	
 	@Override
 	public int totalTasks()
 	{
 		return 0;
 	}
-
+	
 	@Override
 	public void postStartup(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 		super.postStartup(enterprise, progressMonitor);
-
+		
 		ISystems<?> system = getSystem(enterprise);
 		UUID token = getSystemToken(enterprise);
-
+		
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
 		IInvolvedParty<?> ip = involvedPartyService.findByIdentificationType(IdentificationTypeEnterpriseCreatorRole, null, system, token);
 		if (ip != null)
 		{
 			IRolesService<?> rolesService = get(IRolesService.class);
-			List<IUserRole<?>> roles = rolesService.getRoles(ip, system, token);
-			if (!roles.contains(Administrator))
+			Set<String> roles = rolesService.getRoles(ip, system, token);
+			if (!roles.contains(Administrator.toString()))
 			{
-				roles.addAll(rolesService.addRole(ip, Administrator, null, system, token));
+				roles.addAll(rolesService.addRole(ip, Administrator.toString(), null, system, token));
 			}
 		}
 	}
@@ -67,11 +68,11 @@ public class ProfileSystem
 	{
 		return "Profiles Master";
 	}
-
+	
 	@Override
 	public String getSystemDescription()
 	{
 		return "The system for managing User Profiles";
 	}
-
+	
 }

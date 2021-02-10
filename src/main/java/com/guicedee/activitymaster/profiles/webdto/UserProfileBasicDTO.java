@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
@@ -28,7 +29,7 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 	private String fullName;
 	private String firstName;
 	private String surname;
-	private List<IUserRole<?>> roles;
+	private Set<String> roles;
 
 	public UserProfileBasicDTO<?> from(IInvolvedParty<?> involvedParty, IEnterpriseName<?> enterpriseName)
 	{
@@ -36,6 +37,8 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 		IEnterprise<?> enterprise = enterpriseService.getIEnterpriseFromName(enterpriseName);
 		ISystems<?> system = get(ProfileSystem.class).getSystem(enterprise);
 		UUID identityToken = get(ProfileSystem.class).getSystemToken(enterprise);
+		
+		
 
 		if (involvedParty.hasNameType(CommonNameType,null, system, identityToken))
 		{
