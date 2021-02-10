@@ -25,6 +25,18 @@ public class ProfileServiceDTOProvider
 			Map<String, String> stringStringMap = ajaxCall.getVariable(StaticStrings.LOCAL_STORAGE_VARIABLE_KEY)
 			                                              .asMap();
 			UUID identityToken = UUID.fromString(stringStringMap.get(StaticStrings.LOCAL_STORAGE_PARAMETER_KEY));
+
+			/*
+			if (call.isWebSocketCall())
+			{
+				if (GuicedWebSocket.hasProperty(call.getWebsocketSession(), StaticStrings.LOCAL_STORAGE_PARAMETER_KEY))
+				{
+					localStorageKey = GuicedWebSocket.getPropertyMap(call.getWebsocketSession())
+					                                 .get(StaticStrings.LOCAL_STORAGE_PARAMETER_KEY);
+				}
+			}
+			*/
+
 			ProfileServiceDTO<?> pro = new ProfileServiceDTO<>();
 			pro.setWebClientUUID(identityToken);
 			
