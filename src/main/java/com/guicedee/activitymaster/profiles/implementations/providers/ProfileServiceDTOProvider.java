@@ -1,10 +1,11 @@
-package com.guicedee.activitymaster.profiles.implementations;
+package com.guicedee.activitymaster.profiles.implementations.providers;
 
 import com.google.inject.Provider;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.guicedinjection.GuiceContext;
+import com.guicedee.guicedservlets.services.scopes.CallScope;
 import com.jwebmp.core.base.ajax.AjaxCall;
 import com.jwebmp.core.utilities.StaticStrings;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 
+@CallScope
 public class ProfileServiceDTOProvider
 		implements Provider<ProfileServiceDTO>
 {

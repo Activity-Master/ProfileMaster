@@ -31,23 +31,15 @@ public class ProfileMasterInstall implements ISystemUpdate
 	
 	private void createInvolvedPartyClassifications(IEnterprise<?> enterprise)
 	{
-		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
+		
 		ProfileSystem system = GuiceContext.get(ProfileSystem.class);
 		ISystems<?> profileSystem = system.getSystem(enterprise);
 		
 		IEventService<?> eventsService = GuiceContext.get(IEventService.class);
-		eventsService.createEventType(SiteVisit, profileSystem, system.getSystemToken(enterprise));
+	
 		eventsService.createEventType(UserRegistered, profileSystem, system.getSystemToken(enterprise));
 		eventsService.createEventType(VisitorRegistered, profileSystem, system.getSystemToken(enterprise));
-		eventsService.createEventType(UserConfirmedAccount, profileSystem, system.getSystemToken(enterprise));
 		
-		classificationService.create(LogonDetails, profileSystem);
-		classificationService.create(LastLoginTime, profileSystem, LogonDetails);
-		classificationService.create(LastVisitTime, profileSystem, LogonDetails);
-		classificationService.create(ConfirmationKey, profileSystem, LogonDetails);
-		classificationService.create(UserRoles, profileSystem, LogonDetails);
-		classificationService.create(RememberMe, profileSystem, LogonDetails);
-		classificationService.create(LoggedOn, profileSystem, LogonDetails);
 		
 		GuiceContext.get(IInvolvedPartyService.class)
 		            .createIdentificationType(profileSystem, ProfileIdentificationTypes.IdentificationTypeWebClientUUID,

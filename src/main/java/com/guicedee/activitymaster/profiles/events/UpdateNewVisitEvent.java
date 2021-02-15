@@ -23,6 +23,7 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 	private ProfileServiceDTO<?> profileServiceDTO;
 	private IEnterprise<?> enterprise;
 	private ISystems<?> profileSystem;
+	
 	private UUID[] identityToken;
 	
 	public UpdateNewVisitEvent()

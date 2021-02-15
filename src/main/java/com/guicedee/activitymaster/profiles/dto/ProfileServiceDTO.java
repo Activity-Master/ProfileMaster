@@ -7,24 +7,24 @@ import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.guicedee.activitymaster.sessions.services.ISession;
 import com.guicedee.guicedinjection.GuiceContext;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
-import static com.guicedee.guicedinjection.GuiceContext.*;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.IdentificationTypeWebClientUUID;
+import static com.guicedee.guicedinjection.GuiceContext.get;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = ANY,
                 getterVisibility = NONE,
                 setterVisibility = NONE)
+@EqualsAndHashCode(of = {"webClientUUID"},callSuper = false)
 public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		extends UserDTO<J>
 {
@@ -38,56 +38,6 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	@Setter
 	private transient Map<String, Object> sessionUpdates;
 	
-	@JsonIgnore
-	public boolean isLoggedIn(boolean asVisitor)
-	{
-		ISession<?> session = get(ISession.class);
-		
-		ISystems<?> system = session.getSystem();
-		ISystems<?> profileSystem = get(ProfileSystem.class).getSystem(system.getEnterprise());
-		UUID profileSystemUUID = get(ProfileSystem.class).getSystemToken(system.getEnterprise());
-		
-		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		
-		IInvolvedParty<?> newIp = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
-						.toString(),
-				profileSystem, profileSystemUUID);
-		if (!session.hasValue("user-security"))
-		{
-			return false;
-		}
-		
-		UserSecurityDTO us = session.as("user-security", UserSecurityDTO.class);
-		if (us == null ||
-				us.getLoginExpiresOn() == null ||
-				us.getLoginExpiresOn()
-				  .isBefore(LocalDateTime.now()))
-		{
-			return false;
-		}
-		
-		boolean loggedOn = false;
-		try
-		{
-			loggedOn = us.isLoggedIn();
-		}
-		catch (Exception nsfe)
-		{
-			loggedOn = false;
-		}
-		
-		if (loggedOn && !asVisitor)
-		{
-			return true;
-		}
-		
-		if (us.isRememberMe())
-		{
-			return loggedOn;
-		}
-		return false;
-	}
-	
 	public UUID getWebClientUUID()
 	{
 		return webClientUUID;
@@ -99,6 +49,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		return (J) this;
 	}
 	
+	@JsonGetter
 	public Set<String> findRoles()
 	{
 		ISystems<?> system = get(ProfileSystem.class).getSystem((IEnterprise<?>) getEnterprise());

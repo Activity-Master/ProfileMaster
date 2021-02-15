@@ -22,12 +22,6 @@
         <dependency>
             <groupId>com.jwebmp.core</groupId>
             <artifactId>jwebmp-core</artifactId>
-            <version>${jwebmp.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.guicedee.services</groupId>
-            <artifactId>uadetector-core</artifactId>
         </dependency>
 
         <dependency>
@@ -36,19 +30,15 @@
         </dependency>
 
         <dependency>
-            <groupId>com.armineasy.activitymaster</groupId>
-            <artifactId>session-master</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.guicedee.services</groupId>
             <artifactId>json</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.guicedee.persistence</groupId>
             <artifactId>guiced-persistence</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.guicedee.services</groupId>
             <artifactId>cache-annotations-ri-guice</artifactId>

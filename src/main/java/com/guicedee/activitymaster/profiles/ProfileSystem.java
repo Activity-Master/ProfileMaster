@@ -1,29 +1,18 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.google.inject.Singleton;
+import com.google.inject.*;
 import com.guicedee.activitymaster.core.services.IActivityMasterProgressMonitor;
 import com.guicedee.activitymaster.core.services.IActivityMasterSystem;
-import com.guicedee.activitymaster.core.services.dto.IEnterprise;
-import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
-import com.guicedee.activitymaster.core.services.dto.ISystems;
-import com.guicedee.activitymaster.core.services.system.ActivityMasterDefaultSystem;
-import com.guicedee.activitymaster.core.services.system.IClassificationService;
-import com.guicedee.activitymaster.core.services.system.IEventService;
-import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
-import com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
+import com.guicedee.activitymaster.core.services.dto.*;
+import com.guicedee.activitymaster.core.services.system.*;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.guicedee.guicedinjection.GuiceContext;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.core.services.types.IdentificationTypes.*;
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileEventTypes.*;
-import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.*;
 import static com.guicedee.activitymaster.profiles.services.enumerations.UserRoles.*;
+import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileService.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @Singleton
@@ -31,6 +20,16 @@ public class ProfileSystem
 		extends ActivityMasterDefaultSystem<ProfileSystem>
 		implements IActivityMasterSystem<ProfileSystem>
 {
+	@Inject
+	private Provider<ISystemsService<?>> systemsService;
+	
+	@Override
+	public void registerSystem(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
+	{
+		systemsService.get()
+		              .create(enterprise, getSystemName(), getSystemDescription());
+	}
+	
 	@Override
 	public void createDefaults(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
@@ -66,7 +65,7 @@ public class ProfileSystem
 	@Override
 	public String getSystemName()
 	{
-		return "Profiles Master";
+		return ProfileSystemName;
 	}
 	
 	@Override
