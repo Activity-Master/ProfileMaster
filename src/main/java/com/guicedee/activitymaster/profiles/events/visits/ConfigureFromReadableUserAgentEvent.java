@@ -1,16 +1,12 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
-import com.guicedee.activitymaster.core.services.dto.IEnterprise;
-import com.guicedee.activitymaster.core.services.dto.IEvent;
-import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
-import com.guicedee.activitymaster.core.services.dto.ISystems;
+import com.guicedee.activitymaster.core.services.dto.*;
 import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
 import net.sf.uadetector.ReadableUserAgent;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.*;
@@ -20,7 +16,7 @@ public class ConfigureFromReadableUserAgentEvent
 {
 	private static final String JobServiceName = "ConfigureFromReadableUserAgent";
 
-	private IEvent<?> event;
+//	private IEvent<?> event;
 	private UserDTO<?> dto;
 	private IInvolvedParty<?> ip;
 	private ReadableUserAgent readableUserAgent;
@@ -44,19 +40,19 @@ public class ConfigureFromReadableUserAgentEvent
 		                            .getSystemToken(enterprise);
 		var browserDeviceCategory
 				= ip.addOrReuse(BrowserDeviceCategory, readableUserAgent.getDeviceCategory().getName(), profileSystem, systemID);
-		event.add(browserDeviceCategory.getSecondary(),readableUserAgent.getDeviceCategory().getName(),profileSystem, identityToken);
+		//event.add(browserDeviceCategory.getSecondary(),readableUserAgent.getDeviceCategory().getName(),profileSystem, identityToken);
 
 		var browserDevice
 				= ip.addOrReuse(BrowserDevice, readableUserAgent.getDeviceCategory().getCategory().getName(), profileSystem, systemID);
-		event.add(browserDevice.getSecondary(),readableUserAgent.getDeviceCategory().getCategory().getName(),profileSystem, identityToken);
+	//	event.add(browserDevice.getSecondary(),readableUserAgent.getDeviceCategory().getCategory().getName(),profileSystem, identityToken);
 
 		var operatingSystem
 				= ip.addOrReuse(OperatingSystem, readableUserAgent.getOperatingSystem().getName(), profileSystem, systemID);
-		event.add(operatingSystem.getSecondary(),readableUserAgent.getOperatingSystem().getName(),profileSystem, identityToken);
+	//	event.add(operatingSystem.getSecondary(),readableUserAgent.getOperatingSystem().getName(),profileSystem, identityToken);
 
 		var operatingSystemFamily
 				= ip.addOrReuse(OperatingSystemFamily, readableUserAgent.getOperatingSystem().getFamily().getName(), profileSystem, systemID);
-		event.add(operatingSystemFamily.getSecondary(),readableUserAgent.getOperatingSystem().getFamily().getName(),profileSystem, identityToken);
+	//	event.add(operatingSystemFamily.getSecondary(),readableUserAgent.getOperatingSystem().getFamily().getName(),profileSystem, identityToken);
 	}
 
 	public UserDTO<?> getDto()
@@ -124,27 +120,8 @@ public class ConfigureFromReadableUserAgentEvent
 		this.identityToken = identityToken;
 		return this;
 	}
-
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o)
-		{
-			return true;
-		}
-		if (o == null || getClass() != o.getClass())
-		{
-			return false;
-		}
-		if (!super.equals(o))
-		{
-			return false;
-		}
-		ConfigureFromReadableUserAgentEvent that = (ConfigureFromReadableUserAgentEvent) o;
-		return Objects.equals(getEvent(), that.getEvent());
-	}
-
-	public IEvent<?> getEvent()
+	
+/*	public IEvent<?> getEvent()
 	{
 		return this.event;
 	}
@@ -153,11 +130,6 @@ public class ConfigureFromReadableUserAgentEvent
 	{
 		this.event = event;
 		return this;
-	}
+	}*/
 
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(super.hashCode(), getEvent());
-	}
 }

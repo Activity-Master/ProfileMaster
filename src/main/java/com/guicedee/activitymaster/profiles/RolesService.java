@@ -1,18 +1,15 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.google.inject.Singleton;
 import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
 import com.guicedee.activitymaster.core.services.dto.ISystems;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import io.github.classgraph.ClassInfo;
-
 import jakarta.cache.annotation.CacheKey;
 import jakarta.cache.annotation.CacheResult;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
@@ -49,6 +46,10 @@ public class RolesService
 					myRoles.add(role);
 				}
 			}
+		}
+		if (myRoles.isEmpty())
+		{
+			myRoles.add("Guest");
 		}
 		return myRoles;
 	}

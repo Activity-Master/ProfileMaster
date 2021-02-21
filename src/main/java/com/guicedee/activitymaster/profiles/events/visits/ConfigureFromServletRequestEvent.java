@@ -7,9 +7,9 @@ import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.logger.LogFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import org.json.JSONObject;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
@@ -19,16 +19,14 @@ import java.util.logging.Level;
 import static com.guicedee.activitymaster.core.services.classifications.address.AddressLocalSystemClassifications.*;
 import static com.guicedee.activitymaster.core.services.classifications.address.AddressRemoteSystemClassifications.*;
 import static com.guicedee.activitymaster.core.services.classifications.address.AddressWebClassifications.*;
-import static com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemClassifications.*;
-import static com.guicedee.activitymaster.core.services.classifications.resourceitems.ResourceItemTypes.BrowserInformation;
-import static com.guicedee.guicedinjection.json.StaticStrings.STRING_EMPTY;
+import static com.guicedee.guicedinjection.json.StaticStrings.*;
 
 public class ConfigureFromServletRequestEvent
 		extends TransactionalIdentifiedThread
 {
 	private static final String JobServiceName = "ConfigureFromServletRequestEvent";
 
-	private IEvent<?> event;
+	//private IEvent<?> event;
 	private UserDTO<?> dto;
 	private IInvolvedParty<?> ip;
 	private ISystems<?> profileSystem;
@@ -80,84 +78,30 @@ public class ConfigureFromServletRequestEvent
 		}
 		IAddress<?> ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
 		ip.addOrReuse(RemoteAddressIPAddress,ipAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
-		event.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
+	//	event.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
 		IAddress<?> hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
 		ip.addOrReuse(RemoteAddressHostName,hostName,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
-		event.add(hostName, RemoteAddressHostName, profileSystem, systemID);
+	//	event.add(hostName, RemoteAddressHostName, profileSystem, systemID);
 		IAddress<?> localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
 		ip.addOrReuse(LocalAddressIPAddress,localIpAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
-		event.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
+	//	event.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
 		IAddress<?> localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
 		ip.addOrReuse(LocalAddressHostName,localHostName,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
-		event.add(localHostName, LocalAddressHostName, profileSystem, systemID);
+	//	event.add(localHostName, LocalAddressHostName, profileSystem, systemID);
 		IAddress<?> webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
 		                                                                          .toString(), profileSystem, systemID);
 		ip.addOrReuse(WebAddress,webAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
-		event.add(webAddress, WebAddress, profileSystem, systemID);
+	//	event.add(webAddress, WebAddress, profileSystem, systemID);
 
-		event.addResourceItem(Added, BrowserInformation, "", sb.toString()
-		                                                       .getBytes(), "application/json", profileSystem, systemID);
+	//	event.addResourceItem(Added, BrowserInformation, "", sb.toString()
+	//	                                                       .getBytes(), "application/json", profileSystem, systemID);
 	}
 
-	@Override
-	public boolean equals(final Object o)
-	{
-		if (o == this)
-		{
-			return true;
-		}
-		if (!(o instanceof ConfigureFromServletRequestEvent))
-		{
-			return false;
-		}
-		final ConfigureFromServletRequestEvent other = (ConfigureFromServletRequestEvent) o;
-		if (!other.canEqual((Object) this))
-		{
-			return false;
-		}
-		final Object this$event = this.getEvent();
-		final Object other$event = other.getEvent();
-		if (this$event == null ? other$event != null : !this$event.equals(other$event))
-		{
-			return false;
-		}
-		final Object this$dto = this.getDto();
-		final Object other$dto = other.getDto();
-		if (this$dto == null ? other$dto != null : !this$dto.equals(other$dto))
-		{
-			return false;
-		}
-		final Object this$ip = this.getIp();
-		final Object other$ip = other.getIp();
-		if (this$ip == null ? other$ip != null : !this$ip.equals(other$ip))
-		{
-			return false;
-		}
-		final Object this$profileSystem = this.getProfileSystem();
-		final Object other$profileSystem = other.getProfileSystem();
-		if (this$profileSystem == null ? other$profileSystem != null : !this$profileSystem.equals(other$profileSystem))
-		{
-			return false;
-		}
-		final Object this$servletRequest = this.getServletRequest();
-		final Object other$servletRequest = other.getServletRequest();
-		if (this$servletRequest == null ? other$servletRequest != null : !this$servletRequest.equals(other$servletRequest))
-		{
-			return false;
-		}
-		final Object this$enterprise = this.getEnterprise();
-		final Object other$enterprise = other.getEnterprise();
-		if (this$enterprise == null ? other$enterprise != null : !this$enterprise.equals(other$enterprise))
-		{
-			return false;
-		}
-		return true;
-	}
-
-	public IEvent<?> getEvent()
-	{
+	
+	//public IEvent<?> getEvent()
+/*	{
 		return this.event;
-	}
+	}*/
 
 	public UserDTO<?> getDto()
 	{
@@ -214,11 +158,11 @@ public class ConfigureFromServletRequestEvent
 		return this;
 	}
 
-	public ConfigureFromServletRequestEvent setEvent(IEvent<?> event)
+/*	public ConfigureFromServletRequestEvent setEvent(IEvent<?> event)
 	{
 		this.event = event;
 		return this;
-	}
+	}*/
 
 	@Override
 	protected boolean canEqual(final Object other)
@@ -226,30 +170,4 @@ public class ConfigureFromServletRequestEvent
 		return other instanceof ConfigureFromServletRequestEvent;
 	}
 
-	@Override
-	public int hashCode()
-	{
-		final int PRIME = 59;
-		int result = 1;
-		final Object $event = this.getEvent();
-		result = result * PRIME + ($event == null ? 43 : $event.hashCode());
-		final Object $dto = this.getDto();
-		result = result * PRIME + ($dto == null ? 43 : $dto.hashCode());
-		final Object $ip = this.getIp();
-		result = result * PRIME + ($ip == null ? 43 : $ip.hashCode());
-		final Object $profileSystem = this.getProfileSystem();
-		result = result * PRIME + ($profileSystem == null ? 43 : $profileSystem.hashCode());
-		final Object $servletRequest = this.getServletRequest();
-		result = result * PRIME + ($servletRequest == null ? 43 : $servletRequest.hashCode());
-		final Object $enterprise = this.getEnterprise();
-		result = result * PRIME + ($enterprise == null ? 43 : $enterprise.hashCode());
-		return result;
-	}
-
-	@Override
-	public String toString()
-	{
-		return "ConfigureFromServletRequestEvent(event=" + this.getEvent() + ", dto=" + this.getDto() + ", ip=" + this.getIp() + ", profileSystem=" + this.getProfileSystem() +
-		       ", servletRequest=" + this.getServletRequest() + ", enterprise=" + this.getEnterprise() + ")";
-	}
 }

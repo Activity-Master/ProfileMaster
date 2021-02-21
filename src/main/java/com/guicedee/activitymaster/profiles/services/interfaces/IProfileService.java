@@ -5,7 +5,7 @@ import com.guicedee.activitymaster.core.services.dto.ISystems;
 
 import java.util.UUID;
 
-public interface IProfileService
+public interface IProfileService<J extends IProfileService<J>>
 {
 	String ProfileSystemName = "Profiles Master";
 	

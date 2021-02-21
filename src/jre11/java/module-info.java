@@ -1,7 +1,5 @@
 import com.guicedee.activitymaster.profiles.ProfileSystem;
-import com.guicedee.activitymaster.profiles.implementations.ProfileEventConfigurator;
-import com.guicedee.activitymaster.profiles.implementations.ProfileMasterModuleInclusion;
-import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
+import com.guicedee.activitymaster.profiles.implementations.*;
 
 module com.guicedee.activitymaster.profiles {
 
@@ -44,9 +42,9 @@ module com.guicedee.activitymaster.profiles {
 	opens com.guicedee.activitymaster.profiles to com.google.guice, com.guicedee.activitymaster.core;
 	opens com.guicedee.activitymaster.profiles.events.visits to com.google.guice, com.guicedee.activitymaster.core;
 	opens com.guicedee.activitymaster.profiles.events to com.google.guice, com.guicedee.activitymaster.core;
-	opens com.guicedee.activitymaster.profiles.dto to com.fasterxml.jackson.databind;
-	opens com.guicedee.activitymaster.profiles.webdto to com.fasterxml.jackson.databind;
-	opens com.guicedee.activitymaster.profiles.deserializers to com.fasterxml.jackson.databind;
+	opens com.guicedee.activitymaster.profiles.dto to  com.google.guice, com.fasterxml.jackson.databind;
+	opens com.guicedee.activitymaster.profiles.webdto to  com.google.guice, com.fasterxml.jackson.databind;
+	opens com.guicedee.activitymaster.profiles.deserializers to  com.google.guice, com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.implementations to com.fasterxml.jackson.databind, com.google.guice;
 	opens com.guicedee.activitymaster.profiles.implementations.providers to com.fasterxml.jackson.databind, com.google.guice;
 	opens com.guicedee.activitymaster.profiles.implementations.updates to com.fasterxml.jackson.databind, com.google.guice;

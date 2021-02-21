@@ -1,14 +1,12 @@
 package com.guicedee.activitymaster.profiles.dto;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
+import com.google.inject.Inject;
+import com.guicedee.activitymaster.core.services.dto.IEnterprise;
 import com.guicedee.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -16,10 +14,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
-import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
-import static com.guicedee.guicedinjection.GuiceContext.get;
-import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.DefaultObjectMapper;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
+import static com.guicedee.guicedinjection.GuiceContext.*;
+import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.*;
 
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -41,7 +38,8 @@ public class UserDTO<J extends UserDTO<J>>
     private UUID identityToken;
 
     @JsonDeserialize(using = IEnterpriseNameDeserializer.class)
-    private IEnterpriseName<?> enterprise;
+    @Inject
+    private IEnterprise<?> enterprise;
 
     @Override
     public String toString() {
@@ -68,16 +66,17 @@ public class UserDTO<J extends UserDTO<J>>
         return this.identityToken;
     }
 
-    public UserDTO<J> setIdentityToken(UUID identityToken) {
+    public J setIdentityToken(UUID identityToken) {
         this.identityToken = identityToken;
-        return this;
+        //noinspection unchecked
+        return (J)this;
     }
 
-    public IEnterpriseName<?> getEnterprise() {
+    public IEnterprise<?> getEnterprise() {
         return this.enterprise;
     }
 
-    public J setEnterprise(IEnterpriseName<?> enterprise) {
+    public J setEnterprise(IEnterprise<?> enterprise) {
         this.enterprise = enterprise;
 		//noinspection unchecked
 		return (J) this;

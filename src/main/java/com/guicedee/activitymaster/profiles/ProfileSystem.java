@@ -1,6 +1,7 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.google.inject.*;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.guicedee.activitymaster.core.services.IActivityMasterProgressMonitor;
 import com.guicedee.activitymaster.core.services.IActivityMasterSystem;
 import com.guicedee.activitymaster.core.services.dto.*;
@@ -15,7 +16,6 @@ import static com.guicedee.activitymaster.profiles.services.enumerations.UserRol
 import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileService.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
-@Singleton
 public class ProfileSystem
 		extends ActivityMasterDefaultSystem<ProfileSystem>
 		implements IActivityMasterSystem<ProfileSystem>
@@ -28,11 +28,14 @@ public class ProfileSystem
 	{
 		systemsService.get()
 		              .create(enterprise, getSystemName(), getSystemDescription());
+		systemsService.get()
+		              .registerNewSystem(enterprise, getSystem(enterprise));
 	}
 	
 	@Override
 	public void createDefaults(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
+	
 	}
 	
 	@Override
@@ -44,8 +47,6 @@ public class ProfileSystem
 	@Override
 	public void postStartup(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
-		super.postStartup(enterprise, progressMonitor);
-		
 		ISystems<?> system = getSystem(enterprise);
 		UUID token = getSystemToken(enterprise);
 		
@@ -60,6 +61,7 @@ public class ProfileSystem
 				roles.addAll(rolesService.addRole(ip, Administrator.toString(), null, system, token));
 			}
 		}
+		super.postStartup(enterprise, progressMonitor);
 	}
 	
 	@Override

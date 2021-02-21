@@ -12,7 +12,7 @@ import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @SuppressWarnings("Duplicates")
 public class ProfileService
-		implements IProfileService
+		implements IProfileService<ProfileService>
 {
 	private static final Logger log = Logger.getLogger(ProfileService.class.getName());
 
