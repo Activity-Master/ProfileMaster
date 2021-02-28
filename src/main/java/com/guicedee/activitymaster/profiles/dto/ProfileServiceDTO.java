@@ -57,7 +57,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		this.webClientUUID = webClientUUID;
 		return (J) this;
 	}
-
+	
 	public Set<String> findRoles()
 	{
 		if (profileSystem == null)
@@ -87,9 +87,9 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		{
 			if (webClientUUID != null)
 			{
-				this.involvedParty = involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID()
-								.toString(),
-						system, identityToken);
+				this.involvedParty =
+						involvedPartyService.findByIdentificationType(IdentificationTypeWebClientUUID, getWebClientUUID().toString(),
+								system, identityToken);
 				
 				setIdentityToken(involvedParty.getId());
 			}
