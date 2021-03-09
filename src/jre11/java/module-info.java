@@ -27,7 +27,7 @@ module com.guicedee.activitymaster.profiles {
 	
 	
 	requires jakarta.validation;
-
+	
 	exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
 	//exports com.guicedee.activitymaster.profiles.services;
