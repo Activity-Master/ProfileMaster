@@ -1,24 +1,20 @@
 package com.guicedee.activitymaster.profiles.webdto;
 
-import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
-import com.guicedee.activitymaster.core.services.dto.IEnterprise;
-import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
-import com.guicedee.activitymaster.core.services.dto.ISystems;
-import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
+
+import com.guicedee.activitymaster.client.services.IEnterpriseService;
+import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
+import java.util.*;
 
-import static com.guicedee.activitymaster.core.services.classifications.classification.Classifications.*;
-import static com.guicedee.activitymaster.core.services.types.NameTypes.*;
+import static com.guicedee.activitymaster.client.services.classifications.DefaultClassifications.*;
+import static com.guicedee.activitymaster.client.services.classifications.types.NameTypes.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @Data
@@ -31,18 +27,16 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 	private String surname;
 	private Set<String> roles;
 
-	public UserProfileBasicDTO<?> from(IInvolvedParty<?> involvedParty, IEnterpriseName<?> enterpriseName)
+	public UserProfileBasicDTO<?> from(IInvolvedParty<?,?> involvedParty, String enterpriseName)
 	{
-		IEnterpriseService enterpriseService = get(IEnterpriseService.class);
-		IEnterprise<?> enterprise = enterpriseService.getIEnterpriseFromName(enterpriseName);
-		ISystems<?> system = get(ProfileSystem.class).getSystem(enterprise);
+		IEnterpriseService<?> enterpriseService = get(IEnterpriseService.class);
+		IEnterprise<?,?> enterprise = enterpriseService.getIEnterpriseFromName(enterpriseName);
+		ISystems<?,?> system = get(ProfileSystem.class).getSystem(enterprise);
 		UUID identityToken = get(ProfileSystem.class).getSystemToken(enterprise);
-		
-		
 
-		if (involvedParty.hasNameType(CommonNameType,null, system, identityToken))
+		if (involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(),CommonNameType.toString(),null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(CommonNameType,NoClassification.name(), system, identityToken)
+			fullName = involvedParty.findInvolvedPartyNameType(NoClassification.toString(),CommonNameType.toString(),null, system,true,true, identityToken)
 			                        .get()
 			                        .getValue();
 			if (fullName.contains(" "))
@@ -56,11 +50,10 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 				}
 			}
 		}
-		else if (involvedParty.hasNameType(PreferredNameType,null, system, identityToken))
+		else if (involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(),PreferredNameType.toString(),null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(PreferredNameType,NoClassification.name(), system, identityToken)
-			                        .get()
-			                        .getValue();
+			fullName = involvedParty.findInvolvedPartyNameType(NoClassification.toString(),PreferredNameType.toString(),null, system,true,true, identityToken)
+			                        .get().getValue();
 			if (fullName.contains(" "))
 
 			{
@@ -72,22 +65,19 @@ public class UserProfileBasicDTO<J extends UserProfileBasicDTO<J>>
 				}
 			}
 		}
-		else if (involvedParty.hasNameType(FullNameType,null, system, identityToken))
+		else if (involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(),FullNameType.toString(),null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(FullNameType, NoClassification.name(),system, identityToken)
-			                        .get()
-			                        .getValue();
+			fullName = involvedParty.findInvolvedPartyNameType(NoClassification.toString(),FullNameType.toString(),null, system,true,true, identityToken)
+			                        .get().getValue();
 		}
-		else if (involvedParty.hasNameType(FirstNameType,null, system, identityToken))
+		else if (involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(),FirstNameType.toString(),null, system, identityToken))
 		{
-			fullName = involvedParty.findNameType(FirstNameType, NoClassification.name(),system, identityToken)
-			                        .get()
-			                        .getValue();
-			if (involvedParty.hasNameType(SurnameType,null, system, identityToken))
+			fullName = involvedParty.findInvolvedPartyNameType(NoClassification.toString(),FirstNameType.toString(),null, system,true,true, identityToken)
+			                        .get().getValue();
+			if (involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(),SurnameType.toString(),null, system, identityToken))
 			{
-				fullName += " " + involvedParty.findNameType(SurnameType, NoClassification.name(),system, identityToken)
-				                               .get()
-				                               .getValue();
+				fullName += " " + involvedParty.findInvolvedPartyNameType(NoClassification.toString(),SurnameType.toString(),null, system,true,true, identityToken)
+				                               .get().getValue();
 			}
 		}
 		else

@@ -4,11 +4,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.guicedee.activitymaster.core.services.classifications.enterprise.IEnterpriseName;
-import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
-import com.guicedee.activitymaster.core.services.dto.ISystems;
-import com.guicedee.activitymaster.core.services.system.IEnterpriseService;
-import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
+import com.guicedee.activitymaster.client.services.IInvolvedPartyService;
+import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -16,10 +13,10 @@ import java.util.UUID;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
 public class IInvolvedPartyDeserializer
-		extends JsonDeserializer<IInvolvedParty<?>>
+		extends JsonDeserializer<IInvolvedParty<?,?>>
 {
 	@Override
-	public IInvolvedParty<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException
+	public IInvolvedParty<?,?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException
 	{
 		String name = p.getValueAsString();
 		try

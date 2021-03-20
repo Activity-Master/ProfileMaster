@@ -1,14 +1,8 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import com.guicedee.activitymaster.core.services.classifications.involvedparty.IInvolvedPartyClassification;
-import com.guicedee.activitymaster.core.services.enumtypes.IClassificationDataConceptValue;
-import com.guicedee.activitymaster.core.services.enumtypes.IClassificationValue;
-
-import static com.guicedee.activitymaster.core.services.concepts.EnterpriseClassificationDataConcepts.*;
+import static com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts.*;
 
 public enum SiteClientClassifications
-		implements IClassificationValue<SiteClientClassifications>
-				           , IInvolvedPartyClassification<SiteClientClassifications>
 {
 	ClientConnectionDetails("Details for web site connection", EventXClassification),
 	OperatingSystem("The operating system used to browse", EventXClassification),
@@ -20,9 +14,9 @@ public enum SiteClientClassifications
 	;
 
 	private String description;
-	private IClassificationDataConceptValue<?> concept;
+	private com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept;
 
-	SiteClientClassifications(String description, IClassificationDataConceptValue<?> concept)
+	SiteClientClassifications(String description, com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept)
 	{
 		this.description = description;
 		this.concept = concept;
@@ -33,14 +27,12 @@ public enum SiteClientClassifications
 		this.description = description;
 	}
 
-	@Override
 	public String classificationDescription()
 	{
 		return this.description;
 	}
 
-	@Override
-	public IClassificationDataConceptValue<?> concept()
+	public com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept()
 	{
 		return concept;
 	}

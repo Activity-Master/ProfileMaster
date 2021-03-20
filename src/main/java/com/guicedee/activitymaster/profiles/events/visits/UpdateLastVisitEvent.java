@@ -1,9 +1,9 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
-import com.guicedee.activitymaster.core.services.dto.IEnterprise;
-import com.guicedee.activitymaster.core.services.dto.IEvent;
-import com.guicedee.activitymaster.core.services.dto.IInvolvedParty;
-import com.guicedee.activitymaster.core.services.dto.ISystems;
+import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.client.services.builders.warehouse.events.IEvent;
+import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
@@ -23,10 +23,10 @@ public class UpdateLastVisitEvent
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS");
 	private static final String JobServiceName = "UpdateLastVisitEvent";
 
-	private IEvent<?> event;
+	private IEvent<?,?> event;
 	private ProfileServiceDTO<?> profileServiceDTO;
-	private IEnterprise<?> enterprise;
-	private IInvolvedParty<?> newIp;
+	private IEnterprise<?,?> enterprise;
+	private IInvolvedParty<?,?> newIp;
 	private UUID[] identityToken;
 
 	public UpdateLastVisitEvent()
@@ -41,23 +41,23 @@ public class UpdateLastVisitEvent
 	@Override
 	public void perform()
 	{
-		ISystems<?> profileSystem = get(ProfileSystem.class)
+		ISystems<?,?> profileSystem = get(ProfileSystem.class)
 				                            .getSystem(enterprise);
 		//Add last login time
 		String lastVisit = LocalDateTimeDeserializer.formats[0].format(LocalDateTime.now());
-		newIp.addOrUpdate(LastVisitTime,
+		newIp.addOrUpdateClassification(LastVisitTime,
 				null,
 		                  lastVisit,
 		                  profileSystem,
 		                  identityToken);
 	}
 
-	public IEvent<?> getEvent()
+	public IEvent<?,?> getEvent()
 	{
 		return this.event;
 	}
 
-	public UpdateLastVisitEvent setEvent(IEvent<?> event)
+	public UpdateLastVisitEvent setEvent(IEvent<?,?> event)
 	{
 		this.event = event;
 		return this;
@@ -74,23 +74,23 @@ public class UpdateLastVisitEvent
 		return this;
 	}
 
-	public IEnterprise<?> getEnterprise()
+	public IEnterprise<?,?> getEnterprise()
 	{
 		return this.enterprise;
 	}
 
-	public UpdateLastVisitEvent setEnterprise(IEnterprise<?> enterprise)
+	public UpdateLastVisitEvent setEnterprise(IEnterprise<?,?> enterprise)
 	{
 		this.enterprise = enterprise;
 		return this;
 	}
 
-	public IInvolvedParty<?> getNewIp()
+	public IInvolvedParty<?,?> getNewIp()
 	{
 		return this.newIp;
 	}
 
-	public UpdateLastVisitEvent setNewIp(IInvolvedParty<?> newIp)
+	public UpdateLastVisitEvent setNewIp(IInvolvedParty<?,?> newIp)
 	{
 		this.newIp = newIp;
 		return this;

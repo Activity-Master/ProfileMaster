@@ -1,11 +1,7 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import com.guicedee.activitymaster.core.services.classifications.events.IEventClassification;
-import com.guicedee.activitymaster.core.services.enumtypes.IEventTypeValue;
 
 public enum ProfileEventTypes
-		implements IEventTypeValue<ProfileEventTypes>,
-		           IEventClassification<ProfileEventTypes>
 {
 	SiteVisit("When a user visits the site"),
 	VisitorRegistered("When a visitor has registered with the site"),
@@ -19,8 +15,7 @@ public enum ProfileEventTypes
 	{
 		this.description = description;
 	}
-	
-	@Override
+
 	public String classificationValue()
 	{
 		return description;

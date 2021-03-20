@@ -2,10 +2,8 @@ package com.guicedee.activitymaster.profiles.dto;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.inject.Inject;
-import com.guicedee.activitymaster.core.services.dto.IEnterprise;
-import com.guicedee.activitymaster.profiles.deserializers.IEnterpriseNameDeserializer;
+import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
@@ -36,10 +34,9 @@ public class UserDTO<J extends UserDTO<J>>
      * Involved Party Identity Token
      */
     private UUID identityToken;
-
-    @JsonDeserialize(using = IEnterpriseNameDeserializer.class)
+    
     @Inject
-    private IEnterprise<?> enterprise;
+    private IEnterprise<?,?> enterprise;
 
     @Override
     public String toString() {
@@ -72,11 +69,11 @@ public class UserDTO<J extends UserDTO<J>>
         return (J)this;
     }
 
-    public IEnterprise<?> getEnterprise() {
+    public IEnterprise<?,?> getEnterprise() {
         return this.enterprise;
     }
 
-    public J setEnterprise(IEnterprise<?> enterprise) {
+    public J setEnterprise(IEnterprise<?,?> enterprise) {
         this.enterprise = enterprise;
 		//noinspection unchecked
 		return (J) this;

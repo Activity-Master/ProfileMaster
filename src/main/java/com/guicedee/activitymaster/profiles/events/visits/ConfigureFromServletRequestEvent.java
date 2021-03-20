@@ -1,7 +1,10 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
-import com.guicedee.activitymaster.core.services.dto.*;
-import com.guicedee.activitymaster.core.services.system.IAddressService;
+import com.guicedee.activitymaster.client.services.IAddressService;
+import com.guicedee.activitymaster.client.services.builders.warehouse.address.IAddress;
+import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
@@ -16,22 +19,21 @@ import java.util.Enumeration;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import static com.guicedee.activitymaster.core.services.classifications.address.AddressLocalSystemClassifications.*;
-import static com.guicedee.activitymaster.core.services.classifications.address.AddressRemoteSystemClassifications.*;
-import static com.guicedee.activitymaster.core.services.classifications.address.AddressWebClassifications.*;
-import static com.guicedee.guicedinjection.json.StaticStrings.*;
+import static com.guicedee.activitymaster.client.services.classifications.address.AddressLocalSystemClassifications.*;
+import static com.guicedee.activitymaster.client.services.classifications.address.AddressRemoteSystemClassifications.*;
+import static com.guicedee.activitymaster.client.services.classifications.address.AddressWebClassifications.*;
 
 public class ConfigureFromServletRequestEvent
 		extends TransactionalIdentifiedThread
 {
 	private static final String JobServiceName = "ConfigureFromServletRequestEvent";
 
-	//private IEvent<?> event;
+	//private IEvent<?,?> event;
 	private UserDTO<?> dto;
-	private IInvolvedParty<?> ip;
-	private ISystems<?> profileSystem;
+	private IInvolvedParty<?,?> ip;
+	private ISystems<?,?> profileSystem;
 	private HttpServletRequest servletRequest;
-	private IEnterprise<?> enterprise;
+	private IEnterprise<?,?> enterprise;
 
 	public ConfigureFromServletRequestEvent()
 	{
@@ -76,21 +78,21 @@ public class ConfigureFromServletRequestEvent
 			String ipAddress = inetAddress.getHostAddress();
 			ipReal = ipAddress;
 		}
-		IAddress<?> ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
-		ip.addOrReuse(RemoteAddressIPAddress,ipAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
+		IAddress<?,?> ipAddress = addressService.addOrFindIPAddress(ipReal, profileSystem, systemID);
+		ip.addOrReuseAddress(ipAddress,RemoteAddressIPAddress.toString(),ipReal,ipReal, profileSystem, systemID);
 	//	event.add(ipAddress, RemoteAddressIPAddress, profileSystem, systemID);
-		IAddress<?> hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
-		ip.addOrReuse(RemoteAddressHostName,hostName,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
+		IAddress<?,?> hostName = addressService.addOrFindHostName(servletRequest.getRemoteHost(), profileSystem, systemID);
+		ip.addOrReuseAddress(hostName,RemoteAddressHostName.toString(),servletRequest.getRemoteHost(),servletRequest.getRemoteHost(), profileSystem, systemID);
 	//	event.add(hostName, RemoteAddressHostName, profileSystem, systemID);
-		IAddress<?> localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
-		ip.addOrReuse(LocalAddressIPAddress,localIpAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
+		IAddress<?,?> localIpAddress = addressService.addOrFindHostName(servletRequest.getLocalAddr(), profileSystem, systemID);
+		ip.addOrReuseAddress(localIpAddress,LocalAddressIPAddress.toString(),servletRequest.getLocalAddr(),servletRequest.getLocalAddr(), profileSystem, systemID);
 	//	event.add(localIpAddress, LocalAddressIPAddress, profileSystem, systemID);
-		IAddress<?> localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
-		ip.addOrReuse(LocalAddressHostName,localHostName,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
+		IAddress<?,?> localHostName = addressService.addOrFindHostName(servletRequest.getLocalName(), profileSystem, systemID);
+		ip.addOrReuseAddress(localHostName,LocalAddressHostName.toString(),servletRequest.getLocalName(),servletRequest.getLocalName(), profileSystem, systemID);
 	//	event.add(localHostName, LocalAddressHostName, profileSystem, systemID);
-		IAddress<?> webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
+		IAddress<?,?> webAddress = addressService.addOrFindWebAddress(servletRequest.getRequestURL()
 		                                                                          .toString(), profileSystem, systemID);
-		ip.addOrReuse(WebAddress,webAddress,STRING_EMPTY,STRING_EMPTY, profileSystem, systemID);
+		ip.addOrReuseAddress(webAddress,WebAddress.toString(),servletRequest.getRequestURL().toString(),servletRequest.getRequestURL().toString(), profileSystem, systemID);
 	//	event.add(webAddress, WebAddress, profileSystem, systemID);
 
 	//	event.addResourceItem(Added, BrowserInformation, "", sb.toString()
@@ -98,7 +100,7 @@ public class ConfigureFromServletRequestEvent
 	}
 
 	
-	//public IEvent<?> getEvent()
+	//public IEvent<?,?> getEvent()
 /*	{
 		return this.event;
 	}*/
@@ -108,12 +110,12 @@ public class ConfigureFromServletRequestEvent
 		return this.dto;
 	}
 
-	public IInvolvedParty<?> getIp()
+	public IInvolvedParty<?,?> getIp()
 	{
 		return this.ip;
 	}
 
-	public ISystems getProfileSystem()
+	public ISystems<?,?> getProfileSystem()
 	{
 		return this.profileSystem;
 	}
@@ -123,12 +125,12 @@ public class ConfigureFromServletRequestEvent
 		return this.servletRequest;
 	}
 
-	public IEnterprise<?> getEnterprise()
+	public IEnterprise<?,?> getEnterprise()
 	{
 		return this.enterprise;
 	}
 
-	public ConfigureFromServletRequestEvent setEnterprise(IEnterprise<?> enterprise)
+	public ConfigureFromServletRequestEvent setEnterprise(IEnterprise<?,?> enterprise)
 	{
 		this.enterprise = enterprise;
 		return this;
@@ -140,13 +142,13 @@ public class ConfigureFromServletRequestEvent
 		return this;
 	}
 
-	public ConfigureFromServletRequestEvent setProfileSystem(ISystems profileSystem)
+	public ConfigureFromServletRequestEvent setProfileSystem(ISystems<?,?> profileSystem)
 	{
 		this.profileSystem = profileSystem;
 		return this;
 	}
 
-	public ConfigureFromServletRequestEvent setIp(IInvolvedParty<?> ip)
+	public ConfigureFromServletRequestEvent setIp(IInvolvedParty<?,?> ip)
 	{
 		this.ip = ip;
 		return this;
@@ -158,7 +160,7 @@ public class ConfigureFromServletRequestEvent
 		return this;
 	}
 
-/*	public ConfigureFromServletRequestEvent setEvent(IEvent<?> event)
+/*	public ConfigureFromServletRequestEvent setEvent(IEvent<?,?> event)
 	{
 		this.event = event;
 		return this;

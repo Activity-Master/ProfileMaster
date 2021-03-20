@@ -1,44 +1,38 @@
 package com.guicedee.activitymaster.profiles.implementations.updates;
 
-import com.guicedee.activitymaster.core.services.IActivityMasterProgressMonitor;
-import com.guicedee.activitymaster.core.services.dto.IEnterprise;
-import com.guicedee.activitymaster.core.services.dto.ISystems;
-import com.guicedee.activitymaster.core.services.system.IClassificationService;
-import com.guicedee.activitymaster.core.services.system.IEventService;
-import com.guicedee.activitymaster.core.services.system.IInvolvedPartyService;
+import com.guicedee.activitymaster.client.services.*;
+import com.guicedee.activitymaster.client.services.administration.IActivityMasterProgressMonitor;
+import com.guicedee.activitymaster.client.services.administration.ISystemUpdate;
+import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.core.updates.DatedUpdate;
-import com.guicedee.activitymaster.core.updates.ISystemUpdate;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.guicedee.guicedinjection.GuiceContext;
 
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.LogonDetails;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileEventTypes.*;
-import static com.guicedee.activitymaster.profiles.enumerations.ProfileEventTypes.UserConfirmedAccount;
 import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.*;
-import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.ClientConnectionDetails;
 
 @DatedUpdate(date = "2020/12/01", taskCount = 1)
 public class ProfileMasterInstall implements ISystemUpdate
 {
 	@Override
-	public void update(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void update(IEnterprise<?,?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 		createInvolvedPartyClassifications(enterprise);
 		createSiteDetailsClassifications(enterprise);
 	}
 	
-	private void createInvolvedPartyClassifications(IEnterprise<?> enterprise)
+	private void createInvolvedPartyClassifications(IEnterprise<?,?> enterprise)
 	{
 		
 		ProfileSystem system = GuiceContext.get(ProfileSystem.class);
-		ISystems<?> profileSystem = system.getSystem(enterprise);
+		ISystems<?,?> profileSystem = system.getSystem(enterprise);
 		
 		IEventService<?> eventsService = GuiceContext.get(IEventService.class);
 	
-		eventsService.createEventType(UserRegistered, profileSystem, system.getSystemToken(enterprise));
-		eventsService.createEventType(VisitorRegistered, profileSystem, system.getSystemToken(enterprise));
+		eventsService.createEventType(UserRegistered.toString(), profileSystem, system.getSystemToken(enterprise));
+		eventsService.createEventType(VisitorRegistered.toString(), profileSystem, system.getSystemToken(enterprise));
 		
 		
 		GuiceContext.get(IInvolvedPartyService.class)
@@ -47,11 +41,11 @@ public class ProfileMasterInstall implements ISystemUpdate
 				            system.getSystemToken(enterprise));
 	}
 	
-	private void createSiteDetailsClassifications(IEnterprise<?> enterprise)
+	private void createSiteDetailsClassifications(IEnterprise<?,?> enterprise)
 	{
 		IClassificationService<?> classificationService = GuiceContext.get(IClassificationService.class);
 		ProfileSystem system = GuiceContext.get(ProfileSystem.class);
-		ISystems<?> profileSystem = system.getSystem(enterprise);
+		ISystems<?,?> profileSystem = system.getSystem(enterprise);
 		
 		classificationService.create(ClientConnectionDetails, profileSystem);
 		classificationService.create(BrowserDeviceCategory, profileSystem,ClientConnectionDetails);

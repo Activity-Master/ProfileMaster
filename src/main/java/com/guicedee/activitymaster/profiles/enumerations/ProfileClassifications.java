@@ -1,14 +1,8 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import com.guicedee.activitymaster.core.services.enumtypes.IClassificationValue;
-import com.guicedee.activitymaster.core.services.enumtypes.IClassificationDataConceptValue;
-import com.guicedee.activitymaster.core.services.classifications.involvedparty.IInvolvedPartyClassification;
-
-import static com.guicedee.activitymaster.core.services.concepts.EnterpriseClassificationDataConcepts.*;
+import static com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts.*;
 
 public enum ProfileClassifications
-		implements IClassificationValue<ProfileClassifications>
-				           , IInvolvedPartyClassification<ProfileClassifications>
 {
 	LogonDetails("Details for Login", EventXInvolvedParty),
 	LastLoginTime("The last time the Involved Party was logged in", EventXInvolvedParty),
@@ -21,9 +15,9 @@ public enum ProfileClassifications
 	;
 
 	private String description;
-	private IClassificationDataConceptValue<?> concept;
+	private com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept;
 
-	ProfileClassifications(String description, IClassificationDataConceptValue<?> concept)
+	ProfileClassifications(String description, com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept)
 	{
 		this.description = description;
 		this.concept = concept;
@@ -34,14 +28,12 @@ public enum ProfileClassifications
 		this.description = description;
 	}
 
-	@Override
 	public String classificationDescription()
 	{
 		return this.description;
 	}
 
-	@Override
-	public IClassificationDataConceptValue<?> concept()
+	public com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept()
 	{
 		return concept;
 	}

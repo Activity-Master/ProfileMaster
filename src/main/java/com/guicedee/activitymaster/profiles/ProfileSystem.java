@@ -2,16 +2,20 @@ package com.guicedee.activitymaster.profiles;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.guicedee.activitymaster.core.services.IActivityMasterProgressMonitor;
+import com.guicedee.activitymaster.client.services.IInvolvedPartyService;
+import com.guicedee.activitymaster.client.services.ISystemsService;
+import com.guicedee.activitymaster.client.services.administration.IActivityMasterProgressMonitor;
+import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.core.services.IActivityMasterSystem;
-import com.guicedee.activitymaster.core.services.dto.*;
-import com.guicedee.activitymaster.core.services.system.*;
+import com.guicedee.activitymaster.core.services.system.ActivityMasterDefaultSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 
 import java.util.Set;
 import java.util.UUID;
 
-import static com.guicedee.activitymaster.core.services.types.IdentificationTypes.*;
+import static com.guicedee.activitymaster.client.services.classifications.types.IdentificationTypes.*;
 import static com.guicedee.activitymaster.profiles.services.enumerations.UserRoles.*;
 import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileService.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
@@ -24,7 +28,7 @@ public class ProfileSystem
 	private Provider<ISystemsService<?>> systemsService;
 	
 	@Override
-	public void registerSystem(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void registerSystem(IEnterprise<?,?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 		systemsService.get()
 		              .create(enterprise, getSystemName(), getSystemDescription());
@@ -33,7 +37,7 @@ public class ProfileSystem
 	}
 	
 	@Override
-	public void createDefaults(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void createDefaults(IEnterprise<?,?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
 	
 	}
@@ -45,13 +49,13 @@ public class ProfileSystem
 	}
 	
 	@Override
-	public void postStartup(IEnterprise<?> enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void postStartup(IEnterprise<?,?> enterprise, IActivityMasterProgressMonitor progressMonitor)
 	{
-		ISystems<?> system = getSystem(enterprise);
+		ISystems<?,?> system = getSystem(enterprise);
 		UUID token = getSystemToken(enterprise);
 		
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
-		IInvolvedParty<?> ip = involvedPartyService.findByIdentificationType(IdentificationTypeEnterpriseCreatorRole, null, system, token);
+		IInvolvedParty<?,?> ip = involvedPartyService.findByIdentificationType(IdentificationTypeEnterpriseCreatorRole.toString(), null, system, token);
 		if (ip != null)
 		{
 			IRolesService<?> rolesService = get(IRolesService.class);
