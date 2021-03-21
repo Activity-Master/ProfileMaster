@@ -1,10 +1,11 @@
 package com.guicedee.activitymaster.profiles.events;
 
+import com.guicedee.activitymaster.client.services.annotations.ActivityMasterDB;
 import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
-import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
+import com.guicedee.guicedpersistence.db.annotations.Transactional;
 
 import java.util.UUID;
 
@@ -12,7 +13,7 @@ import static com.guicedee.activitymaster.client.services.classifications.Defaul
 import static com.guicedee.activitymaster.client.services.classifications.EventInvolvedPartiesClassifications.*;
 import static com.guicedee.activitymaster.client.services.classifications.types.NameTypes.*;
 
-public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
+public class UpdateNewVisitEvent extends Thread
 {
 	private static final String JobServiceName = "NewVisitorCustomIdentifiersAndItems";
 	
@@ -33,7 +34,8 @@ public class UpdateNewVisitEvent extends TransactionalIdentifiedThread
 	}
 	
 	@Override
-	public void perform()
+	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	public void run()
 	{
 		newIp.addOrReuseInvolvedPartyNameType(NoClassification.toString(), PreferredNameType.toString(),"Guest", profileSystem, identityToken);
 		newIp.addOrReuseClassification(CreatedBy, newIp.getId().toString(), profileSystem, identityToken);

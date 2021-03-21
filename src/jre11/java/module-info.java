@@ -1,3 +1,4 @@
+import com.guicedee.activitymaster.client.services.systems.IActivityMasterSystem;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.implementations.*;
 
@@ -5,7 +6,6 @@ module com.guicedee.activitymaster.profiles {
 
 	requires static lombok;
 
-	requires com.guicedee.activitymaster.core;
 	requires com.google.guice;
 
 	requires com.guicedee.guicedinjection;
@@ -35,7 +35,8 @@ module com.guicedee.activitymaster.profiles {
 	exports com.guicedee.activitymaster.profiles.services.interfaces;
 	exports com.guicedee.activitymaster.profiles.services.enumerations;
 
-	provides com.guicedee.activitymaster.core.services.IActivityMasterSystem with ProfileSystem;
+	provides IActivityMasterSystem with ProfileSystem;
+	
 	provides com.guicedee.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
 	provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
 	provides com.guicedee.guicedinjection.interfaces.IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;

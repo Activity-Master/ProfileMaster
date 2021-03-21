@@ -1,12 +1,13 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
+import com.guicedee.activitymaster.client.services.annotations.ActivityMasterDB;
 import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
-import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
+import com.guicedee.guicedpersistence.db.annotations.Transactional;
 import net.sf.uadetector.ReadableUserAgent;
 
 import java.util.UUID;
@@ -14,7 +15,7 @@ import java.util.UUID;
 import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.*;
 
 public class ConfigureFromReadableUserAgentEvent
-		extends TransactionalIdentifiedThread
+		extends Thread
 {
 	private static final String JobServiceName = "ConfigureFromReadableUserAgent";
 
@@ -36,7 +37,8 @@ public class ConfigureFromReadableUserAgentEvent
 	}
 
 	@Override
-	public void perform()
+	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	public void run()
 	{
 		UUID systemID = GuiceContext.get(ProfileSystem.class)
 		                            .getSystemToken(enterprise);

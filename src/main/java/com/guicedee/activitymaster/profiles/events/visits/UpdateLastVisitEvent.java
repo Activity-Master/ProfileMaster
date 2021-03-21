@@ -1,13 +1,14 @@
 package com.guicedee.activitymaster.profiles.events.visits;
 
+import com.guicedee.activitymaster.client.services.annotations.ActivityMasterDB;
 import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.client.services.builders.warehouse.events.IEvent;
 import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
-import com.guicedee.activitymaster.core.threads.TransactionalIdentifiedThread;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.guicedinjection.json.LocalDateTimeDeserializer;
+import com.guicedee.guicedpersistence.db.annotations.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,7 +19,7 @@ import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassific
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
 public class UpdateLastVisitEvent
-		extends TransactionalIdentifiedThread
+		extends Thread
 {
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS");
 	private static final String JobServiceName = "UpdateLastVisitEvent";
@@ -39,7 +40,8 @@ public class UpdateLastVisitEvent
 	}
 
 	@Override
-	public void perform()
+	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	public void run()
 	{
 		ISystems<?,?> profileSystem = get(ProfileSystem.class)
 				                            .getSystem(enterprise);
