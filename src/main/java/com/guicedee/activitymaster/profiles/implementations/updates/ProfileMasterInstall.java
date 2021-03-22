@@ -11,7 +11,7 @@ import com.guicedee.guicedinjection.GuiceContext;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileEventTypes.*;
 import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassifications.*;
 
-@DatedUpdate(date = "2020/12/01", taskCount = 1)
+@SortedUpdate(sortOrder = 50, taskCount = 1)
 public class ProfileMasterInstall implements ISystemUpdate
 {
 	@Override
