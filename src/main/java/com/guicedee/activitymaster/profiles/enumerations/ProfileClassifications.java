@@ -1,6 +1,6 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import static com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts.*;
+import static com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts.*;
 
 public enum ProfileClassifications
 {
@@ -15,9 +15,9 @@ public enum ProfileClassifications
 	;
 
 	private String description;
-	private com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept;
+	private com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept;
 
-	ProfileClassifications(String description, com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept)
+	ProfileClassifications(String description, com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept)
 	{
 		this.description = description;
 		this.concept = concept;
@@ -33,7 +33,7 @@ public enum ProfileClassifications
 		return this.description;
 	}
 
-	public com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept()
+	public com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept()
 	{
 		return concept;
 	}

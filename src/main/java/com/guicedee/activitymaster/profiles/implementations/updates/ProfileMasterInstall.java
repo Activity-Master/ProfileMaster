@@ -1,9 +1,9 @@
 package com.guicedee.activitymaster.profiles.implementations.updates;
 
-import com.guicedee.activitymaster.client.services.*;
-import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
-import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
-import com.guicedee.activitymaster.client.services.systems.*;
+import com.guicedee.activitymaster.fsdm.client.services.*;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
+import com.guicedee.activitymaster.fsdm.client.services.systems.*;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
 import com.guicedee.guicedinjection.GuiceContext;
@@ -15,7 +15,7 @@ import static com.guicedee.activitymaster.profiles.enumerations.SiteClientClassi
 public class ProfileMasterInstall implements ISystemUpdate
 {
 	@Override
-	public void update(IEnterprise<?,?> enterprise, IActivityMasterProgressMonitor progressMonitor)
+	public void update(IEnterprise<?,?> enterprise)
 	{
 		createInvolvedPartyClassifications(enterprise);
 		createSiteDetailsClassifications(enterprise);

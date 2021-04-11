@@ -1,10 +1,10 @@
 package com.guicedee.activitymaster.profiles.webdto;
 
 
-import com.guicedee.activitymaster.client.services.IEnterpriseService;
-import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
-import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
-import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
+import com.guicedee.activitymaster.fsdm.client.services.IEnterpriseService;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
@@ -13,8 +13,8 @@ import lombok.experimental.Accessors;
 
 import java.util.*;
 
-import static com.guicedee.activitymaster.client.services.classifications.DefaultClassifications.*;
-import static com.guicedee.activitymaster.client.services.classifications.types.NameTypes.*;
+import static com.guicedee.activitymaster.fsdm.client.services.classifications.DefaultClassifications.*;
+import static com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @Data

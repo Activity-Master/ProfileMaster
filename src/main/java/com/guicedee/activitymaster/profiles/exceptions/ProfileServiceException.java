@@ -1,6 +1,6 @@
 package com.guicedee.activitymaster.profiles.exceptions;
 
-import com.guicedee.activitymaster.client.services.exceptions.ActivityMasterException;
+import com.guicedee.activitymaster.fsdm.client.services.exceptions.ActivityMasterException;
 
 public class ProfileServiceException
 		extends ActivityMasterException

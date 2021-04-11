@@ -3,7 +3,7 @@ package com.guicedee.activitymaster.profiles.dto;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
-import com.guicedee.activitymaster.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;

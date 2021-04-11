@@ -1,7 +1,7 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.guicedee.activitymaster.client.services.builders.warehouse.party.IInvolvedParty;
-import com.guicedee.activitymaster.client.services.builders.warehouse.systems.ISystems;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
@@ -21,8 +21,6 @@ public class RolesService
 	@CacheResult(cacheName = "UserRolesGetRoles")
 	public Set<String> getRoles(@CacheKey IInvolvedParty<?,?> ip, ISystems<?,?> systems, @CacheKey UUID... identityToken)
 	{
-		Set<String> roles = findAllRoles();
-		Set<String> myRoles = new TreeSet<>();
 		Set<String> assignedRoles = new TreeSet<>();
 		if (systems == null)
 		{
@@ -33,26 +31,15 @@ public class RolesService
 		{
 			return new TreeSet<>();
 		}
-		for (Object classifications2 : ip.builder().getClassificationsValuePivot(UserRoles.toString(),(String) null, systems, identityToken))
+		for (Object[] classifications2 : ip.builder().getClassificationsValuePivot(UserRoles.toString(),ip.getId() + "", systems, identityToken))
 		{
-			assignedRoles.add(classifications2.toString());
+			assignedRoles.add(classifications2[1].toString());
 		}
-		for (String assignedRole : assignedRoles)
+		if (assignedRoles.isEmpty())
 		{
-			for (String role : roles)
-			{
-				if (role
-				        .equalsIgnoreCase(assignedRole))
-				{
-					myRoles.add(role);
-				}
-			}
+			assignedRoles.add("Guest");
 		}
-		if (myRoles.isEmpty())
-		{
-			myRoles.add("Guest");
-		}
-		return myRoles;
+		return assignedRoles;
 	}
 	
 	@Override

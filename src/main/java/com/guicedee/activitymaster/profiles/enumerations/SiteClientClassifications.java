@@ -1,10 +1,11 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import static com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts.*;
+import static com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts.*;
 
 public enum SiteClientClassifications
 {
-	ClientConnectionDetails("Details for web site connection", EventXClassification),
+	ClientConnectionDetails("Details for site connection", EventXClassification),
+	
 	OperatingSystem("The operating system used to browse", EventXClassification),
 	OperatingSystemFamily("The operating system family", EventXClassification),
 	BrowserDeviceCategory("The browser device category ", EventXClassification),
@@ -14,9 +15,9 @@ public enum SiteClientClassifications
 	;
 
 	private String description;
-	private com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept;
+	private com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept;
 
-	SiteClientClassifications(String description, com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept)
+	SiteClientClassifications(String description, com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept)
 	{
 		this.description = description;
 		this.concept = concept;
@@ -32,7 +33,7 @@ public enum SiteClientClassifications
 		return this.description;
 	}
 
-	public com.guicedee.activitymaster.client.services.classifications.EnterpriseClassificationDataConcepts concept()
+	public com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept()
 	{
 		return concept;
 	}

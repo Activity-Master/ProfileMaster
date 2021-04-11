@@ -1,4 +1,4 @@
-import com.guicedee.activitymaster.client.services.systems.IActivityMasterSystem;
+import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterSystem;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.implementations.*;
 
@@ -27,7 +27,7 @@ module com.guicedee.activitymaster.profiles {
 	
 	
 	requires jakarta.validation;
-	requires com.guicedee.activitymaster.client;
+	requires com.guicedee.activitymaster.fsdm.client;
 	
 	exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
@@ -41,9 +41,7 @@ module com.guicedee.activitymaster.profiles {
 	provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
 	provides com.guicedee.guicedinjection.interfaces.IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;
 	
-	opens com.guicedee.activitymaster.profiles to com.google.guice, com.guicedee.activitymaster.core;
-	opens com.guicedee.activitymaster.profiles.events.visits to com.google.guice, com.guicedee.activitymaster.core;
-	opens com.guicedee.activitymaster.profiles.events to com.google.guice, com.guicedee.activitymaster.core;
+	opens com.guicedee.activitymaster.profiles to com.google.guice, com.guicedee.activitymaster.fsdm;
 	opens com.guicedee.activitymaster.profiles.dto to  com.google.guice, com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.webdto to  com.google.guice, com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.deserializers to  com.google.guice, com.fasterxml.jackson.databind;
@@ -52,8 +50,6 @@ module com.guicedee.activitymaster.profiles {
 	opens com.guicedee.activitymaster.profiles.implementations.updates to com.fasterxml.jackson.databind, com.google.guice;
 
 	exports com.guicedee.activitymaster.profiles.enumerations;
-	exports com.guicedee.activitymaster.profiles.events;
 	exports com.guicedee.activitymaster.profiles.webdto;
 	exports com.guicedee.activitymaster.profiles.deserializers;
-	exports com.guicedee.activitymaster.profiles.events.visits;
 }
