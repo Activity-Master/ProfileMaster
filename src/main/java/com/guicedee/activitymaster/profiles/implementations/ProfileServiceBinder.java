@@ -47,7 +47,7 @@ public class ProfileServiceBinder
 		@SuppressWarnings("Convert2Diamond")
 		Key<ProfileServiceDTO<?>> genericKeyProfileService = Key.get(new TypeLiteral<ProfileServiceDTO<?>>() {});
 		bind(genericKeyProfileService).toProvider(ProfileServiceDTOProvider.class).in(CallScope.class);
-		bind(ProfileServiceDTO.class).to(genericKeyProfileService);
+		bind(ProfileServiceDTO.class).to(genericKeyProfileService).in(CallScope.class);
 		
 		expose(genericKeyProfileService);
 		expose(ProfileServiceDTO.class);

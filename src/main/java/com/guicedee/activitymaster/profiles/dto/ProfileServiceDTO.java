@@ -54,9 +54,11 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	
 	@Inject
 	@Named(ProfileSystemName)
+	@JsonIgnore
 	private ISystems<?, ?> system;
 	@Inject
 	@Named(ProfileSystemName)
+	@JsonIgnore
 	private UUID  identityToken;
 	
 	public UUID getWebClientUUID()
