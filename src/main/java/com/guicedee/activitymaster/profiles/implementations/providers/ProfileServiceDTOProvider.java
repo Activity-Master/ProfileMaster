@@ -19,9 +19,9 @@ public class ProfileServiceDTOProvider
 		AjaxCall<?> ajaxCall = GuiceContext.get(AjaxCall.class);
 		if(ajaxCall.getVariable("localstorage") != null)
 		{
-			Map<String, String> stringStringMap = ajaxCall.getVariable("localstorage")
+			Map<String, Object> stringStringMap = ajaxCall.getVariable("localstorage")
 			                                              .asMap();
-			UUID identityToken = UUID.fromString(stringStringMap.get(LOCAL_STORAGE_PARAMETER_KEY));
+			UUID identityToken = UUID.fromString(stringStringMap.get(LOCAL_STORAGE_PARAMETER_KEY).toString());
 
 			ProfileServiceDTO<?> pro = new ProfileServiceDTO<>();
 			GuiceContext.inject().injectMembers(pro);
