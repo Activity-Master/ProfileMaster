@@ -21,12 +21,22 @@ public class ProfileServiceDTOProvider
 		{
 			Map<String, Object> stringStringMap = ajaxCall.getVariable("localstorage")
 			                                              .asMap();
-			UUID identityToken = UUID.fromString(stringStringMap.get(LOCAL_STORAGE_PARAMETER_KEY).toString());
-
-			ProfileServiceDTO<?> pro = new ProfileServiceDTO<>();
-			GuiceContext.inject().injectMembers(pro);
-			pro.setWebClientUUID(identityToken);
-			return pro;
+			if(stringStringMap.containsKey(LOCAL_STORAGE_PARAMETER_KEY))
+			{
+				UUID identityToken = UUID.fromString(stringStringMap.get(LOCAL_STORAGE_PARAMETER_KEY)
+				                                                    .toString());
+				
+				ProfileServiceDTO<?> pro = new ProfileServiceDTO<>();
+				GuiceContext.inject()
+				            .injectMembers(pro);
+				pro.setWebClientUUID(identityToken);
+				return pro;
+			}else
+			{
+				ProfileServiceDTO<?> pdto = new ProfileServiceDTO<>();
+				GuiceContext.inject().injectMembers(pdto);
+				return pdto;
+			}
 		}
 		else {
 			ProfileServiceDTO<?> pdto = new ProfileServiceDTO<>();
