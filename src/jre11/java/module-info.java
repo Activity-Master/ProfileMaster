@@ -41,12 +41,20 @@ module com.guicedee.activitymaster.profiles {
 	provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
 	provides com.guicedee.guicedinjection.interfaces.IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;
 	
+	exports com.guicedee.activitymaster.profiles;
+	
 	opens com.guicedee.activitymaster.profiles to com.google.guice, com.guicedee.activitymaster.fsdm;
 	opens com.guicedee.activitymaster.profiles.dto to  com.google.guice, com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.webdto to  com.google.guice, com.fasterxml.jackson.databind;
 	opens com.guicedee.activitymaster.profiles.deserializers to  com.google.guice, com.fasterxml.jackson.databind;
+	
+	exports com.guicedee.activitymaster.profiles.implementations;
 	opens com.guicedee.activitymaster.profiles.implementations to com.fasterxml.jackson.databind, com.google.guice;
+	
+	exports com.guicedee.activitymaster.profiles.implementations.providers;
 	opens com.guicedee.activitymaster.profiles.implementations.providers to com.fasterxml.jackson.databind, com.google.guice;
+	
+	exports com.guicedee.activitymaster.profiles.implementations.updates;
 	opens com.guicedee.activitymaster.profiles.implementations.updates to com.fasterxml.jackson.databind, com.google.guice;
 
 	exports com.guicedee.activitymaster.profiles.enumerations;
