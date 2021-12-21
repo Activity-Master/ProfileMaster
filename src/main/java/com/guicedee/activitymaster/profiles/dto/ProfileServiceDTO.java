@@ -11,9 +11,10 @@ import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.guicedservlets.services.scopes.CallScope;
-import lombok.*;
+import lombok.EqualsAndHashCode;
 
-import java.util.*;
+import java.util.Set;
+import java.util.UUID;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
@@ -33,17 +34,15 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	
 	@JsonProperty
 	private UUID webClientUUID;
+	
 	@JsonIgnore
 	private transient IInvolvedParty<?, ?> involvedParty;
 	
-	@JsonIgnore
-	@Getter
-	@Setter
-	private transient Map<String, Object> sessionUpdates;
 	
 	@Inject
 	@JsonIgnore
 	private ProfileSystem profileSystem;
+	
 	@Inject
 	@JsonIgnore
 	private IRolesService<?> rolesService;

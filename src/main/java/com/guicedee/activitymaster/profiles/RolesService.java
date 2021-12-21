@@ -19,7 +19,7 @@ public class RolesService
 {
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
-	public Set<String> getRoles(@CacheKey IInvolvedParty<?,?> ip, ISystems<?,?> systems, @CacheKey UUID... identityToken)
+	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, UUID... identityToken)
 	{
 		Set<String> assignedRoles = new TreeSet<>();
 		if (systems == null)
@@ -31,7 +31,8 @@ public class RolesService
 		{
 			return new TreeSet<>();
 		}
-		for (Object[] classifications2 : ip.builder().getClassificationsValuePivot(UserRoles.toString(),ip.getId() + "", systems, identityToken))
+		for (Object[] classifications2 : ip.builder()
+		                                   .getClassificationsValuePivot(UserRoles.toString(), ip.getId() + "", systems, identityToken))
 		{
 			assignedRoles.add(classifications2[1].toString());
 		}
@@ -45,8 +46,9 @@ public class RolesService
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles",
 	             skipGet = true)
+	//@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	public Set<String> addRole(
-			@CacheKey IInvolvedParty<?,?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?,?> systems, @CacheKey UUID... identityToken)
+			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, UUID... identityToken)
 	{
 		Set<String> roles = getRoles(ip, systems, identityToken);
 		if (!roles.contains(role))
@@ -74,4 +76,6 @@ public class RolesService
 		}
 		return roles;
 	}
+	
+	
 }
