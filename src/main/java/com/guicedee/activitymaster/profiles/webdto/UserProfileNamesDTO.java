@@ -12,8 +12,6 @@ import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
 import jakarta.cache.annotation.CacheKey;
 import jakarta.cache.annotation.CacheResult;
-import lombok.*;
-import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -22,11 +20,6 @@ import static com.guicedee.activitymaster.fsdm.client.services.classifications.D
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
-@Getter
-@Setter
-@Accessors(chain = true)
-@ToString(of = "fullName")
-@EqualsAndHashCode(of = {"involvedParty"}, callSuper = false)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
                 getterVisibility = JsonAutoDetect.Visibility.NONE,
                 setterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -55,6 +48,160 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 	
 	@JsonIgnore
 	private IInvolvedParty<?, ?> involvedParty;
+	
+	public String getFullName()
+	{
+		return fullName;
+	}
+	
+	public UserProfileNamesDTO<J> setFullName(String fullName)
+	{
+		this.fullName = fullName;
+		return this;
+	}
+	
+	public String getBirthName()
+	{
+		return birthName;
+	}
+	
+	public UserProfileNamesDTO<J> setBirthName(String birthName)
+	{
+		this.birthName = birthName;
+		return this;
+	}
+	
+	public String getLegalName()
+	{
+		return legalName;
+	}
+	
+	public UserProfileNamesDTO<J> setLegalName(String legalName)
+	{
+		this.legalName = legalName;
+		return this;
+	}
+	
+	public String getSalutationName()
+	{
+		return salutationName;
+	}
+	
+	public UserProfileNamesDTO<J> setSalutationName(String salutationName)
+	{
+		this.salutationName = salutationName;
+		return this;
+	}
+	
+	public String getQualificationName()
+	{
+		return qualificationName;
+	}
+	
+	public UserProfileNamesDTO<J> setQualificationName(String qualificationName)
+	{
+		this.qualificationName = qualificationName;
+		return this;
+	}
+	
+	public String getCommonName()
+	{
+		return commonName;
+	}
+	
+	public UserProfileNamesDTO<J> setCommonName(String commonName)
+	{
+		this.commonName = commonName;
+		return this;
+	}
+	
+	public String getPreferredName()
+	{
+		return preferredName;
+	}
+	
+	public UserProfileNamesDTO<J> setPreferredName(String preferredName)
+	{
+		this.preferredName = preferredName;
+		return this;
+	}
+	
+	public String getFirstName()
+	{
+		return firstName;
+	}
+	
+	public UserProfileNamesDTO<J> setFirstName(String firstName)
+	{
+		this.firstName = firstName;
+		return this;
+	}
+	
+	public String getInitials()
+	{
+		return initials;
+	}
+	
+	public UserProfileNamesDTO<J> setInitials(String initials)
+	{
+		this.initials = initials;
+		return this;
+	}
+	
+	public String getSurname()
+	{
+		return surname;
+	}
+	
+	public UserProfileNamesDTO<J> setSurname(String surname)
+	{
+		this.surname = surname;
+		return this;
+	}
+	
+	public String getSuffix()
+	{
+		return suffix;
+	}
+	
+	public UserProfileNamesDTO<J> setSuffix(String suffix)
+	{
+		this.suffix = suffix;
+		return this;
+	}
+	
+	public String getTitle()
+	{
+		return title;
+	}
+	
+	public UserProfileNamesDTO<J> setTitle(String title)
+	{
+		this.title = title;
+		return this;
+	}
+	
+	public Set<String> getMiddleNames()
+	{
+		return middleNames;
+	}
+	
+	public UserProfileNamesDTO<J> setMiddleNames(Set<String> middleNames)
+	{
+		this.middleNames = middleNames;
+		return this;
+	}
+	
+	public IInvolvedParty<?, ?> getInvolvedParty()
+	{
+		return involvedParty;
+	}
+	
+	public UserProfileNamesDTO<J> setInvolvedParty(IInvolvedParty<?, ?> involvedParty)
+	{
+		this.involvedParty = involvedParty;
+		return this;
+	}
 	
 	@CacheResult(cacheName = "UserProfileNamesDTO")
 	public J from(@CacheKey IInvolvedParty<?, ?> involvedParty)
@@ -294,4 +441,24 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		return personNameBuilder.toString();
 	}
 	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o)
+		{
+			return true;
+		}
+		if (!(o instanceof UserProfileNamesDTO))
+		{
+			return false;
+		}
+		UserProfileNamesDTO<?> that = (UserProfileNamesDTO<?>) o;
+		return Objects.equals(getInvolvedParty(), that.getInvolvedParty());
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(getInvolvedParty());
+	}
 }

@@ -1,11 +1,9 @@
 import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterSystem;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
-import com.guicedee.activitymaster.profiles.implementations.*;
+import com.guicedee.activitymaster.profiles.implementations.ProfileMasterModuleInclusion;
+import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
 
 module com.guicedee.activitymaster.profiles {
-
-	requires static lombok;
-
 	requires com.google.guice;
 
 	requires com.guicedee.guicedinjection;
@@ -13,17 +11,17 @@ module com.guicedee.activitymaster.profiles {
 
 	requires com.fasterxml.jackson.databind;
 
-	requires net.sf.uadetector.core;
+	//requires net.sf.uadetector.core;
 	requires org.json;
 	requires com.guicedee.guicedpersistence;
-	requires com.guicedee.guicedservlets;
+	//requires com.guicedee.guicedservlets;
 
 	requires cache.annotations.ri.common;
 	requires cache.annotations.ri.guice;
 	requires cache.api;
 	requires com.fasterxml.jackson.annotation;
 	requires io.github.classgraph;
-	requires com.jwebmp.core;
+	//requires com.jwebmp.core;
 	
 	
 	requires jakarta.validation;
@@ -38,7 +36,7 @@ module com.guicedee.activitymaster.profiles {
 	provides IActivityMasterSystem with ProfileSystem;
 	
 	provides com.guicedee.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
-	provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
+	//provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
 	provides com.guicedee.guicedinjection.interfaces.IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;
 	
 	exports com.guicedee.activitymaster.profiles;

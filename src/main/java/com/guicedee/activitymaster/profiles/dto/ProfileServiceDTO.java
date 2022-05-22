@@ -10,11 +10,8 @@ import com.guicedee.activitymaster.fsdm.client.services.exceptions.ActivityMaste
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.guicedinjection.GuiceContext;
-import com.guicedee.guicedservlets.services.scopes.CallScope;
-import lombok.EqualsAndHashCode;
 
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
@@ -25,8 +22,6 @@ import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileS
 @JsonAutoDetect(fieldVisibility = ANY,
                 getterVisibility = NONE,
                 setterVisibility = NONE)
-@EqualsAndHashCode(of = {"webClientUUID"}, callSuper = false)
-@CallScope
 public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		extends UserDTO<J>
 {
@@ -154,5 +149,26 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	{
 		this.involvedParty = involvedParty;
 		return (J) this;
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o)
+		{
+			return true;
+		}
+		if (!(o instanceof ProfileServiceDTO))
+		{
+			return false;
+		}
+		ProfileServiceDTO<?> that = (ProfileServiceDTO<?>) o;
+		return Objects.equals(getWebClientUUID(), that.getWebClientUUID());
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(getWebClientUUID());
 	}
 }
