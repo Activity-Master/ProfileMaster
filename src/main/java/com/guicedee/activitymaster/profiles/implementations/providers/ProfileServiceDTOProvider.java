@@ -8,6 +8,7 @@ import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.UUID;
 
+
 public class ProfileServiceDTOProvider
 		implements Provider<ProfileServiceDTO<?>>
 {

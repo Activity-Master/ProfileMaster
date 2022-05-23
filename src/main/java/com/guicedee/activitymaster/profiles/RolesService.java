@@ -9,7 +9,8 @@ import io.github.classgraph.ClassInfo;
 import jakarta.cache.annotation.CacheKey;
 import jakarta.cache.annotation.CacheResult;
 
-import java.util.*;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
@@ -19,7 +20,7 @@ public class RolesService
 {
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
-	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, UUID... identityToken)
+	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> assignedRoles = new TreeSet<>();
 		if (systems == null)
@@ -48,7 +49,7 @@ public class RolesService
 	             skipGet = true)
 	//@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	public Set<String> addRole(
-			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, UUID... identityToken)
+			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> roles = getRoles(ip, systems, identityToken);
 		if (!roles.contains(role))

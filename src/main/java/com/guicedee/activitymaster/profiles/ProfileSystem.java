@@ -52,21 +52,21 @@ public class ProfileSystem
 	public void postStartup(IEnterprise<?,?> enterprise)
 	{
 		ISystems<?,?> system = getSystem(enterprise);
-		UUID token = getSystemToken(enterprise);
+		UUID identityToken = getSystemToken(enterprise);
 		
 		IInvolvedPartyService<?> involvedPartyService = get(IInvolvedPartyService.class);
 		IInvolvedParty<?, ?> ip = involvedPartyService.get()
 		                                              .builder()
-		                                              .findByIdentificationType(IdentificationTypeEnterpriseCreatorRole.toString(), null, system, token)
+		                                              .findByIdentificationType(IdentificationTypeEnterpriseCreatorRole.toString(), null, system, identityToken)
 		                                              .get()
 		                                              .orElse(null);
 		if (ip != null)
 		{
 			IRolesService<?> rolesService = get(IRolesService.class);
-			Set<String> roles = rolesService.getRoles(ip, system, token);
+			Set<String> roles = rolesService.getRoles(ip, system, identityToken);
 			if (!roles.contains(Administrator.toString()))
 			{
-				roles.addAll(rolesService.addRole(ip, Administrator.toString(), null, system, token));
+				roles.addAll(rolesService.addRole(ip, Administrator.toString(), null, system, identityToken));
 			}
 		}
 		super.postStartup(enterprise);

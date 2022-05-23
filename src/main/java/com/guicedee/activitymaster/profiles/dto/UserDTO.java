@@ -64,7 +64,7 @@ public class UserDTO<J extends UserDTO<J>>
         return this.identityToken;
     }
 
-    public J setIdentityToken(UUID identityToken) {
+    public J setIdentityToken(java.util.UUID identityToken) {
         this.identityToken = identityToken;
         //noinspection unchecked
         return (J)this;
