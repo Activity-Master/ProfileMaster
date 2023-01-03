@@ -2,11 +2,9 @@ package com.guicedee.activitymaster.profiles;
 
 import com.google.inject.Inject;
 import com.guicedee.activitymaster.fsdm.client.services.IPasswordsService;
-import com.guicedee.activitymaster.fsdm.client.services.annotations.ActivityMasterDB;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
-import com.guicedee.guicedpersistence.db.annotations.Transactional;
 import jakarta.cache.annotation.CacheRemove;
 import jakarta.cache.annotation.CacheResult;
 
@@ -14,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService.*;
-import static com.guicedee.activitymaster.fsdm.client.services.classifications.DefaultClassifications.*;
+import static com.guicedee.activitymaster.fsdm.client.types.classifications.DefaultClassifications.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
 
 @SuppressWarnings("Duplicates")
@@ -24,7 +22,7 @@ public class ProfileService
 	@Inject
 	private IPasswordsService<?> passwordsService;
 	
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	//@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	@Override
 	public List<ProfileServiceDTO<?>> listUsers(String... roles)
 	{
@@ -34,11 +32,12 @@ public class ProfileService
 		{
 			for (String role : roles)
 			{
-				if (user.findRoles()
+				//@todo this is not efficient at all
+				/*if (user.findRoles()
 				        .contains(role))
 				{
 					filtered.add(user);
-				}
+				}*/
 			}
 		}
 		return users;
@@ -46,7 +45,7 @@ public class ProfileService
 	
 	@CacheResult(cacheName = "UserProfiles")
 	@Override
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	//@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	public List<ProfileServiceDTO<?>> allUsers()
 	{
 		List<ProfileServiceDTO<?>> output = new ArrayList<>();
@@ -62,7 +61,6 @@ public class ProfileService
 				profileServiceDTO.setWebClientUUID(idType.get()
 				                                         .getValueAsUUID());
 			}
-			profileServiceDTO.setInvolvedParty(allId);
 			output.add(profileServiceDTO);
 		}
 		return output;

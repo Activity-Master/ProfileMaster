@@ -1,6 +1,8 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import static com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts.*;
+import com.guicedee.activitymaster.fsdm.client.types.classifications.EnterpriseClassificationDataConcepts;
+
+import static com.guicedee.activitymaster.fsdm.client.types.classifications.EnterpriseClassificationDataConcepts.*;
 
 public enum SiteClientClassifications
 {
@@ -15,9 +17,9 @@ public enum SiteClientClassifications
 	;
 
 	private String description;
-	private com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept;
+	private EnterpriseClassificationDataConcepts concept;
 
-	SiteClientClassifications(String description, com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept)
+	SiteClientClassifications(String description, EnterpriseClassificationDataConcepts concept)
 	{
 		this.description = description;
 		this.concept = concept;
@@ -33,7 +35,7 @@ public enum SiteClientClassifications
 		return this.description;
 	}
 
-	public com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts concept()
+	public EnterpriseClassificationDataConcepts concept()
 	{
 		return concept;
 	}

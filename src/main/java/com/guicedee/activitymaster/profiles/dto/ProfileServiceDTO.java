@@ -1,21 +1,15 @@
 package com.guicedee.activitymaster.profiles.dto;
 
 import com.fasterxml.jackson.annotation.*;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
-import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
-import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
-import com.guicedee.activitymaster.fsdm.client.services.exceptions.ActivityMasterException;
-import com.guicedee.activitymaster.profiles.ProfileSystem;
-import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.guicedinjection.GuiceContext;
+import com.guicedee.activitymaster.fsdm.client.types.*;
+import com.guicedee.activitymaster.fsdm.client.types.structures.Party;
+import com.guicedee.activitymaster.fsdm.communicator.endpoints.PartyCall;
 
 import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
+import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.*;
-import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileService.*;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -30,30 +24,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	@JsonProperty
 	private UUID webClientUUID;
 	
-	@JsonIgnore
-	private transient IInvolvedParty<?, ?> involvedParty;
-	
-	
-	@Inject
-	@JsonIgnore
-	private ProfileSystem profileSystem;
-	
-	@Inject
-	@JsonIgnore
-	private IRolesService<?> rolesService;
-	
-	@Inject
-	@JsonIgnore
-	private IInvolvedPartyService<?> involvedPartyService;
-	
-	@Inject
-	@Named(ProfileSystemName)
-	@JsonIgnore
-	private ISystems<?, ?> system;
-	@Inject
-	@Named(ProfileSystemName)
-	@JsonIgnore
-	private UUID  identityToken;
+	private Set<String> roles = new HashSet<>();
 	
 	public UUID getWebClientUUID()
 	{
@@ -65,90 +36,29 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		this.webClientUUID = webClientUUID;
 		return (J) this;
 	}
-	
-	public Set<String> findRoles()
+
+	public void findInvolvedParty()
 	{
-		if (profileSystem == null)
-		{
-			GuiceContext.inject()
-			            .injectMembers(this);
-		}
-		ISystems<?, ?> system = profileSystem.getSystem(getEnterprise());
-		UUID systemToken = profileSystem.getSystemToken(getEnterprise());
-		
-		if (this.involvedParty == null)
-		{
-			this.involvedParty = findInvolvedParty(system, systemToken);
-		}
-		Set<String> rolesss = rolesService.getRoles(this.involvedParty, system, systemToken);
-		return rolesss;
-	}
-	
-	public IInvolvedParty<?, ?> findInvolvedParty(ISystems<?, ?> system, UUID identityToken)
-	{
-		if (involvedPartyService == null)
-		{
-			GuiceContext.inject()
-			            .injectMembers(this);
-		}
-		if (this.involvedParty == null)
-		{
-			if (webClientUUID != null)
+			if (webClientUUID != null && getIdentityToken() == null)
 			{
-				
-				this.involvedParty =
-						involvedPartyService.get()
-						                    .builder()
-						                    .findByIdentificationType(IdentificationTypeWebClientUUID.toString(), getWebClientUUID().toString(),
-								                    system, identityToken)
-						                    .get()
-						                    .orElse(null);
-				
-				setIdentityToken(UUID.fromString(involvedParty.getId()));
-			}
-		}
-		return this.involvedParty;
-	}
-	
-	public IInvolvedParty<?, ?> findInvolvedParty()
-	{
-		if (involvedPartyService == null)
-		{
-			GuiceContext.inject()
-			            .injectMembers(this);
-		}
-		if (this.involvedParty == null)
-		{
-			if (webClientUUID != null)
-			{
-				try
+				IdentificationTypes identificationTypes = new IdentificationTypes()
+						.setIdentificationType(new IdentificationType()
+								.setName(IdentificationTypeWebClientUUID))
+						.setValue(getWebClientUUID());
+				AuthenticationConfiguration authenticationConfiguration = new AuthenticationConfiguration();
+				Party party = new PartyCall(authenticationConfiguration).find(identificationTypes, Set.of(), UserRoles.toString());
+				for (Classifications classification : party.getClassifications())
 				{
-					this.involvedParty = involvedPartyService.get()
-					                                         .builder()
-					                                         .findByIdentificationType(IdentificationTypeWebClientUUID.toString(),
-							                                         getWebClientUUID().toString(),
-							                                         system,
-							                                         identityToken)
-					                                         .get()
-					                                         .orElse(null);
-				}catch (ActivityMasterException  e)
-				{
-					//
+					switch (classification.getClassification()
+					                      .getName())
+					{
+						case "UserRoles":{
+							roles.add(classification.getValue());
+						}
+					}
 				}
-				if (this.involvedParty == null)
-				{
-					return null;
-				}
-				setIdentityToken(UUID.fromString(involvedParty.getId()));
+				setIdentityToken(UUID.fromString(party.getId()));
 			}
-		}
-		return this.involvedParty;
-	}
-	
-	public J setInvolvedParty(IInvolvedParty<?, ?> involvedParty)
-	{
-		this.involvedParty = involvedParty;
-		return (J) this;
 	}
 	
 	@Override

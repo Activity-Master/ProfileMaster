@@ -1,44 +1,39 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.guicedee.activitymaster.fsdm.client.services.annotations.ActivityMasterDB;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
+import com.guicedee.activitymaster.fsdm.client.types.AuthenticationConfiguration;
+import com.guicedee.activitymaster.fsdm.client.types.Classifications;
+import com.guicedee.activitymaster.fsdm.client.types.structures.Party;
+import com.guicedee.activitymaster.fsdm.communicator.endpoints.PartyCall;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.guicedee.guicedpersistence.db.annotations.Transactional;
-import io.github.classgraph.ClassInfo;
 import jakarta.cache.annotation.CacheKey;
 import jakarta.cache.annotation.CacheResult;
 
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
-import static com.guicedee.guicedinjection.GuiceContext.*;
 
 public class RolesService
 		implements IRolesService<RolesService>
 {
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+
+	//@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
 	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> assignedRoles = new TreeSet<>();
-		if (systems == null)
-		{
-			systems = get(ProfileSystem.class).getSystem(ip.getOriginalSourceSystemID()
-			                                               .getEnterprise());
-		}
 		if (ip == null)
 		{
 			return new TreeSet<>();
 		}
-		for (Object[] classifications2 : ip.builder()
-		                                   .getClassificationsValuePivot(UserRoles.toString(), ip.getId() + "", systems, identityToken))
+		
+		Party party = new PartyCall(new AuthenticationConfiguration()).find(UUID.fromString(ip.getId()), null,UserRoles.toString());
+		for (Classifications classification : party.getClassifications())
 		{
-			assignedRoles.add(classifications2[1].toString());
+			assignedRoles.add(classification.getValue());
 		}
 		if (assignedRoles.isEmpty())
 		{
@@ -50,7 +45,7 @@ public class RolesService
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles",
 	             skipGet = true)
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	//@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
 	public Set<String> addRole(
 			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
@@ -62,25 +57,5 @@ public class RolesService
 		}
 		return roles;
 	}
-	
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
-	@CacheResult(cacheName = "RolesServiceFindAllRoles")
-	@Override
-	public Set<String> findAllRoles()
-	{
-		Set<String> roles = new TreeSet<>();
-		for (ClassInfo classInfo : instance().getScanResult()
-		                                     .getClassesImplementing(IUserRole.class.getCanonicalName()))
-		{
-			for (Object enumConstant : classInfo.loadClass()
-			                                    .getEnumConstants())
-			{
-				IUserRole<?> role = (IUserRole<?>) enumConstant;
-				roles.add(role.toString());
-			}
-		}
-		return roles;
-	}
-	
 	
 }

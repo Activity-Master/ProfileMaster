@@ -35,5 +35,10 @@
             <artifactId>cache-annotations-ri-guice</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.guicedee.activitymaster</groupId>
+            <artifactId>activity-master-communicator</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

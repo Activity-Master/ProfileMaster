@@ -3,10 +3,12 @@ package com.guicedee.activitymaster.profiles.webdto;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Strings;
-import com.guicedee.activitymaster.fsdm.client.services.annotations.*;
+import com.guicedee.activitymaster.fsdm.client.services.annotations.InvolvedPartyEvent;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.events.IEvent;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
+import com.guicedee.activitymaster.fsdm.client.types.annotations.Party;
+import com.guicedee.activitymaster.fsdm.client.types.classifications.EventAction;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
@@ -16,8 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
-import static com.guicedee.activitymaster.fsdm.client.services.classifications.DefaultClassifications.*;
-import static com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes.*;
+import static com.guicedee.activitymaster.fsdm.client.types.classifications.DefaultClassifications.*;
+import static com.guicedee.activitymaster.fsdm.client.types.classifications.types.NameTypes.*;
 import static com.guicedee.guicedinjection.GuiceContext.*;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,

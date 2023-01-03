@@ -15,5 +15,4 @@ public interface IRolesService<J extends IRolesService<J>>
 	
 	Set<String> addRole(IInvolvedParty<?,?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?,?> systems, java.util.UUID... identityToken);
 	
-	Set<String> findAllRoles();
 }

@@ -11,6 +11,8 @@ module com.guicedee.activitymaster.profiles {
 
 	requires com.fasterxml.jackson.databind;
 
+	requires com.guicedee.activitymaster.fsdm.communicator;
+	
 	//requires net.sf.uadetector.core;
 	requires org.json;
 	requires com.guicedee.guicedpersistence;
@@ -26,6 +28,7 @@ module com.guicedee.activitymaster.profiles {
 	
 	requires jakarta.validation;
 	requires com.guicedee.activitymaster.fsdm.client;
+	requires com.guicedee.activitymaster.fsdm.client.types;
 	
 	exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
