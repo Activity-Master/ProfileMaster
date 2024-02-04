@@ -10,8 +10,8 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.syste
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import com.guicedee.guicedinjection.GuiceContext;
-import jakarta.cache.annotation.CacheKey;
-import jakarta.cache.annotation.CacheResult;
+import javax.cache.annotation.CacheKey;
+import javax.cache.annotation.CacheResult;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;

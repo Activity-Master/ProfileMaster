@@ -7,8 +7,8 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.guicedpersistence.db.annotations.Transactional;
-import jakarta.cache.annotation.CacheRemove;
-import jakarta.cache.annotation.CacheResult;
+import javax.cache.annotation.CacheRemove;
+import javax.cache.annotation.CacheResult;
 
 import java.util.ArrayList;
 import java.util.List;

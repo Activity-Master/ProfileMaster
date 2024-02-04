@@ -23,6 +23,8 @@ module com.guicedee.activitymaster.profiles {
 	requires io.github.classgraph;
 	//requires com.jwebmp.core;
 	
+	requires com.guicedee.jsonrepresentation;
+	
 	
 	requires jakarta.validation;
 	requires com.guicedee.activitymaster.fsdm.client;

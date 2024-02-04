@@ -8,8 +8,8 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import com.guicedee.guicedpersistence.db.annotations.Transactional;
 import io.github.classgraph.ClassInfo;
-import jakarta.cache.annotation.CacheKey;
-import jakarta.cache.annotation.CacheResult;
+import javax.cache.annotation.CacheKey;
+import javax.cache.annotation.CacheResult;
 
 import java.util.Set;
 import java.util.TreeSet;
