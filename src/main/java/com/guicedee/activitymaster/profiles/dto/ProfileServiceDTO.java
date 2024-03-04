@@ -9,7 +9,6 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.syste
 import com.guicedee.activitymaster.fsdm.client.services.exceptions.ActivityMasterException;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.*;
 
@@ -70,7 +69,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	{
 		if (profileSystem == null)
 		{
-			GuiceContext.inject()
+			com.guicedee.client.IGuiceContext.instance().inject()
 			            .injectMembers(this);
 		}
 		ISystems<?, ?> system = profileSystem.getSystem(getEnterprise());
@@ -88,7 +87,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	{
 		if (involvedPartyService == null)
 		{
-			GuiceContext.inject()
+			com.guicedee.client.IGuiceContext.instance().inject()
 			            .injectMembers(this);
 		}
 		if (this.involvedParty == null)
@@ -114,7 +113,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 	{
 		if (involvedPartyService == null)
 		{
-			GuiceContext.inject()
+			com.guicedee.client.IGuiceContext.instance().inject()
 			            .injectMembers(this);
 		}
 		if (this.involvedParty == null)

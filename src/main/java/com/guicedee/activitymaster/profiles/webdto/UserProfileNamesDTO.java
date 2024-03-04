@@ -9,16 +9,15 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
-import com.guicedee.guicedinjection.GuiceContext;
-import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CacheResult;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.cache.annotation.CacheKey;
+import javax.cache.annotation.CacheResult;
 import java.util.*;
 
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.DefaultClassifications.*;
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes.*;
-import static com.guicedee.guicedinjection.GuiceContext.*;
+import static com.guicedee.client.IGuiceContext.*;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY,
                 getterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -300,7 +299,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		ISystems<?, ?> system = get(ProfileSystem.class).getSystem(getEnterprise());
 		UUID identityToken = get(ProfileSystem.class).getSystemToken(getEnterprise());
 		
-		IEvent<?, ?> event = GuiceContext.get(IEvent.class);
+		IEvent<?, ?> event = com.guicedee.client.IGuiceContext.get(IEvent.class);
 		event.addInvolvedParty(thisInvolvedParty, "Updated", null, system, identityToken);
 		
 		if (!Strings.isNullOrEmpty(updatedParty.getTitle()))

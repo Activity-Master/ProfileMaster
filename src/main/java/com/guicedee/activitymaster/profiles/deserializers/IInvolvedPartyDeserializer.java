@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
-import com.guicedee.guicedinjection.GuiceContext;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -21,7 +20,7 @@ public class IInvolvedPartyDeserializer
 		String name = p.getValueAsString();
 		try
 		{
-			IInvolvedPartyService<?> enterpriseService = GuiceContext.get(IInvolvedPartyService.class);
+			IInvolvedPartyService<?> enterpriseService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
 			return enterpriseService.findByID(UUID.fromString(name));
 		}catch (Throwable t)
 		{

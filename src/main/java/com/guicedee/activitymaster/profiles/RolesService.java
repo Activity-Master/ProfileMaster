@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
-import static com.guicedee.guicedinjection.GuiceContext.*;
+import static com.guicedee.client.IGuiceContext.*;
 
 public class RolesService
 		implements IRolesService<RolesService>

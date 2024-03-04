@@ -9,7 +9,6 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.guicedinjection.GuiceContext;
 
 import java.util.Set;
 import java.util.UUID;
@@ -54,7 +53,7 @@ public class ProfileSystem
 		ISystems<?,?> system = getSystem(enterprise);
 		UUID identityToken = getSystemToken(enterprise);
 		
-		IInvolvedPartyService<?> involvedPartyService = GuiceContext.get(IInvolvedPartyService.class);
+		IInvolvedPartyService<?> involvedPartyService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
 		IInvolvedParty<?, ?> ip = involvedPartyService.get()
 		                                              .builder()
 		                                              .findByIdentificationType(IdentificationTypeEnterpriseCreatorRole.toString(), null, system, identityToken)
@@ -62,7 +61,7 @@ public class ProfileSystem
 		                                              .orElse(null);
 		if (ip != null)
 		{
-			IRolesService<?> rolesService = GuiceContext.get(IRolesService.class);
+			IRolesService<?> rolesService = com.guicedee.client.IGuiceContext.get(IRolesService.class);
 			Set<String> roles = rolesService.getRoles(ip, system, identityToken);
 			if (!roles.contains(Administrator.toString()))
 			{
