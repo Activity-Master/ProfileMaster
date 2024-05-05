@@ -1,16 +1,15 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.guicedee.activitymaster.fsdm.client.services.annotations.ActivityMasterDB;
+import com.google.inject.persist.Transactional;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
-import com.guicedee.guicedpersistence.db.annotations.Transactional;
 import io.github.classgraph.ClassInfo;
+
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheResult;
-
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -20,7 +19,7 @@ import static com.guicedee.client.IGuiceContext.*;
 public class RolesService
 		implements IRolesService<RolesService>
 {
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	@Transactional()
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
 	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
@@ -50,7 +49,7 @@ public class RolesService
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles",
 	             skipGet = true)
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	@Transactional()
 	public Set<String> addRole(
 			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
@@ -63,7 +62,7 @@ public class RolesService
 		return roles;
 	}
 	
-	@Transactional(entityManagerAnnotation = ActivityMasterDB.class)
+	@Transactional()
 	@CacheResult(cacheName = "RolesServiceFindAllRoles")
 	@Override
 	public Set<String> findAllRoles()
