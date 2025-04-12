@@ -103,7 +103,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 						                    .get()
 						                    .orElse(null);
 				
-				setIdentityToken(UUID.fromString(involvedParty.getId()));
+				setIdentityToken(involvedParty.getId());
 			}
 		}
 		return this.involvedParty;
@@ -138,7 +138,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 				{
 					return null;
 				}
-				setIdentityToken(UUID.fromString(involvedParty.getId()));
+				setIdentityToken(involvedParty.getId());
 			}
 		}
 		return this.involvedParty;
