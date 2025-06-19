@@ -25,11 +25,6 @@ public class RolesService
 	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> assignedRoles = new TreeSet<>();
-		if (systems == null)
-		{
-			systems = get(ProfileSystem.class).getSystem(ip.getOriginalSourceSystemID()
-			                                               .getEnterprise());
-		}
 		if (ip == null)
 		{
 			return new TreeSet<>();

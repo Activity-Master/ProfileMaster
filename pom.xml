@@ -17,7 +17,6 @@
         <dependency>
             <groupId>com.guicedee.activitymaster</groupId>
             <artifactId>activity-master</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
