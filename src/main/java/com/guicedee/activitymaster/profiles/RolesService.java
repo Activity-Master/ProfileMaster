@@ -19,7 +19,7 @@ import static com.guicedee.client.IGuiceContext.*;
 public class RolesService
 		implements IRolesService<RolesService>
 {
-	@Transactional()
+	//@Transactional()
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles")
 	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
@@ -44,7 +44,7 @@ public class RolesService
 	@Override
 	@CacheResult(cacheName = "UserRolesGetRoles",
 	             skipGet = true)
-	@Transactional()
+	//@Transactional()
 	public Set<String> addRole(
 			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
@@ -57,7 +57,7 @@ public class RolesService
 		return roles;
 	}
 	
-	@Transactional()
+	//@Transactional()
 	@CacheResult(cacheName = "RolesServiceFindAllRoles")
 	@Override
 	public Set<String> findAllRoles()

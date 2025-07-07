@@ -23,7 +23,7 @@ public class ProfileService
 	@Inject
 	private IPasswordsService<?> passwordsService;
 	
-	@Transactional()
+	//@Transactional()
 	@Override
 	public List<ProfileServiceDTO<?>> listUsers(String... roles)
 	{
@@ -45,7 +45,7 @@ public class ProfileService
 	
 	@CacheResult(cacheName = "UserProfiles")
 	@Override
-	@Transactional()
+	//@Transactional()
 	public List<ProfileServiceDTO<?>> allUsers()
 	{
 		List<ProfileServiceDTO<?>> output = new ArrayList<>();
