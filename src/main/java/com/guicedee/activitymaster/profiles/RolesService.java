@@ -21,7 +21,7 @@ public class RolesService
 {
 	//@Transactional()
 	@Override
-	@CacheResult(cacheName = "UserRolesGetRoles")
+	//@CacheResult(cacheName = "UserRolesGetRoles")
 	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> assignedRoles = new TreeSet<>();
@@ -42,7 +42,7 @@ public class RolesService
 	}
 	
 	@Override
-	@CacheResult(cacheName = "UserRolesGetRoles",
+	//@CacheResult(cacheName = "UserRolesGetRoles",
 	             skipGet = true)
 	//@Transactional()
 	public Set<String> addRole(
@@ -58,7 +58,7 @@ public class RolesService
 	}
 	
 	//@Transactional()
-	@CacheResult(cacheName = "RolesServiceFindAllRoles")
+	//@CacheResult(cacheName = "RolesServiceFindAllRoles")
 	@Override
 	public Set<String> findAllRoles()
 	{

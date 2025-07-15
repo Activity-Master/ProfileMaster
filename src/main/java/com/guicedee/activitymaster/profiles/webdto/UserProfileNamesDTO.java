@@ -202,7 +202,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		return this;
 	}
 	
-	@CacheResult(cacheName = "UserProfileNamesDTO")
+	//@CacheResult(cacheName = "UserProfileNamesDTO")
 	public J from(@CacheKey IInvolvedParty<?, ?> involvedParty)
 	{
 		this.involvedParty = involvedParty;
@@ -290,7 +290,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		return (J) this;
 	}
 	
-	@CacheResult(cacheName = "UserProfileNamesDTO", skipGet = true)
+	//@CacheResult(cacheName = "UserProfileNamesDTO", skipGet = true)
 	@InvolvedPartyEvent(EventAction.Updated)
 	public void update(@CacheKey IInvolvedParty<?, ?> thisInvolvedParty,
 	                   @Party("Updated") J updatedParty,

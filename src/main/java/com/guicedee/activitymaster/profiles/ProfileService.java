@@ -43,7 +43,7 @@ public class ProfileService
 		return users;
 	}
 	
-	@CacheResult(cacheName = "UserProfiles")
+	//@CacheResult(cacheName = "UserProfiles")
 	@Override
 	//@Transactional()
 	public List<ProfileServiceDTO<?>> allUsers()
