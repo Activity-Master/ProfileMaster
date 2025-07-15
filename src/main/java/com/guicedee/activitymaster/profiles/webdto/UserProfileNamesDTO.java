@@ -11,8 +11,8 @@ import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CacheResult;
+
+
 import java.util.*;
 
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.DefaultClassifications.*;
@@ -203,7 +203,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 	}
 	
 	//@CacheResult(cacheName = "UserProfileNamesDTO")
-	public J from(@CacheKey IInvolvedParty<?, ?> involvedParty)
+	public J from( IInvolvedParty<?, ?> involvedParty)
 	{
 		this.involvedParty = involvedParty;
 		setEnterprise(involvedParty.getEnterprise());
@@ -292,7 +292,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 	
 	//@CacheResult(cacheName = "UserProfileNamesDTO", skipGet = true)
 	@InvolvedPartyEvent(EventAction.Updated)
-	public void update(@CacheKey IInvolvedParty<?, ?> thisInvolvedParty,
+	public void update( IInvolvedParty<?, ?> thisInvolvedParty,
 	                   @Party("Updated") J updatedParty,
 	                   @Party("OnBehalfOf") IInvolvedParty<?, ?> involvedParty)
 	{

@@ -8,8 +8,8 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IUserRole;
 import io.github.classgraph.ClassInfo;
 
-import javax.cache.annotation.CacheKey;
-import javax.cache.annotation.CacheResult;
+
+
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -22,7 +22,7 @@ public class RolesService
 	//@Transactional()
 	@Override
 	//@CacheResult(cacheName = "UserRolesGetRoles")
-	public Set<String> getRoles(@CacheKey IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
+	public Set<String> getRoles( IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> assignedRoles = new TreeSet<>();
 		if (ip == null)
@@ -46,7 +46,7 @@ public class RolesService
 	             skipGet = true)
 	//@Transactional()
 	public Set<String> addRole(
-			@CacheKey IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
+			 IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
 	{
 		Set<String> roles = getRoles(ip, systems, identityToken);
 		if (!roles.contains(role))

@@ -8,7 +8,7 @@ import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 
 import javax.cache.annotation.CacheRemove;
-import javax.cache.annotation.CacheResult;
+
 import java.util.ArrayList;
 import java.util.List;
 
