@@ -21,7 +21,8 @@ public class IInvolvedPartyDeserializer
 		try
 		{
 			IInvolvedPartyService<?> enterpriseService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
-			return enterpriseService.findByID(UUID.fromString(name));
+			return enterpriseService.findByID(UUID.fromString(name))
+				.await().atMost(java.time.Duration.ofMinutes(1));
 		}catch (Throwable t)
 		{
 			return null;
