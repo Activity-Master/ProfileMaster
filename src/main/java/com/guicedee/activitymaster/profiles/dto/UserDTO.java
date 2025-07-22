@@ -1,21 +1,23 @@
 package com.guicedee.activitymaster.profiles.dto;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.services.jsonrepresentation.IJsonRepresentation;
+import lombok.extern.log4j.Log4j2;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
-import static com.guicedee.client.IGuiceContext.*;
-import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.*;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+import static com.guicedee.client.IGuiceContext.get;
+import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.DefaultObjectMapper;
 
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -23,11 +25,10 @@ import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.*;
 @JsonAutoDetect(fieldVisibility = ANY,
         getterVisibility = NONE,
         setterVisibility = NONE)
+@Log4j2
 public class UserDTO<J extends UserDTO<J>>
         implements Serializable, IJsonRepresentation<J>
 {
-    private static final Logger log = Logger.getLogger(UserDTO.class.getName());
-    
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -43,8 +44,8 @@ public class UserDTO<J extends UserDTO<J>>
     public String toString() {
         try {
             return objectAsString(this);
-        } catch (JsonProcessingException e) {
-            log.log(Level.SEVERE, "Can't do the string", e);
+        } catch (Throwable e) {
+            log.error("Can't do the string", e);
         }
         return "Can't Convert";
     }

@@ -4,31 +4,18 @@ import com.guicedee.activitymaster.profiles.implementations.ProfileMasterModuleI
 import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
 
 module com.guicedee.activitymaster.profiles {
-	requires com.google.guice;
-
-	requires com.guicedee.guicedinjection;
-	requires com.google.common;
-
-	requires com.fasterxml.jackson.databind;
+	requires transitive com.guicedee.guicedinjection;
 
 	//requires net.sf.uadetector.core;
 	requires org.json;
-	requires com.guicedee.guicedpersistence;
-	//requires com.guicedee.guicedservlets;
 
-	requires cache.annotations.ri.common;
-	requires cache.annotations.ri.guice;
-	requires cache.api;
 	requires com.fasterxml.jackson.annotation;
 	requires io.github.classgraph;
-	//requires com.jwebmp.core;
-	
-	requires com.guicedee.jsonrepresentation;
-	
-	
-	requires jakarta.validation;
-	requires com.guicedee.activitymaster.fsdm.client;
-	
+
+	requires transitive com.guicedee.jsonrepresentation;
+	requires transitive com.guicedee.activitymaster.fsdm.client;
+	requires static lombok;
+
 	exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
 	//exports com.guicedee.activitymaster.profiles.services;

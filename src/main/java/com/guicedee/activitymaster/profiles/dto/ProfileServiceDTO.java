@@ -9,7 +9,11 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.syste
 import com.guicedee.activitymaster.fsdm.client.services.exceptions.ActivityMasterException;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
+import io.smallrye.mutiny.Uni;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.time.Duration;
 import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.*;
@@ -24,6 +28,7 @@ import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileS
 public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		extends UserDTO<J>
 {
+	private static final Logger log = LogManager.getLogger(ProfileServiceDTO.class);
 	public static final String IDENTITY_SESSION_NAME = "identity";
 	
 	@JsonProperty
@@ -65,6 +70,12 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		return (J) this;
 	}
 	
+	/**
+	 * Find roles for the involved party
+	 * 
+	 * Note: This method is still synchronous for backward compatibility,
+	 * but internally uses reactive programming with await().atMost()
+	 */
 	public Set<String> findRoles()
 	{
 		if (profileSystem == null)
@@ -79,10 +90,48 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		{
 			this.involvedParty = findInvolvedParty(system, systemToken);
 		}
-		Set<String> rolesss = rolesService.getRoles(this.involvedParty, system, systemToken);
-		return rolesss;
+		
+		// Use reactive getRoles method with await().atMost() for backward compatibility
+		return rolesService.getRoles(this.involvedParty, system, systemToken)
+			.await().atMost(Duration.ofMinutes(1));
 	}
 	
+	/**
+	 * Find roles for the involved party (reactive version)
+	 */
+	public Uni<Set<String>> findRolesReactive()
+	{
+		if (profileSystem == null)
+		{
+			com.guicedee.client.IGuiceContext.instance().inject()
+			            .injectMembers(this);
+		}
+		ISystems<?, ?> system = profileSystem.getSystem(getEnterprise());
+		UUID systemToken = profileSystem.getSystemToken(getEnterprise());
+		
+		if (this.involvedParty == null)
+		{
+			// Use reactive findInvolvedPartyReactive method
+			return findInvolvedPartyReactive(system, systemToken)
+				.chain(ip -> {
+					this.involvedParty = ip;
+					return rolesService.getRoles(this.involvedParty, system, systemToken);
+				})
+				.onFailure().invoke(error -> log.error("Error finding roles: {}", error.getMessage(), error))
+				.onFailure().recoverWithItem(() -> new TreeSet<>());
+		}
+		
+		return rolesService.getRoles(this.involvedParty, system, systemToken)
+			.onFailure().invoke(error -> log.error("Error finding roles: {}", error.getMessage(), error))
+			.onFailure().recoverWithItem(() -> new TreeSet<>());
+	}
+	
+	/**
+	 * Find involved party
+	 * 
+	 * Note: This method is still synchronous for backward compatibility,
+	 * but internally uses reactive programming with await().atMost()
+	 */
 	public IInvolvedParty<?, ?> findInvolvedParty(ISystems<?, ?> system, UUID identityToken)
 	{
 		if (involvedPartyService == null)
@@ -94,21 +143,60 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 		{
 			if (webClientUUID != null)
 			{
+				// Use reactive findInvolvedPartyReactive method with await().atMost() for backward compatibility
+				this.involvedParty = findInvolvedPartyReactive(system, identityToken)
+					.await().atMost(Duration.ofMinutes(1));
 				
-				this.involvedParty =
-						involvedPartyService.get()
-						                    .builder()
-						                    .findByIdentificationType(IdentificationTypeWebClientUUID.toString(), getWebClientUUID().toString(),
-								                    system, identityToken)
-						                    .get()
-						                    .orElse(null);
-				
-				setIdentityToken(involvedParty.getId());
+				if (this.involvedParty != null) {
+					setIdentityToken(involvedParty.getId());
+				}
 			}
 		}
 		return this.involvedParty;
 	}
 	
+	/**
+	 * Find involved party (reactive version)
+	 */
+	@SuppressWarnings("unchecked")
+	public Uni<IInvolvedParty<?, ?>> findInvolvedPartyReactive(ISystems<?, ?> system, UUID identityToken)
+	{
+		if (involvedPartyService == null)
+		{
+			com.guicedee.client.IGuiceContext.instance().inject()
+			            .injectMembers(this);
+		}
+		if (this.involvedParty != null)
+		{
+			return Uni.createFrom().item(this.involvedParty);
+		}
+		
+		if (webClientUUID != null)
+		{
+			// Cast the result to the correct type
+			return (Uni<IInvolvedParty<?, ?>>) (Uni<?>) involvedPartyService.get()
+				.builder()
+				.findByIdentificationType(IdentificationTypeWebClientUUID.toString(), getWebClientUUID().toString(),
+						system, identityToken)
+				.get()
+				.onItem().invoke(ip -> {
+					if (ip != null) {
+						setIdentityToken(((IInvolvedParty<?, ?>) ip).getId());
+					}
+				})
+				.onFailure().invoke(error -> log.error("Error finding involved party: {}", error.getMessage(), error))
+				.onFailure().recoverWithItem(() -> null);
+		}
+		
+		return Uni.createFrom().nullItem();
+	}
+	
+	/**
+	 * Find involved party
+	 * 
+	 * Note: This method is still synchronous for backward compatibility,
+	 * but internally uses reactive programming with await().atMost()
+	 */
 	public IInvolvedParty<?, ?> findInvolvedParty()
 	{
 		if (involvedPartyService == null)
@@ -122,15 +210,11 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 			{
 				try
 				{
-					this.involvedParty = involvedPartyService.get()
-					                                         .builder()
-					                                         .findByIdentificationType(IdentificationTypeWebClientUUID.toString(),
-							                                         getWebClientUUID().toString(),
-							                                         system,
-							                                         identityToken)
-					                                         .get()
-					                                         .orElse(null);
-				}catch (ActivityMasterException  e)
+					// Use reactive findInvolvedPartyReactive method with await().atMost() for backward compatibility
+					this.involvedParty = findInvolvedPartyReactive(system, identityToken)
+						.await().atMost(Duration.ofMinutes(1));
+				}
+				catch (ActivityMasterException e)
 				{
 					//
 				}
@@ -142,6 +226,29 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 			}
 		}
 		return this.involvedParty;
+	}
+	
+	/**
+	 * Find involved party (reactive version)
+	 */
+	public Uni<IInvolvedParty<?, ?>> findInvolvedPartyReactive()
+	{
+		if (involvedPartyService == null)
+		{
+			com.guicedee.client.IGuiceContext.instance().inject()
+			            .injectMembers(this);
+		}
+		if (this.involvedParty != null)
+		{
+			return Uni.createFrom().item(this.involvedParty);
+		}
+		
+		if (webClientUUID != null)
+		{
+			return findInvolvedPartyReactive(system, identityToken);
+		}
+		
+		return Uni.createFrom().nullItem();
 	}
 	
 	public J setInvolvedParty(IInvolvedParty<?, ?> involvedParty)

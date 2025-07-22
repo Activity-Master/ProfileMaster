@@ -9,7 +9,11 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
+import io.smallrye.mutiny.Uni;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,6 +25,8 @@ public class ProfileSystem
 		extends ActivityMasterDefaultSystem<ProfileSystem>
 		implements IActivityMasterSystem<ProfileSystem>
 {
+	private static final Logger log = LogManager.getLogger(ProfileSystem.class);
+	
 	@Inject
 	private ISystemsService<?> systemsService;
 	
@@ -28,9 +34,11 @@ public class ProfileSystem
 	public ISystems<?,?>  registerSystem(IEnterprise<?,?> enterprise)
 	{
 		ISystems<?, ?> iSystems = systemsService
-		                                        .create(enterprise, getSystemName(), getSystemDescription());
+		                                        .create(enterprise, getSystemName(), getSystemDescription())
+		                                        .await().atMost(Duration.ofMinutes(1));
 		systemsService
-		              .registerNewSystem(enterprise, getSystem(enterprise));
+		              .registerNewSystem(enterprise, getSystem(enterprise))
+		              .await().atMost(Duration.ofMinutes(1));
 		
 		return iSystems;
 	}
@@ -48,27 +56,50 @@ public class ProfileSystem
 	}
 	
 	@Override
-	public void postStartup(IEnterprise<?,?> enterprise)
+	public Uni<Void> postStartup(IEnterprise<?,?> enterprise)
 	{
 		ISystems<?,?> system = getSystem(enterprise);
 		UUID identityToken = getSystemToken(enterprise);
 		
 		IInvolvedPartyService<?> involvedPartyService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
-		IInvolvedParty<?, ?> ip = involvedPartyService.get()
-		                                              .builder()
-		                                              .findByIdentificationType(IdentificationTypeEnterpriseCreatorRole.toString(), null, system, identityToken)
-		                                              .get()
-		                                              .orElse(null);
-		if (ip != null)
-		{
-			IRolesService<?> rolesService = com.guicedee.client.IGuiceContext.get(IRolesService.class);
-			Set<String> roles = rolesService.getRoles(ip, system, identityToken);
-			if (!roles.contains(Administrator.toString()))
-			{
-				roles.addAll(rolesService.addRole(ip, Administrator.toString(), null, system, identityToken));
+		
+		// Use reactive pattern for finding involved party
+		// First get the builder, then call get() which returns a Uni
+		Uni<?> ipUni = involvedPartyService.get()
+		                                  .builder()
+		                                  .findByIdentificationType(IdentificationTypeEnterpriseCreatorRole.toString(), null, system, identityToken)
+		                                  .get();
+		
+		// Execute the reactive chain with proper type handling
+		ipUni.chain(ipObj -> {
+			if (ipObj != null) {
+				// Cast to the correct type
+				IInvolvedParty<?, ?> ip = (IInvolvedParty<?, ?>) ipObj;
+				IRolesService<?> rolesService = com.guicedee.client.IGuiceContext.get(IRolesService.class);
+				
+				// Use reactive getRoles method
+				return rolesService.getRoles(ip, system, identityToken)
+					.chain(roles -> {
+						if (!roles.contains(Administrator.toString())) {
+							// Use reactive addRole method
+							return rolesService.addRole(ip, Administrator.toString(), null, system, identityToken);
+						}
+						return Uni.createFrom().item(roles);
+					});
 			}
-		}
-		super.postStartup(enterprise);
+			return Uni.createFrom().nullItem();
+		})
+		.subscribe().with(
+			result -> {
+				// Role assignment completed successfully
+				log.debug("Role assignment completed for enterprise creator");
+			},
+			error -> {
+				// Handle error
+				log.error("Error assigning roles to enterprise creator: {}", error.getMessage(), error);
+			}
+		);
+		return ipUni.replaceWith(Uni.createFrom().voidItem());
 	}
 	
 	@Override
