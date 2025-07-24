@@ -83,8 +83,8 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 			com.guicedee.client.IGuiceContext.instance().inject()
 			            .injectMembers(this);
 		}
-		ISystems<?, ?> system = profileSystem.getSystem(getEnterprise());
-		UUID systemToken = profileSystem.getSystemToken(getEnterprise());
+		ISystems<?, ?> system = profileSystem.getSystem(session, getEnterprise());
+		UUID systemToken = profileSystem.getSystemToken(session, getEnterprise());
 		
 		if (this.involvedParty == null)
 		{
@@ -106,8 +106,8 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 			com.guicedee.client.IGuiceContext.instance().inject()
 			            .injectMembers(this);
 		}
-		ISystems<?, ?> system = profileSystem.getSystem(getEnterprise());
-		UUID systemToken = profileSystem.getSystemToken(getEnterprise());
+		ISystems<?, ?> system = profileSystem.getSystem(session, getEnterprise());
+		UUID systemToken = profileSystem.getSystemToken(session, getEnterprise());
 		
 		if (this.involvedParty == null)
 		{

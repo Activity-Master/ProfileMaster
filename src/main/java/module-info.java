@@ -15,8 +15,9 @@ module com.guicedee.activitymaster.profiles {
 	requires transitive com.guicedee.jsonrepresentation;
 	requires transitive com.guicedee.activitymaster.fsdm.client;
 	requires static lombok;
+    requires org.hibernate.reactive;
 
-	exports com.guicedee.activitymaster.profiles.dto;
+    exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
 	//exports com.guicedee.activitymaster.profiles.services;
 	exports com.guicedee.activitymaster.profiles.services.interfaces;

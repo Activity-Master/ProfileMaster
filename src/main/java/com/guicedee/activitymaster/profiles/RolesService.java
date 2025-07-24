@@ -35,7 +35,7 @@ public class RolesService
 		}
 		
 		// Use findClassifications from IManageClassifications instead of getClassificationsValuePivot
-		return ip.findClassifications(UserRoles.toString(), systems, identityToken)
+		return ip.findClassifications(session, UserRoles.toString(), systems, identityToken)
 			.map(classifications -> {
 				Set<String> assignedRoles = new TreeSet<>();
 				for (var classification : classifications)
@@ -68,7 +68,7 @@ public class RolesService
 				if (!roles.contains(role))
 				{
 					// Use addClassification from IManageClassifications
-					return ip.addClassification(UserRoles.toString(), role, systems, identityToken)
+					return ip.addClassification(session, UserRoles.toString(), role, systems, identityToken)
 						.map(result -> {
 							roles.add(role);
 							return roles;

@@ -1,9 +1,7 @@
 package com.guicedee.activitymaster.profiles;
 
 import com.google.inject.Inject;
-import com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService;
 import com.guicedee.activitymaster.fsdm.client.services.IPasswordsService;
-import com.guicedee.activitymaster.fsdm.client.services.ReactiveTransactionUtil;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
@@ -18,7 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService.getISystem;
 import static com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService.getISystemToken;
@@ -81,7 +78,7 @@ public class ProfileService
 				return getISystemTokenReactive(ProfileSystemName)
 					.chain(token -> {
 						// Now use the system and token to get all users
-						return passwordsService.getAllUsers(system, token)
+						return passwordsService.getAllUsers(session, system, token)
 							.chain(allIds -> {
 								List<Uni<ProfileServiceDTO<?>>> profileDtoUnis = new ArrayList<>();
 								
@@ -95,7 +92,7 @@ public class ProfileService
 											return getISystemTokenReactive(ProfileSystemName)
 												.chain(innerToken -> {
 													return allId.findInvolvedPartyIdentificationType(
-														NoClassification, 
+                                                                    session, NoClassification,
 														IdentificationTypeWebClientUUID, 
 														null,
 														innerSystem, 

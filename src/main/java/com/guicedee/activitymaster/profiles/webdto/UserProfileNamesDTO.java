@@ -3,13 +3,9 @@ package com.guicedee.activitymaster.profiles.webdto;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Strings;
-import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
-import com.guicedee.activitymaster.fsdm.client.services.IRelationshipValue;
-import com.guicedee.activitymaster.fsdm.client.services.ReactiveTransactionUtil;
 import com.guicedee.activitymaster.fsdm.client.services.annotations.*;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.events.IEvent;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
-import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedPartyNameType;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.dto.UserDTO;
@@ -212,18 +208,18 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 	{
 		this.involvedParty = involvedParty;
 		setEnterprise(involvedParty.getEnterprise());
-		ISystems<?, ?> system = get(ProfileSystem.class).getSystem(getEnterprise());
-		UUID identityToken = get(ProfileSystem.class).getSystemToken(getEnterprise());
+		ISystems<?, ?> system = get(ProfileSystem.class).getSystem(session, getEnterprise());
+		UUID identityToken = get(ProfileSystem.class).getSystemToken(session, getEnterprise());
 
 		// Create a list to hold all the name type operations
 		List<Uni<?>> nameTypeOperations = new ArrayList<>();
 
 		// Common Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), CommonNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), CommonNameType.toString(), null, system, identityToken)
 				.chain(hasCommonName -> {
 					if (hasCommonName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), CommonNameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), CommonNameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setCommonName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -232,10 +228,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Birth Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), BirthNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), BirthNameType.toString(), null, system, identityToken)
 				.chain(hasBirthName -> {
 					if (hasBirthName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), BirthNameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), BirthNameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setBirthName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -244,10 +240,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Legal Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), LegalNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), LegalNameType.toString(), null, system, identityToken)
 				.chain(hasLegalName -> {
 					if (hasLegalName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), LegalNameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), LegalNameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setLegalName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -256,10 +252,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Salutation Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), SalutationType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), SalutationType.toString(), null, system, identityToken)
 				.chain(hasSalutationName -> {
 					if (hasSalutationName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), SalutationType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), SalutationType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setSalutationName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -268,10 +264,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Qualification Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), QualificationType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), QualificationType.toString(), null, system, identityToken)
 				.chain(hasQualificationName -> {
 					if (hasQualificationName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), QualificationType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), QualificationType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setQualificationName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -280,10 +276,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Suffix
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), SuffixType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), SuffixType.toString(), null, system, identityToken)
 				.chain(hasSuffix -> {
 					if (hasSuffix) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), SuffixType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), SuffixType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setSuffix(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -292,11 +288,11 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Middle Names
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), MiddleNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), MiddleNameType.toString(), null, system, identityToken)
 				.chain(hasMiddleNames -> {
 					if (hasMiddleNames) {
 						getMiddleNames().clear();
-						return involvedParty.findInvolvedPartyNameTypesAll(NoClassification.toString(), MiddleNameType.toString(), null, system, false, identityToken)
+						return involvedParty.findInvolvedPartyNameTypesAll(session, NoClassification.toString(), MiddleNameType.toString(), null, system, false, identityToken)
 							.onItem().invoke(middleNames -> {
 								for (var middleName : middleNames) {
 									getMiddleNames().add(middleName.getValue());
@@ -309,10 +305,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Preferred Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), PreferredNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), PreferredNameType.toString(), null, system, identityToken)
 				.chain(hasPreferredName -> {
 					if (hasPreferredName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), PreferredNameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), PreferredNameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setPreferredName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -321,10 +317,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Full Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), FullNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), FullNameType.toString(), null, system, identityToken)
 				.chain(hasFullName -> {
 					if (hasFullName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), FullNameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), FullNameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setFullName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -333,10 +329,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// First Name
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), FirstNameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), FirstNameType.toString(), null, system, identityToken)
 				.chain(hasFirstName -> {
 					if (hasFirstName) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), FirstNameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), FirstNameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setFirstName(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -345,10 +341,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Surname
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), SurnameType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), SurnameType.toString(), null, system, identityToken)
 				.chain(hasSurname -> {
 					if (hasSurname) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), SurnameType.toString(), null, system, true, true, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), SurnameType.toString(), null, system, true, true, identityToken)
 							.onItem().invoke(nameType -> setSurname(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -357,10 +353,10 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 		// Initials
 		nameTypeOperations.add(
-			involvedParty.hasInvolvedPartyNameTypes(NoClassification.toString(), InitialsType.toString(), null, system, identityToken)
+			involvedParty.hasInvolvedPartyNameTypes(session, NoClassification.toString(), InitialsType.toString(), null, system, identityToken)
 				.chain(hasInitials -> {
 					if (hasInitials) {
-						return involvedParty.findInvolvedPartyNameType(NoClassification.toString(), InitialsType.toString(), null, system, false, false, identityToken)
+						return involvedParty.findInvolvedPartyNameType(session, NoClassification.toString(), InitialsType.toString(), null, system, false, false, identityToken)
 							.onItem().invoke(nameType -> setInitials(nameType.getValue()));
 					}
 					return Uni.createFrom().nullItem();
@@ -386,8 +382,8 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 	                   @Party("Updated") J updatedParty,
 	                   @Party("OnBehalfOf") IInvolvedParty<?, ?> involvedParty)
 	{
-		ISystems<?, ?> system = get(ProfileSystem.class).getSystem(getEnterprise());
-		UUID identityToken = get(ProfileSystem.class).getSystemToken(getEnterprise());
+		ISystems<?, ?> system = get(ProfileSystem.class).getSystem(session, getEnterprise());
+		UUID identityToken = get(ProfileSystem.class).getSystemToken(session, getEnterprise());
 
 		IEvent<?, ?> event = com.guicedee.client.IGuiceContext.get(IEvent.class);
 		
@@ -396,14 +392,14 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		
 		// Add the event operation
 		updateOperations.add(
-			event.addInvolvedParty(thisInvolvedParty, "Updated", null, system, identityToken)
+			event.addInvolvedParty(session, thisInvolvedParty, "Updated", null, system, identityToken)
 		);
 
 		// Title
 		if (!Strings.isNullOrEmpty(updatedParty.getTitle())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), InitialsType, this.title, updatedParty.getTitle(), system, identityToken)
+						session, NoClassification.toString(), InitialsType, this.title, updatedParty.getTitle(), system, identityToken)
 			);
 		}
 		
@@ -411,7 +407,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getFirstName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), FirstNameType, this.firstName, updatedParty.getFirstName(), system, identityToken)
+						session, NoClassification.toString(), FirstNameType, this.firstName, updatedParty.getFirstName(), system, identityToken)
 			);
 		}
 		
@@ -419,7 +415,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getSurname())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), SurnameType, this.surname, updatedParty.getSurname(), system, identityToken)
+						session, NoClassification.toString(), SurnameType, this.surname, updatedParty.getSurname(), system, identityToken)
 			);
 		}
 		
@@ -427,7 +423,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getInitials())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), InitialsType, this.initials, updatedParty.getInitials(), system, identityToken)
+						session, NoClassification.toString(), InitialsType, this.initials, updatedParty.getInitials(), system, identityToken)
 			);
 		}
 		
@@ -435,7 +431,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getFullName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), FullNameType, this.fullName, updatedParty.getFullName(), system, identityToken)
+						session, NoClassification.toString(), FullNameType, this.fullName, updatedParty.getFullName(), system, identityToken)
 			);
 		}
 		
@@ -443,7 +439,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getBirthName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), BirthNameType, this.birthName, updatedParty.getBirthName(), system, identityToken)
+						session, NoClassification.toString(), BirthNameType, this.birthName, updatedParty.getBirthName(), system, identityToken)
 			);
 		}
 		
@@ -451,7 +447,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getLegalName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), LegalNameType, this.legalName, updatedParty.getLegalName(), system, identityToken)
+						session, NoClassification.toString(), LegalNameType, this.legalName, updatedParty.getLegalName(), system, identityToken)
 			);
 		}
 		
@@ -459,7 +455,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getSalutationName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), SalutationType, this.salutationName, updatedParty.getSalutationName(), system, identityToken)
+						session, NoClassification.toString(), SalutationType, this.salutationName, updatedParty.getSalutationName(), system, identityToken)
 			);
 		}
 		
@@ -467,7 +463,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getQualificationName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), QualificationType, this.qualificationName, updatedParty.getQualificationName(), system, identityToken)
+						session, NoClassification.toString(), QualificationType, this.qualificationName, updatedParty.getQualificationName(), system, identityToken)
 			);
 		}
 		
@@ -475,7 +471,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getSuffix())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), SuffixType, this.suffix, updatedParty.getSuffix(), system, identityToken)
+						session, NoClassification.toString(), SuffixType, this.suffix, updatedParty.getSuffix(), system, identityToken)
 			);
 		}
 		
@@ -483,7 +479,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 		if (!Strings.isNullOrEmpty(updatedParty.getPreferredName())) {
 			updateOperations.add(
 				getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-					NoClassification.toString(), PreferredNameType, this.preferredName, updatedParty.getPreferredName(), system, identityToken)
+						session, NoClassification.toString(), PreferredNameType, this.preferredName, updatedParty.getPreferredName(), system, identityToken)
 			);
 		}
 		
@@ -496,7 +492,7 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 			for (String middleName : updatedParty.getMiddleNames()) {
 				middleNameOperations.add(
 					getInvolvedParty().addOrUpdateInvolvedPartyNameType(
-						NoClassification.toString(), MiddleNameType.toString(), null, middleName, system, identityToken)
+							session, NoClassification.toString(), MiddleNameType.toString(), null, middleName, system, identityToken)
 				);
 			}
 			

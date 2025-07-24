@@ -12,9 +12,9 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import io.smallrye.mutiny.Uni;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.Duration;
-import java.util.Set;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.types.IdentificationTypes.*;
@@ -31,20 +31,20 @@ public class ProfileSystem
 	private ISystemsService<?> systemsService;
 	
 	@Override
-	public ISystems<?,?>  registerSystem(IEnterprise<?,?> enterprise)
+	public ISystems<?,?>  registerSystem(Mutiny.Session session, IEnterprise<?,?> enterprise)
 	{
 		ISystems<?, ?> iSystems = systemsService
-		                                        .create(enterprise, getSystemName(), getSystemDescription())
+		                                        .create(session, enterprise, getSystemName(), getSystemDescription())
 		                                        .await().atMost(Duration.ofMinutes(1));
 		systemsService
-		              .registerNewSystem(enterprise, getSystem(enterprise))
+		              .registerNewSystem(session, enterprise, getSystem(session, enterprise))
 		              .await().atMost(Duration.ofMinutes(1));
 		
 		return iSystems;
 	}
 	
 	@Override
-	public void createDefaults(IEnterprise<?,?> enterprise)
+	public void createDefaults(Mutiny.Session session, IEnterprise<?,?> enterprise)
 	{
 	
 	}
@@ -56,10 +56,10 @@ public class ProfileSystem
 	}
 	
 	@Override
-	public Uni<Void> postStartup(IEnterprise<?,?> enterprise)
+	public Uni<Void> postStartup(Mutiny.Session session, IEnterprise<?,?> enterprise)
 	{
-		ISystems<?,?> system = getSystem(enterprise);
-		UUID identityToken = getSystemToken(enterprise);
+		ISystems<?,?> system = getSystem(session, enterprise);
+		UUID identityToken = getSystemToken(session, enterprise);
 		
 		IInvolvedPartyService<?> involvedPartyService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
 		
