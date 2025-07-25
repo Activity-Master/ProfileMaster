@@ -31,9 +31,7 @@ public class ProfileService
 	@Inject
 	private IPasswordsService<?> passwordsService;
 	
-	@Inject
-	private IEnterprise<?, ?> enterprise;
-	
+
 	// Helper methods for reactive operations
     private Uni<ISystems<?, ?>> getISystemReactive(String systemName) {
         return getISystem(systemName, enterprise)

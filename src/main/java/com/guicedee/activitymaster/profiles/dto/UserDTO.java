@@ -36,8 +36,7 @@ public class UserDTO<J extends UserDTO<J>>
      * Involved Party Identity Token
      */
     private UUID identityToken;
-    
-    @Inject
+
     private IEnterprise<?,?> enterprise;
 
     @Override
