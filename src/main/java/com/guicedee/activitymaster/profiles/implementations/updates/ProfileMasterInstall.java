@@ -24,62 +24,71 @@ public class ProfileMasterInstall implements ISystemUpdate
     public Uni<Boolean> update(Mutiny.Session session, IEnterprise<?,?> enterprise)
     {
         // Chain reactive operations
-        return createInvolvedPartyClassifications(enterprise)
-            .chain(v -> createSiteDetailsClassifications(enterprise))
+        return createInvolvedPartyClassifications(session, enterprise)
+            .chain(v -> createSiteDetailsClassifications(session, enterprise))
             .map(v -> true)
             .onFailure().invoke(error -> log.error("Error in ProfileMasterInstall update: {}", error.getMessage(), error));
     }
 
-    private Uni<Void> createInvolvedPartyClassifications(IEnterprise<?,?> enterprise)
+    private Uni<Void> createInvolvedPartyClassifications(Mutiny.Session session, IEnterprise<?,?> enterprise)
     {
         ProfileSystem system = com.guicedee.client.IGuiceContext.get(ProfileSystem.class);
-        ISystems<?,?> profileSystem = system.getSystem(session, enterprise);
-        
         IEventService<?> eventsService = com.guicedee.client.IGuiceContext.get(IEventService.class);
         IInvolvedPartyService<?> involvedPartyService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
         
-        // Chain reactive operations
-        return eventsService.createEventType(session, UserRegistered.toString(), profileSystem, system.getSystemToken(session, enterprise))
-            .chain(userRegistered -> 
-                eventsService.createEventType(session, VisitorRegistered.toString(), profileSystem, system.getSystemToken(session, enterprise))
-            )
-            .chain(visitorRegistered -> 
-                involvedPartyService.createIdentificationType(
-                        session, profileSystem,
-                    ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
-                    "The Web Client UUID stored as a device identifier",
-                    system.getSystemToken(session, enterprise)
-                )
-            )
+        // Chain reactive operations - first get the system
+        return system.getSystem(session, enterprise)
+            .chain(profileSystem -> {
+                // Then get the system token
+                return system.getSystemToken(session, enterprise)
+                    .chain(systemToken -> {
+                        // Now use both profileSystem and systemToken for the operations
+                        return eventsService.createEventType(session, UserRegistered.toString(), profileSystem, systemToken)
+                            .chain(userRegistered -> 
+                                eventsService.createEventType(session, VisitorRegistered.toString(), profileSystem, systemToken)
+                            )
+                            .chain(visitorRegistered -> 
+                                involvedPartyService.createIdentificationType(
+                                    session, profileSystem,
+                                    ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+                                    "The Web Client UUID stored as a device identifier",
+                                    systemToken
+                                )
+                            );
+                    });
+            })
             .map(result -> null); // Convert to Void
     }
 
-    private Uni<Void> createSiteDetailsClassifications(IEnterprise<?,?> enterprise)
+    private Uni<Void> createSiteDetailsClassifications(Mutiny.Session session, IEnterprise<?,?> enterprise)
     {
         IClassificationService<?> classificationService = com.guicedee.client.IGuiceContext.get(IClassificationService.class);
         ProfileSystem system = com.guicedee.client.IGuiceContext.get(ProfileSystem.class);
-        ISystems<?,?> profileSystem = system.getSystem(session, enterprise);
         
-        // Chain reactive operations
-        return classificationService.create(session, ClientConnectionDetails, profileSystem)
-            .chain(clientConnectionDetails -> 
-                classificationService.create(session, BrowserDeviceCategory, profileSystem, ClientConnectionDetails)
-            )
-            .chain(browserDeviceCategory -> 
-                classificationService.create(session, OperatingSystemFamily, profileSystem, ClientConnectionDetails)
-            )
-            .chain(operatingSystemFamily -> 
-                classificationService.create(session, BrowserDeviceCategory, profileSystem, ClientConnectionDetails)
-            )
-            .chain(browserDeviceCategory -> 
-                classificationService.create(session, BrowserDevice, profileSystem, ClientConnectionDetails)
-            )
-            .chain(browserDevice -> 
-                classificationService.create(session, BrowserIcon, profileSystem, ClientConnectionDetails)
-            )
-            .chain(browserIcon -> 
-                classificationService.create(session, OperatingSystem, profileSystem, ClientConnectionDetails)
-            )
+        // Chain reactive operations - first get the system
+        return system.getSystem(session, enterprise)
+            .chain(profileSystem -> {
+                // Now use profileSystem for the operations
+                return classificationService.create(session, ClientConnectionDetails, profileSystem)
+                    .chain(clientConnectionDetails -> 
+                        classificationService.create(session, BrowserDeviceCategory, profileSystem, ClientConnectionDetails)
+                    )
+                    .chain(browserDeviceCategory -> 
+                        classificationService.create(session, OperatingSystemFamily, profileSystem, ClientConnectionDetails)
+                    )
+                    .chain(operatingSystemFamily -> 
+                        classificationService.create(session, BrowserDeviceCategory, profileSystem, ClientConnectionDetails)
+                    )
+                    .chain(browserDeviceCategory -> 
+                        classificationService.create(session, BrowserDevice, profileSystem, ClientConnectionDetails)
+                    )
+                    .chain(browserDevice -> 
+                        classificationService.create(session, BrowserIcon, profileSystem, ClientConnectionDetails)
+                    )
+                    .chain(browserIcon -> 
+                        classificationService.create(session, OperatingSystem, profileSystem, ClientConnectionDetails)
+                    );
+            })
             .map(result -> null); // Convert to Void
     }
 }

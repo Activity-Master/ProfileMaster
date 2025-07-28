@@ -10,6 +10,7 @@ import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import io.smallrye.mutiny.Uni;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +31,12 @@ public class ProfileService
 	
 	@Inject
 	private IPasswordsService<?> passwordsService;
+	
+	@Inject
+	private Mutiny.Session session;
+	
+	@Inject
+	private IEnterprise<?,?> enterprise;
 	
 
 	// Helper methods for reactive operations
