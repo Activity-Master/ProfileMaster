@@ -50,10 +50,6 @@ public class UserProfileNamesDTO<J extends UserProfileNamesDTO<J>>
 
 	@JsonIgnore
 	private IInvolvedParty<?, ?> involvedParty;
-	
-	@Inject
-	@JsonIgnore
-	private Mutiny.Session session;
 
 	public String getFullName()
 	{

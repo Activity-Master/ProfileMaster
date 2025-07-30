@@ -1,6 +1,7 @@
 package com.guicedee.activitymaster.profiles;
 
 import com.google.inject.Inject;
+import com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService;
 import com.guicedee.activitymaster.fsdm.client.services.IPasswordsService;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
@@ -31,37 +32,19 @@ public class ProfileService
 	
 	@Inject
 	private IPasswordsService<?> passwordsService;
-	
-	@Inject
-	private Mutiny.Session session;
-	
-	@Inject
-	private IEnterprise<?,?> enterprise;
-	
-
-	// Helper methods for reactive operations
-    private Uni<ISystems<?, ?>> getISystemReactive(String systemName) {
-        return getISystem(systemName, enterprise)
-                .onItem().ifNull().failWith(() -> new NoSuchElementException("System not found: " + systemName));
-    }
-
-    private Uni<UUID> getISystemTokenReactive(String systemName) {
-        return getISystemToken(systemName, enterprise)
-                .onItem().ifNull().failWith(() -> new NoSuchElementException("System token not found: " + systemName));
-    }
 
 	//@Transactional()
 	@Override
-	public Uni<List<ProfileServiceDTO<?>>> listUsers(String... roles)
+	public Uni<List<ProfileServiceDTO<?>>> listUsers(Mutiny.Session session, IEnterprise<?, ?> enterprise, String... roles)
 	{
-		return allUsers()
+		return allUsers(session, enterprise)
 			.map(users -> {
 				List<ProfileServiceDTO<?>> filtered = new ArrayList<>();
 				for (ProfileServiceDTO<?> user : users)
 				{
 					for (String role : roles)
 					{
-						if (user.findRoles().contains(role))
+						if (user.findRoles(session).contains(role))
 						{
 							filtered.add(user);
 						}
@@ -75,12 +58,12 @@ public class ProfileService
 	//@CacheResult(cacheName = "UserProfiles")
 	@Override
 	//@Transactional()
-	public Uni<List<ProfileServiceDTO<?>>> allUsers()
+	public Uni<List<ProfileServiceDTO<?>>> allUsers(Mutiny.Session session, IEnterprise<?, ?> enterprise)
 	{
 		// Get system and token using reactive helper methods
-		return getISystemReactive(ProfileSystemName)
+		return getISystem(session, ProfileSystemName, enterprise)
 			.chain(system -> {
-				return getISystemTokenReactive(ProfileSystemName)
+				return getISystemToken(session, ProfileSystemName, enterprise)
 					.chain(token -> {
 						// Now use the system and token to get all users
 						return passwordsService.getAllUsers(session, system, token)
@@ -92,9 +75,9 @@ public class ProfileService
 									profileServiceDTO.setInvolvedParty(allId);
 									
 									// Get system and token for each involved party
-									Uni<ProfileServiceDTO<?>> dtoUni = getISystemReactive(ProfileSystemName)
+									Uni<ProfileServiceDTO<?>> dtoUni = getISystem(session, ProfileSystemName, enterprise)
 										.chain(innerSystem -> {
-											return getISystemTokenReactive(ProfileSystemName)
+											return getISystemToken(session, ProfileSystemName, enterprise)
 												.chain(innerToken -> {
 													return allId.findInvolvedPartyIdentificationType(
                                                                     session, NoClassification,

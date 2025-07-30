@@ -1,6 +1,5 @@
 package com.guicedee.activitymaster.profiles;
 
-import com.google.inject.Inject;
 //import com.google.inject.persist.Transactional;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
@@ -15,6 +14,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.*;
 import static com.guicedee.client.IGuiceContext.*;
@@ -23,14 +23,11 @@ public class RolesService
 		implements IRolesService<RolesService>
 {
 	private static final Logger log = LogManager.getLogger(RolesService.class);
-	
-	@Inject
-	private Mutiny.Session session;
-	
+
 	//@Transactional()
 	@Override
 	//@CacheResult(cacheName = "UserRolesGetRoles")
-	public Uni<Set<String>> getRoles(IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, java.util.UUID... identityToken)
+	public Uni<Set<String>> getRoles(Mutiny.Session session, IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, UUID... identityToken)
 	{
 		if (ip == null)
 		{
@@ -65,10 +62,10 @@ public class RolesService
 	//@CacheResult(cacheName = "UserRolesGetRoles", skipGet = true)
 	//@Transactional()
 	public Uni<Set<String>> addRole(
-			 IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, java.util.UUID... identityToken)
+			Mutiny.Session session, IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, UUID... identityToken)
 	{
 		// Avoid using ReactiveTransactionUtil
-		return getRoles(ip, systems, identityToken)
+		return getRoles(session, ip, systems, identityToken)
 			.chain(roles -> {
 				if (!roles.contains(role))
 				{

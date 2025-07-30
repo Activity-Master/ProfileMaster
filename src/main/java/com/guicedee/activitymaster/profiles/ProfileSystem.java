@@ -13,9 +13,6 @@ import io.smallrye.mutiny.Uni;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.time.Duration;
-import java.util.UUID;
-
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.types.IdentificationTypes.*;
 import static com.guicedee.activitymaster.profiles.services.enumerations.UserRoles.*;
 import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileService.*;
@@ -142,7 +139,7 @@ public class ProfileSystem
 		                                        
 		                                        log.debug("🔍 Checking roles for involved party");
 		                                        // Use reactive getRoles method
-		                                        return rolesService.getRoles(ip, system, identityToken)
+		                                        return rolesService.getRoles(session, ip, system, identityToken)
 		                                            .onItem()
 		                                            .invoke(roles -> log.debug("✅ Found {} roles for involved party", roles.size()))
 		                                            .onFailure()
@@ -151,7 +148,7 @@ public class ProfileSystem
 		                                                if (!roles.contains(Administrator.toString())) {
 		                                                    log.debug("🔄 Adding Administrator role to involved party");
 		                                                    // Use reactive addRole method
-		                                                    return rolesService.addRole(ip, Administrator.toString(), null, system, identityToken)
+		                                                    return rolesService.addRole(session, ip, Administrator.toString(), null, system, identityToken)
 		                                                        .onItem()
 		                                                        .invoke(result -> log.debug("✅ Added Administrator role to involved party"))
 		                                                        .onFailure()
