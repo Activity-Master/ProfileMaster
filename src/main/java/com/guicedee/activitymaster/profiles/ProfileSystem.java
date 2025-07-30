@@ -24,10 +24,7 @@ public class ProfileSystem
 {
 	@Inject
 	private ISystemsService<?> systemsService;
-	
-	@Inject
-	private Mutiny.SessionFactory sessionFactory;
-	
+
 	@Override
 	public Uni<ISystems<?,?>> registerSystem(Mutiny.Session session, IEnterprise<?,?> enterprise)
 	{
