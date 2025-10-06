@@ -33,25 +33,24 @@ public class ProfileSystem
 		
 		return systemsService
 		        .create(session, enterprise, getSystemName(), getSystemDescription())
-		        .onItem()
-		        .invoke(system -> {
+		        .chain(system -> {
 		            log.debug("✅ Created Profile System: '{}' with session: {}", system.getName(), session.hashCode());
-		            
-		            // Chain the registerNewSystem call but don't block on it
-		            getSystem(session, enterprise)
+		            // Properly chain the registration to keep all operations on the same session/thread
+		            return getSystem(session, enterprise)
 		                .chain(sys -> systemsService.registerNewSystem(session, enterprise, sys))
 		                .onItem()
-		                .invoke(() -> log.debug("✅ Registered system: {}", getSystemName()))
+		                .invoke(() -> {
+		                    log.debug("✅ Registered system: {}", getSystemName());
+		                    log.info("🎉 Successfully registered Profile System for enterprise: '{}'", enterprise.getName());
+		                })
 		                .onFailure()
 		                .invoke(error -> log.error("❌ Error registering system: {}", error.getMessage(), error))
-		                .subscribe().with(
-		                    result -> log.info("🎉 Successfully registered Profile System for enterprise: '{}'", enterprise.getName()),
-		                    error -> log.error("❌ Failed to register Profile System for enterprise: '{}'", enterprise.getName(), error)
-		                );
+		                .chain(ignored -> Uni.createFrom().item((ISystems<?, ?>) system)); // return the created system after registration
 		        })
 		        .onFailure()
 		        .invoke(error -> log.error("❌ Failed to create Profile System: '{}' with session {}: {}",
-		            getSystemName(), session.hashCode(), error.getMessage(), error));
+		            getSystemName(), session.hashCode(), error.getMessage(), error))
+		        .map(sys -> (ISystems<?, ?>) sys);
 	}
 	
 	@Override
