@@ -64,7 +64,7 @@ public class UserDTO<J extends UserDTO<J>>
         return this.identityToken;
     }
 
-    public J setIdentityToken(java.util.UUID identityToken) {
+    public @org.jspecify.annotations.NonNull J setIdentityToken(java.util.UUID identityToken) {
         this.identityToken = identityToken;
         //noinspection unchecked
         return (J)this;
@@ -74,7 +74,7 @@ public class UserDTO<J extends UserDTO<J>>
         return this.enterprise;
     }
 
-    public J setEnterprise(IEnterprise<?,?> enterprise) {
+    public @org.jspecify.annotations.NonNull J setEnterprise(IEnterprise<?,?> enterprise) {
         this.enterprise = enterprise;
 		//noinspection unchecked
 		return (J) this;

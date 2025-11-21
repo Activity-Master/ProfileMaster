@@ -68,7 +68,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
     return webClientUUID;
   }
 
-  public J setWebClientUUID(UUID webClientUUID)
+  public @org.jspecify.annotations.NonNull J setWebClientUUID(UUID webClientUUID)
   {
     this.webClientUUID = webClientUUID;
     return (J) this;
@@ -273,7 +273,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
                .nullItem();
   }
 
-  public J setInvolvedParty(IInvolvedParty<?, ?> involvedParty)
+  public @org.jspecify.annotations.NonNull J setInvolvedParty(IInvolvedParty<?, ?> involvedParty)
   {
     this.involvedParty = involvedParty;
     return (J) this;
