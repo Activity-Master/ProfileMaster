@@ -5,7 +5,7 @@ import com.guicedee.activitymaster.profiles.ProfileService;
 import com.guicedee.activitymaster.profiles.RolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
-import com.guicedee.guicedinjection.interfaces.IGuiceModule;
+import com.guicedee.client.services.lifecycle.IGuiceModule;
 
 public class ProfileServiceBinder
 		extends PrivateModule

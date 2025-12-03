@@ -2,6 +2,8 @@ import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterS
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.implementations.ProfileMasterModuleInclusion;
 import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
+import com.guicedee.client.services.lifecycle.IGuiceModule;
+import com.guicedee.client.services.config.IGuiceScanModuleInclusions;
 
 module com.guicedee.activitymaster.profiles {
 	requires transitive com.guicedee.guicedinjection;
@@ -25,9 +27,9 @@ module com.guicedee.activitymaster.profiles {
 
 	provides IActivityMasterSystem with ProfileSystem;
 	
-	provides com.guicedee.guicedinjection.interfaces.IGuiceModule with ProfileServiceBinder;
+	provides IGuiceModule with ProfileServiceBinder;
 	//provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
-	provides com.guicedee.guicedinjection.interfaces.IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;
+	provides IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;
 	
 	exports com.guicedee.activitymaster.profiles;
 	

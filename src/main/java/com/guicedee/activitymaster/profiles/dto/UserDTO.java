@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.inject.Inject;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.services.jsonrepresentation.IJsonRepresentation;
 import lombok.extern.log4j.Log4j2;
@@ -17,7 +16,7 @@ import java.util.UUID;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.guicedee.client.IGuiceContext.get;
-import static com.guicedee.guicedinjection.interfaces.ObjectBinderKeys.DefaultObjectMapper;
+import static com.guicedee.client.implementations.ObjectBinderKeys.DefaultObjectMapper;
 
 @SuppressWarnings({"MissingClassJavaDoc", "unused"})
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
