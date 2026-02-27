@@ -29,7 +29,8 @@ public class IInvolvedPartyDeserializer
         return factory.openSession()
                        .chain(session -> {
                            IInvolvedPartyService<?> enterpriseService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
-                           return enterpriseService.findByID(session, UUID.fromString(name));
+                           return enterpriseService.findByID(session, UUID.fromString(name))
+                                   .eventually(session::close);
                        })
                        .await()
                        .atMost(Duration.ofSeconds(50));
