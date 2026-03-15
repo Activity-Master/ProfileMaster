@@ -13,6 +13,10 @@
     <packaging>jar</packaging>
     <name>Profile Master</name>
 
+    <properties>
+        <project.scm.nameUrl>/Activity-Master/ProfileMaster</project.scm.nameUrl>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.guicedee.activitymaster</groupId>
