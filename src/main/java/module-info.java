@@ -1,4 +1,4 @@
-import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterSystem;
+import com.guicedee.activitymaster.fsdm.client.services.systems.IMasterSystem;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.implementations.ProfileMasterModuleInclusion;
 import com.guicedee.activitymaster.profiles.implementations.ProfileServiceBinder;
@@ -25,7 +25,7 @@ module com.guicedee.activitymaster.profiles {
 	exports com.guicedee.activitymaster.profiles.services.interfaces;
 	exports com.guicedee.activitymaster.profiles.services.enumerations;
 
-	provides IActivityMasterSystem with ProfileSystem;
+	provides IMasterSystem with ProfileSystem;
 	
 	provides IGuiceModule with ProfileServiceBinder;
 	//provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;

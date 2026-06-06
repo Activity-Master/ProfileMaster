@@ -3,11 +3,11 @@ package com.guicedee.activitymaster.profiles;
 import com.google.inject.Inject;
 import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
 import com.guicedee.activitymaster.fsdm.client.services.ISystemsService;
-import com.guicedee.activitymaster.fsdm.client.services.administration.ActivityMasterDefaultSystem;
+import com.guicedee.activitymaster.fsdm.client.services.administration.MasterDefaultSystem;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
-import com.guicedee.activitymaster.fsdm.client.services.systems.IActivityMasterSystem;
+import com.guicedee.activitymaster.fsdm.client.services.systems.IMasterSystem;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import io.smallrye.mutiny.Uni;
 import lombok.extern.log4j.Log4j2;
@@ -19,8 +19,8 @@ import static com.guicedee.activitymaster.profiles.services.interfaces.IProfileS
 
 @Log4j2
 public class ProfileSystem
-		extends ActivityMasterDefaultSystem<ProfileSystem>
-		implements IActivityMasterSystem<ProfileSystem>
+		extends MasterDefaultSystem<ProfileSystem>
+		implements IMasterSystem<ProfileSystem>
 {
 	@Inject
 	private ISystemsService<?> systemsService;
