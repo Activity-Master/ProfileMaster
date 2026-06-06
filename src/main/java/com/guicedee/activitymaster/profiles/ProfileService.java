@@ -24,7 +24,6 @@ import static com.guicedee.activitymaster.fsdm.client.services.IActivityMasterSe
 import static com.guicedee.activitymaster.fsdm.client.services.classifications.DefaultClassifications.NoClassification;
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes.IdentificationTypeWebClientUUID;
 
-@SuppressWarnings("Duplicates")
 public class ProfileService
 		implements IProfileService<ProfileService>
 {

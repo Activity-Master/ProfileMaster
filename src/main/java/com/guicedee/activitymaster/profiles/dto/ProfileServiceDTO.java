@@ -184,7 +184,6 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
   /**
    * Find involved party (reactive version)
    */
-  @SuppressWarnings("unchecked")
   public Uni<IInvolvedParty<?, ?>> findInvolvedPartyReactive(ISystems<?, ?> system, UUID identityToken)
   {
     if (involvedPartyService == null)
