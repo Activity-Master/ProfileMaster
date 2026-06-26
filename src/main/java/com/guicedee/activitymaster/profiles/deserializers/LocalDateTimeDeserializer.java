@@ -1,20 +1,20 @@
 package com.guicedee.activitymaster.profiles.deserializers;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class LocalDateTimeDeserializer
-		extends JsonDeserializer<LocalDateTime>
+		extends ValueDeserializer<LocalDateTime>
 {
 	public static String LocalDateTimeFormat ="yyyy-MM-dd'T'HH:mm:ss.SSSSSSSS";
 	@Override
-	public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException
+	public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException
 	{
 		String name = p.getValueAsString();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(LocalDateTimeFormat);

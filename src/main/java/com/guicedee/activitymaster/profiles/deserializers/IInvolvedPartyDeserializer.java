@@ -1,9 +1,9 @@
 package com.guicedee.activitymaster.profiles.deserializers;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.client.IGuiceContext;
@@ -15,10 +15,10 @@ import java.util.UUID;
 
 
 public class IInvolvedPartyDeserializer
-        extends JsonDeserializer<IInvolvedParty<?, ?>>
+        extends ValueDeserializer<IInvolvedParty<?, ?>>
 {
     @Override
-    public IInvolvedParty<?, ?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException
+    public IInvolvedParty<?, ?> deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException
     {
         String name = p.getValueAsString();
         if(name == null)

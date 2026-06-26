@@ -1,15 +1,15 @@
 package com.guicedee.activitymaster.profiles.deserializers;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.SerializationContext;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class LocalDateTimeSerializer
-		extends JsonSerializer<LocalDateTime>
+		extends ValueSerializer<LocalDateTime>
 {
 	public static String LocalDateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSS";
 
@@ -18,7 +18,7 @@ public class LocalDateTimeSerializer
 	}
 
 	@Override
-	public void serialize(LocalDateTime value, JsonGenerator generator, SerializerProvider provider) throws IOException
+	public void serialize(LocalDateTime value, JsonGenerator generator, SerializationContext provider)
 	{
 		generator.writeString(value.format(DateTimeFormatter.ofPattern(LocalDateTimeFormat)));
 	}
