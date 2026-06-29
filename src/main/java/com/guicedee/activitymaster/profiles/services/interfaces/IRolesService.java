@@ -19,4 +19,10 @@ public interface IRolesService<J extends IRolesService<J>>
 	Uni<Set<String>> addRole(Mutiny.Session session, IInvolvedParty<?,?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?,?> systems, UUID... identityToken);
 	
 	Uni<Set<String>> findAllRoles();
+
+	/** Stateless variant of {@link #getRoles(Mutiny.Session, IInvolvedParty, ISystems, UUID...)}. */
+	Uni<Set<String>> getRoles(Mutiny.StatelessSession session, IInvolvedParty<?,?> ip, ISystems<?,?> systems, UUID... identityToken);
+
+	/** Stateless variant of {@link #addRole(Mutiny.Session, IInvolvedParty, String, ProfileServiceDTO, ISystems, UUID...)}. */
+	Uni<Set<String>> addRole(Mutiny.StatelessSession session, IInvolvedParty<?,?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?,?> systems, UUID... identityToken);
 }

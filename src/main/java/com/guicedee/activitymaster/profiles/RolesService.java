@@ -24,7 +24,7 @@ public class RolesService
 {
 	private static final Logger log = LogManager.getLogger(RolesService.class);
 
-	//@Transactional()
+	
 	@Override
 	//@CacheResult(cacheName = "UserRolesGetRoles")
 	public Uni<Set<String>> getRoles(Mutiny.Session session, IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, UUID... identityToken)
@@ -60,7 +60,7 @@ public class RolesService
 	
 	@Override
 	//@CacheResult(cacheName = "UserRolesGetRoles", skipGet = true)
-	//@Transactional()
+	
 	public Uni<Set<String>> addRole(
 			Mutiny.Session session, IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, UUID... identityToken)
 	{
@@ -80,10 +80,32 @@ public class RolesService
 			})
 			.onFailure().invoke(error -> log.error("Error adding role: {}", error.getMessage(), error));
 	}
-	
-	//@Transactional()
-	//@CacheResult(cacheName = "RolesServiceFindAllRoles")
+
 	@Override
+	public Uni<Set<String>> getRoles(Mutiny.StatelessSession session, IInvolvedParty<?, ?> ip, ISystems<?, ?> systems, UUID... identityToken)
+	{
+		if (ip == null) { Set<String> e = new TreeSet<>(); e.add("Guest"); return Uni.createFrom().item(e); }
+		return ip.findClassifications(session, UserRoles.toString(), systems, identityToken)
+			.map(classifications -> {
+				Set<String> assignedRoles = new TreeSet<>();
+				for (var classification : classifications) { assignedRoles.add(classification.getClassificationID().getName()); }
+				if (assignedRoles.isEmpty()) { assignedRoles.add("Guest"); }
+				return assignedRoles;
+			})
+			.onFailure().recoverWithItem(() -> { Set<String> d = new TreeSet<>(); d.add("Guest"); return d; });
+	}
+
+	@Override
+	public Uni<Set<String>> addRole(Mutiny.StatelessSession session, IInvolvedParty<?, ?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?, ?> systems, UUID... identityToken)
+	{
+		return getRoles(session, ip, systems, identityToken)
+			.chain(roles -> roles.contains(role) ? Uni.createFrom().item(roles)
+				: ip.addClassification(session, UserRoles.toString(), role, systems, identityToken).map(r -> { roles.add(role); return roles; }));
+	}
+
+	@Override
+	//@CacheResult(cacheName = "RolesServiceFindAllRoles", skipGet = true)
+	
 	public Uni<Set<String>> findAllRoles()
 	{
 		return Uni.createFrom().item(() -> {

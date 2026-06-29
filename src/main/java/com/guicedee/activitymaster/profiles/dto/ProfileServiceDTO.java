@@ -2,7 +2,6 @@ package com.guicedee.activitymaster.profiles.dto;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
@@ -50,17 +49,6 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
   @JsonIgnore
   private IInvolvedPartyService<?> involvedPartyService;
 
-  // TODO: Remove these injected fields after full migration to reactive pattern
-  // These fields are being replaced by calls to profileSystem.getSystem and profileSystem.getSystemToken
-  // They are kept temporarily as fallbacks during the migration
-  @Inject
-  @Named(ProfileSystemName)
-  @JsonIgnore
-  private ISystems<?, ?> system;
-  @Inject
-  @Named(ProfileSystemName)
-  @JsonIgnore
-  private UUID identityToken;
 
 
   public UUID getWebClientUUID()
@@ -149,6 +137,28 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
   }
 
   /**
+   * Find roles for the involved party (stateless reactive version).
+   */
+  public Uni<Set<String>> findRolesReactive(Mutiny.StatelessSession session)
+  {
+    if (profileSystem == null)
+    {
+      com.guicedee.client.IGuiceContext.instance().inject().injectMembers(this);
+    }
+    return com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService
+            .getISystem(session, ProfileSystemName, getEnterprise())
+            .chain(system -> com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService
+                .getISystemToken(session, ProfileSystemName, getEnterprise())
+                .chain(systemToken -> findInvolvedPartyReactive(system, systemToken)
+                    .chain(ip -> {
+                      this.involvedParty = ip;
+                      return rolesService.getRoles(session, this.involvedParty, system, systemToken);
+                    })))
+            .onFailure().invoke(error -> log.error("Error finding roles (stateless): {}", error.getMessage(), error))
+            .onFailure().recoverWithItem(() -> new TreeSet<>());
+  }
+
+  /**
    * Find involved party
    * <p>
    * Note: This method is still synchronous for backward compatibility,
@@ -227,7 +237,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
         try
         {
           // Use reactive findInvolvedPartyReactive method with await().atMost() for backward compatibility
-          this.involvedParty = findInvolvedPartyReactive(system, identityToken)
+          this.involvedParty = findInvolvedPartyReactive(null, null)
                                    .await()
                                    .atMost(Duration.ofMinutes(1));
         }
@@ -265,7 +275,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
 
     if (webClientUUID != null)
     {
-      return findInvolvedPartyReactive(system, identityToken);
+      return findInvolvedPartyReactive(null, null);
     }
 
     return Uni.createFrom()
@@ -276,6 +286,11 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
   {
     this.involvedParty = involvedParty;
     return (J) this;
+  }
+
+  public IInvolvedParty<?, ?> getInvolvedParty()
+  {
+    return involvedParty;
   }
 
   @Override

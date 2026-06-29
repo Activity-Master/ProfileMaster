@@ -19,6 +19,12 @@ module com.guicedee.activitymaster.profiles {
 	requires static lombok;
     requires org.hibernate.reactive;
 
+    // REST surface + typed REST client for the comprehensive profile
+    requires com.guicedee.rest;
+    requires com.guicedee.rest.client;
+    requires com.guicedee.openapi;
+    requires jakarta.ws.rs;
+
     exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
 	//exports com.guicedee.activitymaster.profiles.services;
@@ -50,4 +56,7 @@ module com.guicedee.activitymaster.profiles {
 	exports com.guicedee.activitymaster.profiles.enumerations;
 	exports com.guicedee.activitymaster.profiles.webdto;
 	exports com.guicedee.activitymaster.profiles.deserializers;
+
+	exports com.guicedee.activitymaster.profiles.rest;
+	opens com.guicedee.activitymaster.profiles.rest to com.google.guice, com.guicedee.rest, com.guicedee.rest.client, org.hibernate.reactive, net.bytebuddy, tools.jackson.databind;
 }
