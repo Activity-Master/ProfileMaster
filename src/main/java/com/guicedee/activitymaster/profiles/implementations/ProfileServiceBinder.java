@@ -6,7 +6,9 @@ import com.guicedee.activitymaster.profiles.RolesService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.activitymaster.profiles.services.interfaces.IRolesService;
 import com.guicedee.client.services.lifecycle.IGuiceModule;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class ProfileServiceBinder
 		extends PrivateModule
 		implements IGuiceModule<ProfileServiceBinder>
@@ -14,6 +16,7 @@ public class ProfileServiceBinder
 	@Override
 	protected void configure()
 	{
+		log.info("👤 Using Profile Activity Master Module");
 		@SuppressWarnings("Convert2Diamond")
 		Key<IProfileService<?>> genericKey = Key.get(new TypeLiteral<IProfileService<?>>() {});
 		@SuppressWarnings("Convert2Diamond")

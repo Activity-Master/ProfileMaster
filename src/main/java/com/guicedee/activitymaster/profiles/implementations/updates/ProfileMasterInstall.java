@@ -10,6 +10,7 @@ import com.guicedee.activitymaster.fsdm.client.services.systems.SortedUpdate;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributes;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileIdentificationTypes;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -152,5 +153,88 @@ public class ProfileMasterInstall implements ISystemUpdate
                     }
                     return chain;
                 }));
+    }
+
+    // =============================================================================================
+    // Stateless twins — mirror the managed seeding on a Mutiny.StatelessSession for the stateless install loop.
+    // =============================================================================================
+
+    @Override
+    public Uni<Boolean> update(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
+    {
+        return createInvolvedPartyClassifications(session, enterprise)
+            .chain(v -> createSiteDetailsClassifications(session, enterprise))
+            .chain(v -> createProfileNameTypes(session, enterprise))
+            .chain(v -> createProfileAttributeClassifications(session, enterprise))
+            .map(v -> true)
+            .onFailure().invoke(error -> log.error("Error in ProfileMasterInstall update (stateless): {}", error.getMessage(), error));
+    }
+
+    private Uni<Void> createInvolvedPartyClassifications(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
+    {
+        ProfileSystem system = com.guicedee.client.IGuiceContext.get(ProfileSystem.class);
+        IEventService<?> eventsService = com.guicedee.client.IGuiceContext.get(IEventService.class);
+        IInvolvedPartyService<?> involvedPartyService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
+
+        return system.getSystem(session, enterprise)
+            .chain(profileSystem -> system.getSystemToken(session, enterprise)
+                .chain(systemToken -> eventsService.createEventType(session, UserRegistered.toString(), profileSystem, systemToken)
+                    .chain(userRegistered -> eventsService.createEventType(session, VisitorRegistered.toString(), profileSystem, systemToken))
+                    .chain(visitorRegistered -> involvedPartyService.createIdentificationType(
+                        session, profileSystem,
+                        ProfileIdentificationTypes.IdentificationTypeWebClientUUID,
+                        "The Web Client UUID stored as a device identifier",
+                        systemToken))))
+            .map(result -> null);
+    }
+
+    private Uni<Void> createSiteDetailsClassifications(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
+    {
+        IClassificationService<?> classificationService = com.guicedee.client.IGuiceContext.get(IClassificationService.class);
+        ProfileSystem system = com.guicedee.client.IGuiceContext.get(ProfileSystem.class);
+
+        return system.getSystem(session, enterprise)
+            .chain(profileSystem -> classificationService.create(session, ClientConnectionDetails, profileSystem)
+                .chain(clientConnectionDetails -> classificationService.create(session, BrowserDeviceCategory, profileSystem, ClientConnectionDetails))
+                .chain(browserDeviceCategory -> classificationService.create(session, OperatingSystemFamily, profileSystem, ClientConnectionDetails))
+                .chain(operatingSystemFamily -> classificationService.create(session, BrowserDeviceCategory, profileSystem, ClientConnectionDetails))
+                .chain(browserDeviceCategory -> classificationService.create(session, BrowserDevice, profileSystem, ClientConnectionDetails))
+                .chain(browserDevice -> classificationService.create(session, BrowserIcon, profileSystem, ClientConnectionDetails))
+                .chain(browserIcon -> classificationService.create(session, OperatingSystem, profileSystem, ClientConnectionDetails)))
+            .map(result -> null);
+    }
+
+    private Uni<Void> createProfileNameTypes(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
+    {
+        ProfileSystem system = com.guicedee.client.IGuiceContext.get(ProfileSystem.class);
+        IInvolvedPartyService<?> involvedPartyService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
+
+        return system.getSystem(session, enterprise)
+            .chain(profileSystem -> system.getSystemToken(session, enterprise)
+                // Sequential (concatenated) create of every name type — one statement at a time on the connection.
+                .chain(systemToken -> Multi.createFrom().items(NameTypes.values())
+                    .onItem().transformToUniAndConcatenate(nameType -> involvedPartyService
+                        .createNameType(session, nameType, nameType.classificationDescription(), profileSystem, systemToken))
+                    .collect().last()
+                    .replaceWithVoid()));
+    }
+
+    private Uni<Void> createProfileAttributeClassifications(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
+    {
+        IClassificationService<?> classificationService = com.guicedee.client.IGuiceContext.get(IClassificationService.class);
+        ProfileSystem system = com.guicedee.client.IGuiceContext.get(ProfileSystem.class);
+
+        return system.getSystem(session, enterprise)
+            .chain(profileSystem -> system.getSystemToken(session, enterprise)
+                // Sequential (concatenated) create of every attribute classification.
+                .chain(systemToken -> Multi.createFrom().items(ProfileAttributes.values())
+                    .onItem().transformToUniAndConcatenate(attribute -> classificationService.create(session,
+                            attribute.name(),
+                            attribute.classificationDescription(),
+                            EnterpriseClassificationDataConcepts.NoClassificationDataConceptName,
+                            profileSystem,
+                            systemToken))
+                    .collect().last()
+                    .replaceWithVoid()));
     }
 }
