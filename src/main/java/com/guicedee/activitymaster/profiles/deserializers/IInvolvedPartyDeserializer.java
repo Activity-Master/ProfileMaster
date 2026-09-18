@@ -26,7 +26,7 @@ public class IInvolvedPartyDeserializer
             return null;
         }
         var factory = IGuiceContext.get(Mutiny.SessionFactory.class);
-        return factory.openSession()
+        return factory.openStatelessSession()
                        .chain(session -> {
                            IInvolvedPartyService<?> enterpriseService = com.guicedee.client.IGuiceContext.get(IInvolvedPartyService.class);
                            return enterpriseService.findByID(session, UUID.fromString(name))

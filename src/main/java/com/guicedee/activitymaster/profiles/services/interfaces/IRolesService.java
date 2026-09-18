@@ -14,15 +14,13 @@ public interface IRolesService<J extends IRolesService<J>>
 {
 	String USER_ROLES_SESSION_NAME = "user-roles";
 	
-	Uni<Set<String>> getRoles(Mutiny.Session session, IInvolvedParty<?,?> ip, ISystems<?,?> systems, UUID... identityToken);
 	
-	Uni<Set<String>> addRole(Mutiny.Session session, IInvolvedParty<?,?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?,?> systems, UUID... identityToken);
 	
 	Uni<Set<String>> findAllRoles();
 
-	/** Stateless variant of {@link #getRoles(Mutiny.Session, IInvolvedParty, ISystems, UUID...)}. */
+	/** Stateless variant of {@link #getRoles(Mutiny.StatelessSession, IInvolvedParty, ISystems, UUID...)}. */
 	Uni<Set<String>> getRoles(Mutiny.StatelessSession session, IInvolvedParty<?,?> ip, ISystems<?,?> systems, UUID... identityToken);
 
-	/** Stateless variant of {@link #addRole(Mutiny.Session, IInvolvedParty, String, ProfileServiceDTO, ISystems, UUID...)}. */
+	/** Stateless variant of {@link #addRole(Mutiny.StatelessSession, IInvolvedParty, String, ProfileServiceDTO, ISystems, UUID...)}. */
 	Uni<Set<String>> addRole(Mutiny.StatelessSession session, IInvolvedParty<?,?> ip, String role, ProfileServiceDTO<?> dto, ISystems<?,?> systems, UUID... identityToken);
 }

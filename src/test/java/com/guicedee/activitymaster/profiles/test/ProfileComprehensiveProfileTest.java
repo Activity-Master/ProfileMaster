@@ -51,7 +51,7 @@ public class ProfileComprehensiveProfileTest
 		assertNotNull(sessionFactory, "SessionFactory should not be null");
 
 		IEnterpriseService<?> es = IGuiceContext.get(IEnterpriseService.class);
-		sessionFactory.withSession(session -> session.withTransaction(tx ->
+		sessionFactory.withStatelessSession(session -> session.withTransaction(tx ->
 				es.getEnterprise(session, ENTERPRISE)
 						.onFailure().recoverWithUni(t -> {
 							var ent = es.get();
@@ -65,11 +65,11 @@ public class ProfileComprehensiveProfileTest
 
 		// Install the profile taxonomy (name types + comprehensive attribute classifications).
 		ProfileMasterInstall install = IGuiceContext.get(ProfileMasterInstall.class);
-		IEnterprise<?, ?> enterprise = sessionFactory.withSession(s -> es.getEnterprise(s, ENTERPRISE))
+		IEnterprise<?, ?> enterprise = sessionFactory.withStatelessSession(s -> es.getEnterprise(s, ENTERPRISE))
 				.await().atMost(Duration.ofMinutes(1));
 		assertNotNull(enterprise, "Baseline enterprise must be provisioned in setup");
 
-		Boolean installed = sessionFactory.withSession(s -> s.withTransaction(tx -> install.update(s, enterprise)))
+		Boolean installed = sessionFactory.withStatelessSession(s -> s.withTransaction(tx -> install.update(s, enterprise)))
 				.await().atMost(Duration.ofMinutes(3));
 		assertEquals(Boolean.TRUE, installed, "Profile taxonomy installation should succeed");
 	}
@@ -95,7 +95,7 @@ public class ProfileComprehensiveProfileTest
 		profile.setLinkedIn("https://linkedin.com/in/ada");
 
 		ComprehensiveProfileDTO stored = SessionUtils.<ComprehensiveProfileDTO>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
-			Mutiny.Session session = tuple.getItem1();
+			Mutiny.StatelessSession session = tuple.getItem1();
 			IEnterprise<?, ?> enterprise = tuple.getItem2();
 			IProfileService<?> profileService = IGuiceContext.get(IProfileService.class);
 			return profileService.saveProfile(session, enterprise, profile)
@@ -132,7 +132,7 @@ public class ProfileComprehensiveProfileTest
 		initial.setOccupation("Computer Scientist");
 
 		UUID id = SessionUtils.<UUID>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
-			Mutiny.Session session = tuple.getItem1();
+			Mutiny.StatelessSession session = tuple.getItem1();
 			IEnterprise<?, ?> enterprise = tuple.getItem2();
 			return profileService.saveProfile(session, enterprise, initial);
 		}).await().atMost(Duration.ofMinutes(2));
@@ -145,7 +145,7 @@ public class ProfileComprehensiveProfileTest
 		update.setPrimaryEmail("grace@example.com");
 
 		ComprehensiveProfileDTO reread = SessionUtils.<ComprehensiveProfileDTO>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
-			Mutiny.Session session = tuple.getItem1();
+			Mutiny.StatelessSession session = tuple.getItem1();
 			IEnterprise<?, ?> enterprise = tuple.getItem2();
 			return profileService.saveProfile(session, enterprise, update)
 					.chain(savedId -> profileService.getProfile(session, enterprise, savedId));

@@ -68,7 +68,7 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
    * Note: This method is still synchronous for backward compatibility,
    * but internally uses reactive programming with await().atMost()
    */
-  public Set<String> findRoles(Mutiny.Session session)
+  public Set<String> findRoles(Mutiny.StatelessSession session)
   {
     if (profileSystem == null)
     {
@@ -97,43 +97,6 @@ public class ProfileServiceDTO<J extends ProfileServiceDTO<J>>
     return rolesService.getRoles(session, this.involvedParty, system, systemToken)
                .await()
                .atMost(Duration.ofMinutes(1));
-  }
-
-  /**
-   * Find roles for the involved party (reactive version)
-   */
-  public Uni<Set<String>> findRolesReactive(Mutiny.Session session)
-  {
-    if (profileSystem == null)
-    {
-      com.guicedee.client.IGuiceContext.instance()
-          .inject()
-          .injectMembers(this)
-      ;
-    }
-
-    // Chain reactive operations to get system and token
-    return profileSystem.getSystem(session, getEnterprise())
-               .chain(system -> {
-                 return profileSystem.getSystemToken(session, getEnterprise())
-                            .chain(systemToken -> {
-                              if (this.involvedParty == null)
-                              {
-                                // Use reactive findInvolvedPartyReactive method
-                                return findInvolvedPartyReactive(system, systemToken)
-                                           .chain(ip -> {
-                                             this.involvedParty = ip;
-                                             return rolesService.getRoles(session, this.involvedParty, system, systemToken);
-                                           });
-                              }
-
-                              return rolesService.getRoles(session, this.involvedParty, system, systemToken);
-                            });
-               })
-               .onFailure()
-               .invoke(error -> log.error("Error finding roles: {}", error.getMessage(), error))
-               .onFailure()
-               .recoverWithItem(() -> new TreeSet<>());
   }
 
   /**

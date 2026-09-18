@@ -2,6 +2,7 @@ package com.guicedee.activitymaster.profiles;
 
 import com.google.inject.Inject;
 import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
+import com.guicedee.activitymaster.fsdm.client.services.IClassificationService;
 import com.guicedee.activitymaster.fsdm.client.services.ISystemsService;
 import com.guicedee.activitymaster.fsdm.client.services.administration.MasterDefaultSystem;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
@@ -26,7 +27,7 @@ public class ProfileSystem
 	private ISystemsService<?> systemsService;
 
 	@Override
-	public Uni<ISystems<?,?>> registerSystem(Mutiny.Session session, IEnterprise<?,?> enterprise)
+	public Uni<ISystems<?,?>> registerSystem(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
 	{
 		log.info("🚀 Registering Profile System for enterprise: '{}'", enterprise.getName());
 		log.debug("📋 Creating Profile System with session: {}", session.hashCode());
@@ -53,23 +54,6 @@ public class ProfileSystem
 		        .map(sys -> (ISystems<?, ?>) sys);
 	}
 	
-	@Override
-	public Uni<Void> createDefaults(Mutiny.Session session, IEnterprise<?,?> enterprise)
-	{
-		logProgress("Profile System", "Starting Profile Checks");
-		log.info("🚀 Creating profile defaults for enterprise: '{}'", enterprise.getName());
-		log.debug("📋 Starting with session: {}", session.hashCode());
-		
-		// No actual operations needed, just return a void item
-		log.debug("✅ No specific defaults needed for Profile System");
-		return Uni.createFrom()
-		           .voidItem()
-		           .onItem()
-		           .invoke(() -> log.info("🎉 Successfully completed Profile System defaults"))
-		           .onFailure()
-		           .invoke(error -> log.error("❌ Error in Profile System defaults: {}", error.getMessage(), error))
-		           .replaceWithVoid();
-	}
 	
 	@Override
 	public int totalTasks()
@@ -91,7 +75,7 @@ public class ProfileSystem
 	}
 	
 	@Override
-	public Uni<Void> postStartup(Mutiny.Session session, IEnterprise<?,?> enterprise)
+	public Uni<Void> postStartup(Mutiny.StatelessSession session, IEnterprise<?,?> enterprise)
 	{
 		log.info("🚀 Starting reactive postStartup for Profile System");
 		log.debug("📋 Beginning postStartup operations for enterprise: '{}' with session: {}", 
@@ -142,7 +126,12 @@ public class ProfileSystem
 		                                        
 		                                        log.debug("🔍 Checking roles for involved party");
 		                                        // Use reactive getRoles method
-		                                        return rolesService.getRoles(session, ip, system, identityToken)
+		                                        var roleClassification = com.guicedee.activitymaster.profiles.enumerations.ProfileClassifications.UserRoles;
+		                                        IClassificationService<?> classifications = com.guicedee.client.IGuiceContext.get(IClassificationService.class);
+		                                        return classifications
+		                                            .create(session, roleClassification.toString(), roleClassification.classificationDescription(),
+		                                                    roleClassification.concept(), system, identityToken)
+		                                            .chain(ignored -> rolesService.getRoles(session, ip, system, identityToken))
 		                                            .onItem()
 		                                            .invoke(roles -> log.debug("✅ Found {} roles for involved party", roles.size()))
 		                                            .onFailure()

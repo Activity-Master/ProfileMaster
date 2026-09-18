@@ -87,7 +87,7 @@ public class ProfileRestService
 	{
 		UUID id = UUID.fromString(profileId);
 		return SessionUtils.<ComprehensiveProfileDTO>withActivityMaster(enterpriseName, systemName, tuple -> {
-			Mutiny.Session session = tuple.getItem1();
+			Mutiny.StatelessSession session = tuple.getItem1();
 			IEnterprise<?, ?> enterprise = tuple.getItem2();
 			return profileService.getProfile(session, enterprise, id);
 		}).onFailure().invoke(e ->
@@ -98,7 +98,7 @@ public class ProfileRestService
 	private Uni<ComprehensiveProfileDTO> save(String enterpriseName, String systemName, ComprehensiveProfileDTO profile)
 	{
 		return SessionUtils.<ComprehensiveProfileDTO>withActivityMaster(enterpriseName, systemName, tuple -> {
-			Mutiny.Session session = tuple.getItem1();
+			Mutiny.StatelessSession session = tuple.getItem1();
 			IEnterprise<?, ?> enterprise = tuple.getItem2();
 			return profileService.saveProfile(session, enterprise, profile)
 					.chain(id -> profileService.getProfile(session, enterprise, id));
