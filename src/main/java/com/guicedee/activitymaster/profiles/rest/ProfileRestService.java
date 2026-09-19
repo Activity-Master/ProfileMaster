@@ -48,6 +48,7 @@ public class ProfileRestService
 			description = "Stores an individual's full profile (names, demographics, contact, occupation, etc.) and returns the hydrated profile including its generated id.")
 	@ApiResponse(responseCode = "200", description = "Profile created")
 	@ApiResponse(responseCode = "500", description = "Storage failure")
+
 	public Uni<ComprehensiveProfileDTO> create(@Parameter(description = "Owning enterprise name") @PathParam("enterprise") String enterpriseName,
 	                                           @Parameter(description = "Requesting system name (security scope)") @PathParam("requestingSystemName") String systemName,
 	                                           ComprehensiveProfileDTO profile)
