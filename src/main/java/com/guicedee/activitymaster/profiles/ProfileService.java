@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import static com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService.getISystem;
@@ -45,16 +47,6 @@ public class ProfileService
 	@Inject
 	private IInvolvedPartyService<?> involvedPartyService;
 
-
-	//@CacheResult(cacheName = "UserProfiles")
-	//@CacheRemove(cacheName = "UserProfiles")
-	@Override
-	public Uni<Void> clearCache()
-	{
-		// Since the original method was empty, we just return a completed Uni
-		return Uni.createFrom().voidItem();
-	}
-
 	// ---- Stateless twins ----
 
 	@Override
@@ -71,7 +63,8 @@ public class ProfileService
 									.onFailure().recoverWithItem(() -> null)
 									.map(idType -> {
 										ProfileServiceDTO<?> dto = new ProfileServiceDTO<>();
-										dto.setInvolvedParty(allId);
+										dto.setIdentityToken(allId.getId());
+										dto.setEnterprise(enterprise);
 										if (idType != null) { dto.setWebClientUUID(idType.getValueAsUUID()); }
 										acc.add(dto);
 										return acc;
@@ -89,13 +82,92 @@ public class ProfileService
 			.chain(system -> allUsers(session, enterprise).chain(users -> {
 				Uni<List<ProfileServiceDTO<?>>> chain = Uni.createFrom().item(new ArrayList<>());
 				for (ProfileServiceDTO<?> user : users) {
-					chain = chain.chain(acc -> rolesService.getRoles(session, user.getInvolvedParty(), system).map(have -> {
+					chain = chain.chain(acc -> findRoles(session, user).map(have -> {
 						for (String role : roles) { if (have.contains(role)) { acc.add(user); break; } }
 						return acc;
 					}));
 				}
 				return chain;
 			}));
+	}
+
+	@Override
+	public Uni<IInvolvedParty<?, ?>> findInvolvedParty(Mutiny.StatelessSession session, ProfileServiceDTO<?> userDTO)
+	{
+		if (userDTO == null)
+		{
+			return Uni.createFrom().nullItem();
+		}
+		return getISystem(session, ProfileSystemName, userDTO.getEnterprise())
+				.chain(system -> getISystemToken(session, ProfileSystemName, userDTO.getEnterprise())
+						.chain(systemToken -> findInvolvedParty(session, system, systemToken, userDTO)));
+	}
+
+	@Override
+	public Uni<IInvolvedParty<?, ?>> findInvolvedParty(Mutiny.StatelessSession session, ISystems<?, ?> system, UUID systemToken, ProfileServiceDTO<?> userDTO)
+	{
+		if (userDTO == null)
+		{
+			return Uni.createFrom().nullItem();
+		}
+		if (userDTO.getIdentityToken() != null)
+		{
+			return Uni.createFrom().item(preppedParty(userDTO.getIdentityToken()));
+		}
+		if (userDTO.getWebClientUUID() != null)
+		{
+			return involvedPartyService.findAllByIdentificationType(session, IdentificationTypeWebClientUUID.toString(), userDTO.getWebClientUUID().toString())
+					.map(results -> {
+						if (results != null && !results.isEmpty() && results.get(0).getPrimary() != null)
+						{
+							IInvolvedParty<?, ?> party = results.get(0).getPrimary();
+							userDTO.setIdentityToken(party.getId());
+							return party;
+						}
+						IInvolvedParty<?, ?> party = preppedParty(userDTO.getWebClientUUID());
+						userDTO.setIdentityToken(party.getId());
+						return party;
+					})
+					.onFailure().recoverWithItem(() -> {
+						IInvolvedParty<?, ?> party = preppedParty(userDTO.getWebClientUUID());
+						userDTO.setIdentityToken(party.getId());
+						return party;
+					});
+		}
+		return Uni.createFrom().nullItem();
+	}
+
+	@Override
+	public Uni<Set<String>> findRoles(Mutiny.StatelessSession session, ProfileServiceDTO<?> userDTO)
+	{
+		if (userDTO == null)
+		{
+			Set<String> guest = new TreeSet<>();
+			guest.add("Guest");
+			return Uni.createFrom().item(guest);
+		}
+		return getISystem(session, ProfileSystemName, userDTO.getEnterprise())
+				.chain(system -> getISystemToken(session, ProfileSystemName, userDTO.getEnterprise())
+						.chain(systemToken -> findRoles(session, system, systemToken, userDTO)));
+	}
+
+	@Override
+	public Uni<Set<String>> findRoles(Mutiny.StatelessSession session, ISystems<?, ?> system, UUID systemToken, ProfileServiceDTO<?> userDTO)
+	{
+		if (userDTO == null)
+		{
+			Set<String> guest = new TreeSet<>();
+			guest.add("Guest");
+			return Uni.createFrom().item(guest);
+		}
+		return findInvolvedParty(session, system, systemToken, userDTO)
+				.chain(party -> rolesService.getRoles(session, party, system, systemToken))
+				.onFailure().invoke(error -> log.error("Error finding roles (stateless): {}", error.getMessage(), error))
+				.onFailure().recoverWithItem(() -> {
+					Set<String> guest = new TreeSet<>();
+					guest.add("Guest");
+					return guest;
+				});
 	}
 
 	// ---- Comprehensive profile storage ----
@@ -139,7 +211,8 @@ public class ProfileService
 	 * is sufficient to read/write the profile's name and classification links without a stateless
 	 * find-by-id (which the party service does not expose).
 	 */
-	private IInvolvedParty<?, ?> preppedParty(UUID profileId)
+	@Override
+	public IInvolvedParty<?, ?> preppedParty(UUID profileId)
 	{
 		IInvolvedParty<?, ?> prepped = involvedPartyService.get();
 		prepped.setId(profileId);

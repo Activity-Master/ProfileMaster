@@ -25,6 +25,13 @@ module com.guicedee.activitymaster.profiles {
     requires com.guicedee.openapi;
     requires jakarta.ws.rs;
 
+    // GraphQL schema provider
+    requires com.guicedee.vertx.graphql;
+    requires com.graphqljava;
+    requires io.vertx.core;
+    requires io.smallrye.mutiny;
+    requires com.google.guice;
+
     exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
 	//exports com.guicedee.activitymaster.profiles.services;
@@ -36,6 +43,8 @@ module com.guicedee.activitymaster.profiles {
 	provides IGuiceModule with ProfileServiceBinder;
 	//provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;
 	provides IGuiceScanModuleInclusions with ProfileMasterModuleInclusion;
+	provides com.guicedee.vertx.graphql.services.IGraphQLSchemaProvider
+			with com.guicedee.activitymaster.profiles.implementations.graphql.ProfileGraphQLSchemaProvider;
 	
 	exports com.guicedee.activitymaster.profiles;
 	
@@ -52,6 +61,9 @@ module com.guicedee.activitymaster.profiles {
 	
 	exports com.guicedee.activitymaster.profiles.implementations.updates;
 	opens com.guicedee.activitymaster.profiles.implementations.updates to tools.jackson.databind, com.google.guice;
+
+	exports com.guicedee.activitymaster.profiles.implementations.graphql;
+	opens com.guicedee.activitymaster.profiles.implementations.graphql to com.google.guice;
 
 	exports com.guicedee.activitymaster.profiles.enumerations;
 	exports com.guicedee.activitymaster.profiles.webdto;

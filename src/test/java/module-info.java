@@ -22,6 +22,11 @@ open module activity.master.profiles.tests {
     requires com.guicedee.activitymaster.fsdm.client;
     requires com.guicedee.activitymaster.profiles;
 
+    requires com.graphqljava;
+    requires com.guicedee.vertx.graphql;
+
+    uses com.guicedee.vertx.graphql.services.IGraphQLSchemaProvider;
+
     provides IGuiceModule with com.guicedee.activitymaster.profiles.test.PostgreSQLTestDBModule;
 }
 

@@ -1,27 +1,52 @@
 package com.guicedee.activitymaster.profiles.services.interfaces;
 
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.webdto.ComprehensiveProfileDTO;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface IProfileService<J extends IProfileService<J>>
 {
 	String ProfileSystemName = "Profiles Master";
-	
-	
-	
-	Uni<Void> clearCache();
+
 
 	/** Stateless variant of {@link #listUsers(Mutiny.StatelessSession, IEnterprise, String...)}. */
 	Uni<List<ProfileServiceDTO<?>>> listUsers(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, String... roles);
 
 	/** Stateless variant of {@link #allUsers(Mutiny.StatelessSession, IEnterprise)}. */
 	Uni<List<ProfileServiceDTO<?>>> allUsers(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise);
+
+	/**
+	 * Finds the involved party corresponding to the provided user profile DTO.
+	 */
+	Uni<IInvolvedParty<?, ?>> findInvolvedParty(Mutiny.StatelessSession session, ProfileServiceDTO<?> userDTO);
+
+	/**
+	 * Finds the involved party corresponding to the provided user profile DTO within the specified system scope.
+	 */
+	Uni<IInvolvedParty<?, ?>> findInvolvedParty(Mutiny.StatelessSession session, ISystems<?, ?> system, UUID systemToken, ProfileServiceDTO<?> userDTO);
+
+	/**
+	 * Finds all roles assigned to the given user profile DTO.
+	 */
+	Uni<Set<String>> findRoles(Mutiny.StatelessSession session, ProfileServiceDTO<?> userDTO);
+
+	/**
+	 * Finds all roles assigned to the given user profile DTO within the specified system scope.
+	 */
+	Uni<Set<String>> findRoles(Mutiny.StatelessSession session, ISystems<?, ?> system, UUID systemToken, ProfileServiceDTO<?> userDTO);
+
+	/**
+	 * Builds a detached-prepped involved party carrying only {@code profileId} as its id.
+	 */
+	IInvolvedParty<?, ?> preppedParty(UUID profileId);
 
 	/**
 	 * Stateless variant of {@link #saveProfile(Mutiny.StatelessSession, IEnterprise, ComprehensiveProfileDTO)} —

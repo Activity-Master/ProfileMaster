@@ -55,6 +55,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.guicedee</groupId>
+            <artifactId>graphql</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.guicedee.modules.services</groupId>
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>

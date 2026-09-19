@@ -21,9 +21,6 @@ public class ProfileServiceDTOProvider
 		}
 		
 		ProfileServiceDTO<?> pro = new ProfileServiceDTO<>();
-		com.guicedee.client.IGuiceContext.instance().inject()
-		            .injectMembers(pro);
-		
 		pro.setWebClientUUID(localStorageKey);
 		return pro;
 	}
