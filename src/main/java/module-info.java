@@ -6,31 +6,21 @@ import com.guicedee.client.services.lifecycle.IGuiceModule;
 import com.guicedee.client.services.config.IGuiceScanModuleInclusions;
 
 module com.guicedee.activitymaster.profiles {
-	requires transitive com.guicedee.guicedinjection;
 
 	//requires net.sf.uadetector.core;
 	requires org.json;
 
-	requires com.fasterxml.jackson.annotation;
-	requires io.github.classgraph;
 
-	requires transitive com.guicedee.jsonrepresentation;
 	requires transitive com.guicedee.activitymaster.fsdm.client;
 	requires static lombok;
-    requires org.hibernate.reactive;
 
     // REST surface + typed REST client for the comprehensive profile
     requires com.guicedee.rest;
     requires com.guicedee.rest.client;
     requires com.guicedee.openapi;
-    requires jakarta.ws.rs;
 
     // GraphQL schema provider
     requires com.guicedee.vertx.graphql;
-    requires com.graphqljava;
-    requires io.vertx.core;
-    requires io.smallrye.mutiny;
-    requires com.google.guice;
 
     exports com.guicedee.activitymaster.profiles.dto;
 	exports com.guicedee.activitymaster.profiles.exceptions;
