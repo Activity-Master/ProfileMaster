@@ -6,9 +6,15 @@ import com.guicedee.activitymaster.fsdm.client.services.IEnterpriseService;
 import com.guicedee.activitymaster.fsdm.client.services.SessionUtils;
 import com.guicedee.activitymaster.fsdm.client.services.administration.ActivityMasterConfiguration;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
+import com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributeChoices;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileNameRealms;
+import com.guicedee.activitymaster.profiles.implementations.updates.ProfileAttributeChoicesInstall;
 import com.guicedee.activitymaster.profiles.implementations.updates.ProfileMasterInstall;
+import com.guicedee.activitymaster.profiles.implementations.updates.ProfileNameRealmsInstall;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.activitymaster.profiles.webdto.ComprehensiveProfileDTO;
+import com.guicedee.activitymaster.profiles.webdto.ProfileAttributeChoiceDTO;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.client.utils.LogUtils;
 import io.smallrye.mutiny.Uni;
@@ -18,6 +24,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.*;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,6 +80,80 @@ public class ProfileComprehensiveProfileTest
 		Boolean installed = sessionFactory.withStatelessSession(s -> s.withTransaction(tx -> install.update(s, enterprise)))
 				.await().atMost(Duration.ofMinutes(3));
 		assertEquals(Boolean.TRUE, installed, "Profile taxonomy installation should succeed");
+
+		ProfileNameRealmsInstall realms = IGuiceContext.get(ProfileNameRealmsInstall.class);
+		Boolean realmsInstalled = sessionFactory.withStatelessSession(s -> s.withTransaction(tx -> realms.update(s, enterprise)))
+				.await().atMost(Duration.ofMinutes(3));
+		assertEquals(Boolean.TRUE, realmsInstalled, "Profile name realm installation should succeed");
+
+		ProfileAttributeChoicesInstall choices = IGuiceContext.get(ProfileAttributeChoicesInstall.class);
+		for (int run = 0; run < 2; run++)
+		{
+			Boolean choicesInstalled = sessionFactory.withStatelessSession(s -> s.withTransaction(tx -> choices.update(s, enterprise)))
+					.await().atMost(Duration.ofMinutes(3));
+			assertEquals(Boolean.TRUE, choicesInstalled, "Profile attribute choice installation should succeed and be repeatable");
+		}
+	}
+
+	@Test
+	@Order(6)
+	@DisplayName("Attribute choices are read from the FSDM classification hierarchy")
+	public void attributeChoicesComeFromClassificationChildren()
+	{
+		IProfileService<?> profileService = IGuiceContext.get(IProfileService.class);
+		Map<String, List<ProfileAttributeChoiceDTO>> choices = SessionUtils
+				.<Map<String, List<ProfileAttributeChoiceDTO>>>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+						profileService.getAttributeChoices(tuple.getItem1(), tuple.getItem2()))
+				.await().atMost(Duration.ofMinutes(2));
+		assertEquals(List.of("Gender", "Pronouns", "MaritalStatus"), List.copyOf(choices.keySet()));
+		for (var attribute : ProfileAttributeChoices.attributes())
+		{
+			List<String> expected = java.util.Arrays.stream(ProfileAttributeChoices.values())
+					.filter(choice -> choice.attribute() == attribute).map(Enum::name).toList();
+			assertEquals(expected, choices.get(attribute.name()).stream().map(ProfileAttributeChoiceDTO::value).toList(),
+					attribute + " children in declared order, once each after a repeated install");
+		}
+		assertEquals(new ProfileAttributeChoiceDTO("MaritalStatusPartnered", "Domestic partnership"),
+				choices.get("MaritalStatus").get(2));
+		assertEquals("Prefer not to say", choices.get("Gender").getLast().label());
+	}
+
+	@Test
+	@Order(5)
+	@DisplayName("Social and work names are classified separately from personal names")
+	public void realmNamesAreSeparateFromPersonalNames()
+	{
+		IProfileService<?> profileService = IGuiceContext.get(IProfileService.class);
+		ComprehensiveProfileDTO initial = new ComprehensiveProfileDTO();
+		initial.setFirstName("Grace");
+		initial.setPreferredName("Grace");
+		initial.setSuffix("PhD");
+		initial.setRealmName(ProfileNameRealms.ProfileSocialName, NameTypes.PreferredNameType, "Amazing Grace");
+		initial.setRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.PreferredNameType, "Admiral Hopper");
+		initial.setRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.SuffixType, "USN");
+
+		ComprehensiveProfileDTO stored = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+				profileService.saveProfile(tuple.getItem1(), tuple.getItem2(), initial)
+						.chain(id -> profileService.getProfile(tuple.getItem1(), tuple.getItem2(), id)))
+				.await().atMost(Duration.ofMinutes(2));
+		assertEquals("Grace", stored.getPreferredName());
+		assertEquals("PhD", stored.getSuffix());
+		assertEquals("Amazing Grace", stored.getRealmName(ProfileNameRealms.ProfileSocialName, NameTypes.PreferredNameType));
+		assertEquals("Admiral Hopper", stored.getRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.PreferredNameType));
+		assertEquals("USN", stored.getRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.SuffixType));
+		assertNull(stored.getRealmName(ProfileNameRealms.ProfileSocialName, NameTypes.SuffixType));
+
+		ComprehensiveProfileDTO changed = new ComprehensiveProfileDTO();
+		changed.setProfileId(stored.getProfileId());
+		changed.setRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.PreferredNameType, "Rear Admiral Hopper");
+		ComprehensiveProfileDTO reread = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+				profileService.saveProfile(tuple.getItem1(), tuple.getItem2(), changed)
+						.chain(id -> profileService.getProfile(tuple.getItem1(), tuple.getItem2(), id)))
+				.await().atMost(Duration.ofMinutes(2));
+		assertEquals("Rear Admiral Hopper", reread.getRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.PreferredNameType));
+		assertEquals("Amazing Grace", reread.getRealmName(ProfileNameRealms.ProfileSocialName, NameTypes.PreferredNameType));
+		assertEquals("USN", reread.getRealmName(ProfileNameRealms.ProfileWorkName, NameTypes.SuffixType));
+		assertEquals("Grace", reread.getPreferredName(), "A work name change must not replace the personal name");
 	}
 
 	@Test
@@ -130,6 +212,7 @@ public class ProfileComprehensiveProfileTest
 		initial.setFirstName("Grace");
 		initial.setSurname("Hopper");
 		initial.setOccupation("Computer Scientist");
+		initial.setCity("New York");
 
 		UUID id = SessionUtils.<UUID>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
 			Mutiny.StatelessSession session = tuple.getItem1();
@@ -143,6 +226,7 @@ public class ProfileComprehensiveProfileTest
 		update.setProfileId(id);
 		update.setOccupation("Rear Admiral");
 		update.setPrimaryEmail("grace@example.com");
+		update.setCity("Arlington");
 
 		ComprehensiveProfileDTO reread = SessionUtils.<ComprehensiveProfileDTO>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
 			Mutiny.StatelessSession session = tuple.getItem1();
@@ -155,10 +239,48 @@ public class ProfileComprehensiveProfileTest
 		assertEquals(id, reread.getProfileId(), "Update must operate on the same profile id");
 		assertEquals("Rear Admiral", reread.getOccupation(), "Updated field must be persisted");
 		assertEquals("grace@example.com", reread.getPrimaryEmail(), "New field must be persisted");
+		assertEquals("Arlington", reread.getCity(), "Another existing attribute must be replaced");
+		assertEquals("Grace", reread.getFirstName(), "Sparse update must preserve the name");
+		assertEquals("Hopper", reread.getSurname(), "Sparse update must preserve the surname");
 	}
 
 	@Test
 	@Order(3)
+	@DisplayName("Changing a name retires the previous active name and preserves other names")
+	public void updateNameById()
+	{
+		IProfileService<?> profileService = IGuiceContext.get(IProfileService.class);
+		ComprehensiveProfileDTO initial = new ComprehensiveProfileDTO();
+		initial.setFirstName("Augusta");
+		initial.setSurname("Lovelace");
+		initial.setPreferredName("Ada");
+
+		UUID id = SessionUtils.<UUID>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+				profileService.saveProfile(tuple.getItem1(), tuple.getItem2(), initial))
+				.await().atMost(Duration.ofMinutes(2));
+
+		ComprehensiveProfileDTO changed = new ComprehensiveProfileDTO();
+		changed.setProfileId(id);
+		changed.setFirstName("Ada");
+		changed.setPreferredName("Countess");
+		ComprehensiveProfileDTO reread = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+				profileService.saveProfile(tuple.getItem1(), tuple.getItem2(), changed)
+						.chain(saved -> profileService.getProfile(tuple.getItem1(), tuple.getItem2(), saved)))
+				.await().atMost(Duration.ofMinutes(2));
+		assertEquals("Ada", reread.getFirstName());
+		assertEquals("Countess", reread.getPreferredName());
+		assertEquals("Lovelace", reread.getSurname());
+
+		ComprehensiveProfileDTO again = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+				profileService.saveProfile(tuple.getItem1(), tuple.getItem2(), changed)
+						.chain(saved -> profileService.getProfile(tuple.getItem1(), tuple.getItem2(), saved)))
+				.await().atMost(Duration.ofMinutes(2));
+		assertEquals("Ada", again.getFirstName());
+		assertEquals("Countess", again.getPreferredName());
+	}
+
+	@Test
+	@Order(4)
 	@DisplayName("A comprehensive profile saves and reads back via a stateless session")
 	public void saveAndReadComprehensiveProfileStateless()
 	{
@@ -188,5 +310,3 @@ public class ProfileComprehensiveProfileTest
 		assertEquals("Hampton", stored.getCity());
 	}
 }
-
-

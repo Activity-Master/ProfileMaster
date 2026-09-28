@@ -2,17 +2,25 @@ package com.guicedee.activitymaster.profiles;
 
 import com.google.inject.Inject;
 import com.guicedee.activitymaster.fsdm.client.services.IActivityMasterService;
+import com.guicedee.activitymaster.fsdm.client.services.IActiveFlagService;
+import com.guicedee.activitymaster.fsdm.client.services.IClassificationService;
 import com.guicedee.activitymaster.fsdm.client.services.IInvolvedPartyService;
 import com.guicedee.activitymaster.fsdm.client.services.IPasswordsService;
 import com.guicedee.activitymaster.fsdm.client.services.IRelationshipValue;
+import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.classifications.IClassification;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedPartyNameType;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes;
+import com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributeChoices;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributes;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileNameRealms;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.activitymaster.profiles.webdto.ComprehensiveProfileDTO;
+import com.guicedee.activitymaster.profiles.webdto.ProfileAttributeChoiceDTO;
 import com.guicedee.client.utils.Pair;
 import io.smallrye.mutiny.Uni;
 import org.apache.logging.log4j.LogManager;
@@ -21,6 +29,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -46,6 +56,12 @@ public class ProfileService
 
 	@Inject
 	private IInvolvedPartyService<?> involvedPartyService;
+
+	@Inject
+	private IClassificationService<?> classifications;
+
+	@Inject
+	private IActiveFlagService<?> activeFlags;
 
 	// ---- Stateless twins ----
 
@@ -205,6 +221,73 @@ public class ProfileService
 			.onFailure().invoke(error -> log.error("Error reading profile {} (stateless): {}", profileId, error.getMessage(), error));
 	}
 
+	@Override
+	public Uni<Map<String, List<ProfileAttributeChoiceDTO>>> getAttributeChoices(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise)
+	{
+		return getISystem(session, ProfileSystemName, enterprise)
+			.chain(system -> getISystemToken(session, ProfileSystemName, enterprise)
+				.chain(token -> {
+					Map<String, List<ProfileAttributeChoiceDTO>> choices = new LinkedHashMap<>();
+					// Sequential reads: one statement at a time on the stateless connection.
+					Uni<Void> chain = Uni.createFrom().voidItem();
+					for (ProfileAttributes attribute : ProfileAttributeChoices.attributes())
+					{
+						chain = chain.chain(() -> attributeChoices(session, attribute, system, token)
+							.invoke(list -> choices.put(attribute.name(), list))
+							.replaceWithVoid());
+					}
+					return chain.replaceWith(choices);
+				}))
+			.onFailure().invoke(error -> log.error("Error reading profile attribute choices (stateless): {}", error.getMessage(), error));
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private Uni<List<ProfileAttributeChoiceDTO>> attributeChoices(Mutiny.StatelessSession session, ProfileAttributes attribute, ISystems<?, ?> system, UUID token)
+	{
+		return classifications.find(session, attribute.name(), system, token)
+			.chain(parent -> ((IClassification) parent).findChildren(session, NoClassification.name(), null, system, token))
+			.chain(links -> {
+				List<IClassification<?, ?>> children = new ArrayList<>();
+				Uni<Void> fetches = Uni.createFrom().voidItem();
+				// The link's secondary is lazy; fetch each on the stateless session.
+				for (Object link : (List<Object>) links)
+				{
+					fetches = fetches.chain(() -> session.fetch(((IRelationshipValue) link).getSecondary())
+						.invoke(child -> {
+							if (child instanceof IClassification<?, ?> classification)
+							{
+								children.add(classification);
+							}
+						})
+						.replaceWithVoid());
+				}
+				return fetches.replaceWith(() -> sortedChoices(children));
+			});
+	}
+
+	private static List<ProfileAttributeChoiceDTO> sortedChoices(List<IClassification<?, ?>> children)
+	{
+		Map<String, ProfileAttributeChoiceDTO> byName = new LinkedHashMap<>();
+		for (IClassification<?, ?> child : children)
+		{
+			String name = child.getName();
+			if (name == null || name.isBlank())
+			{
+				continue;
+			}
+			String label = child.getDescription() == null || child.getDescription().isBlank() ? name : child.getDescription();
+			byName.putIfAbsent(name, new ProfileAttributeChoiceDTO(name, label));
+		}
+		List<ProfileAttributeChoiceDTO> sorted = new ArrayList<>(byName.values());
+		sorted.sort(Comparator
+			.comparingInt((ProfileAttributeChoiceDTO choice) -> {
+				ProfileAttributeChoices known = ProfileAttributeChoices.fromName(choice.value());
+				return known == null ? Integer.MAX_VALUE : known.ordinal();
+			})
+			.thenComparing(ProfileAttributeChoiceDTO::label, String.CASE_INSENSITIVE_ORDER));
+		return sorted;
+	}
+
 	/**
 	 * Builds a detached-prepped involved party carrying only {@code profileId} as its id. The FSDM
 	 * link capabilities ({@code findLink((J) this, …)}) filter by the primary's id, so a prepped party
@@ -231,14 +314,43 @@ public class ProfileService
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private Uni<Void> persistNames(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party, ComprehensiveProfileDTO profile, ISystems<?, ?> system, UUID token)
 	{
-		IInvolvedParty raw = party;
+		Uni<Void> chain = persistNames(session, party, NoClassification.classificationValue(), profile.toNameValues(), system, token);
+		for (ProfileNameRealms realm : ProfileNameRealms.values())
+		{
+			Map<NameTypes, String> names = profile.toRealmNameValues(realm);
+			if (!names.isEmpty())
+			{
+				chain = chain.chain(() -> persistNames(session, party, realm.name(), names, system, token));
+			}
+		}
+		return chain;
+	}
+
+	/** Replaces each changed name of one realm; the classification separates personal, social and work names. */
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private Uni<Void> persistNames(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party, String classification,
+	                               Map<NameTypes, String> names, ISystems<?, ?> system, UUID token)
+	{
 		Uni<Void> chain = Uni.createFrom().voidItem();
-		for (Map.Entry<NameTypes, String> entry : profile.toNameValues().entrySet())
+		for (Map.Entry<NameTypes, String> entry : names.entrySet())
 		{
 			final NameTypes nameType = entry.getKey();
 			final String value = entry.getValue();
-			chain = chain.chain(() -> raw.addOrReuseInvolvedPartyNameType(session,
-					NoClassification.classificationValue(), nameType.toString(), value, system, token));
+			chain = chain.chain(() -> party.findInvolvedPartyNameTypesAll(session,
+					classification, nameType.toString(), null, system, false, token)
+				.chain(existing -> {
+					if (existing.size() == 1 && value.equals(existing.getFirst().getValue()))
+					{
+						return Uni.createFrom().voidItem();
+					}
+					Uni<Void> retire = Uni.createFrom().voidItem();
+					for (IRelationshipValue<?, IInvolvedPartyNameType<?, ?>, ?> link : existing)
+					{
+						retire = retire.chain(() -> link.archive(session, system, token).replaceWithVoid());
+					}
+					return retire.chain(() -> party.addOrReuseInvolvedPartyNameType(session,
+							classification, nameType.toString(), value, system, token));
+				}));
 		}
 		return chain;
 	}
@@ -246,15 +358,50 @@ public class ProfileService
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private Uni<Void> persistAttributes(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party, ComprehensiveProfileDTO profile, ISystems<?, ?> system, UUID token)
 	{
-		IInvolvedParty raw = party;
-		Uni<Void> chain = Uni.createFrom().voidItem();
-		for (Map.Entry<String, String> entry : profile.toAttributeValues().entrySet())
-		{
-			final String classificationName = entry.getKey();
-			final String value = entry.getValue();
-			chain = chain.chain(() -> raw.addOrUpdateClassification(session, classificationName, (String) null, value, system, token));
-		}
-		return chain;
+		return party.findClassificationValues(session, system, token)
+			.chain(values -> {
+				Uni<Void> updates = Uni.createFrom().voidItem();
+				for (Map.Entry<String, String> entry : profile.toAttributeValues().entrySet())
+				{
+					final String classificationName = entry.getKey();
+					final String value = entry.getValue();
+					String previous = values.get(classificationName);
+					if (value.equals(previous)) continue;
+					if (previous != null)
+					{
+						updates = updates.chain(() -> retireProfileAttribute(session, party.getId(), classificationName, system, token));
+					}
+					updates = updates.chain(() -> party.addOrUpdateClassification(session, classificationName, value, system, token));
+				}
+				return updates;
+			});
+	}
+
+	private Uni<Void> retireProfileAttribute(Mutiny.StatelessSession session, UUID partyId, String name, ISystems<?, ?> system, UUID token)
+	{
+		return classifications.find(session, name, EnterpriseClassificationDataConcepts.NoClassificationDataConceptName, system, token)
+			.chain(classification -> activeFlags.getArchivedFlag(session, system.getEnterprise(), token)
+				.chain(archived -> {
+					var now = com.guicedee.activitymaster.fsdm.client.services.builders.IQueryBuilderSCD
+						.convertToUTCDateTime(com.entityassist.RootEntity.getNow());
+					return session.createNativeQuery("""
+							UPDATE party.involvedpartyxclassification
+							SET activeflagid = :archived, effectivetodate = :now
+							WHERE involvedpartyid = :party AND enterpriseid = :enterprise
+							  AND classificationid = :classification
+							  AND effectivefromdate <= :now AND effectivetodate > :now
+							  AND activeflagid IN (
+							    SELECT activeflagid FROM dbo.activeflag
+							    WHERE enterpriseid = :enterprise AND activeflagname = 'Active'
+							  )
+							""")
+						.setParameter("archived", archived.getId())
+						.setParameter("now", now)
+						.setParameter("party", partyId)
+						.setParameter("enterprise", system.getEnterprise().getId())
+						.setParameter("classification", classification.getId())
+						.executeUpdate().replaceWithVoid();
+				}));
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
@@ -275,6 +422,23 @@ public class ProfileService
 					}
 				})
 				.replaceWithVoid());
+		}
+		for (ProfileNameRealms realm : ProfileNameRealms.values())
+		{
+			for (NameTypes nameType : realm.nameTypes())
+			{
+				chain = chain.chain(() -> ((Uni<IRelationshipValue<?, IInvolvedPartyNameType<?, ?>, ?>>) (Uni<?>) raw.findInvolvedPartyNameType(session,
+						realm.name(), nameType.toString(), null, system, true, true, token))
+					.map(relationship -> relationship == null ? null : relationship.getValue())
+					.onFailure().recoverWithItem(() -> null)
+					.invoke(value -> {
+						if (value != null)
+						{
+							dto.setRealmName(realm, nameType, value);
+						}
+					})
+					.replaceWithVoid());
+			}
 		}
 		return chain;
 	}

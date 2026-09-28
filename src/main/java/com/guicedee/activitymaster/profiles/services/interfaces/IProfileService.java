@@ -5,10 +5,12 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
 import com.guicedee.activitymaster.profiles.dto.ProfileServiceDTO;
 import com.guicedee.activitymaster.profiles.webdto.ComprehensiveProfileDTO;
+import com.guicedee.activitymaster.profiles.webdto.ProfileAttributeChoiceDTO;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -65,4 +67,13 @@ public interface IProfileService<J extends IProfileService<J>>
 	 * carrying only its id and enterprise rather than {@code null}.
 	 */
 	Uni<ComprehensiveProfileDTO> getProfile(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId);
+
+	/**
+	 * Reads the selectable values for each list-valued profile attribute (gender, pronouns, marital status)
+	 * from the FSDM: the child classifications of each attribute classification, on a
+	 * {@link Mutiny.StatelessSession}. Keys are attribute names; installed defaults keep their declared order
+	 * and enterprise-added children follow alphabetically by label. An attribute without children maps to
+	 * an empty list.
+	 */
+	Uni<Map<String, List<ProfileAttributeChoiceDTO>>> getAttributeChoices(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise);
 }

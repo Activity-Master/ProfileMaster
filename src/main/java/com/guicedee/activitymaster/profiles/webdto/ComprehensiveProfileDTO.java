@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributes;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileNameRealms;
 import com.guicedee.modules.services.jsonrepresentation.IJsonRepresentation;
 import lombok.Getter;
 import lombok.Setter;
@@ -174,6 +175,64 @@ public class ComprehensiveProfileDTO
 
 	/** Extensibility bag for any attribute not modelled by an explicit field. */
 	private Map<String, String> additionalAttributes = new LinkedHashMap<>();
+
+	/**
+	 * Names used in the social and work realms, stored as name types classified by
+	 * {@link ProfileNameRealms}. The top-level name fields are the personal realm.
+	 */
+	private Map<ProfileNameRealms, Map<NameTypes, String>> realmNames = new LinkedHashMap<>();
+
+	// -------------------------------------------------------------------------------------------
+	//  Realm name projection
+	// -------------------------------------------------------------------------------------------
+
+	/** Returns the realm name for a name type, or {@code null}. */
+	public String getRealmName(ProfileNameRealms realm, NameTypes nameType)
+	{
+		if (realm == null || nameType == null || realmNames == null)
+		{
+			return null;
+		}
+		Map<NameTypes, String> names = realmNames.get(realm);
+		return names == null ? null : names.get(nameType);
+	}
+
+	/**
+	 * Sets a realm name. A {@code null} value is ignored so a partial update never blanks a name.
+	 *
+	 * @throws IllegalArgumentException when the realm does not hold the name type
+	 */
+	public ComprehensiveProfileDTO setRealmName(ProfileNameRealms realm, NameTypes nameType, String value)
+	{
+		if (realm == null || nameType == null || !realm.nameTypes().contains(nameType))
+		{
+			throw new IllegalArgumentException("The " + realm + " realm does not hold " + nameType);
+		}
+		if (value != null)
+		{
+			if (realmNames == null)
+			{
+				realmNames = new LinkedHashMap<>();
+			}
+			realmNames.computeIfAbsent(realm, ignored -> new LinkedHashMap<>()).put(nameType, value);
+		}
+		return this;
+	}
+
+	/** The populated names of a realm, limited to the name types that realm holds. */
+	public Map<NameTypes, String> toRealmNameValues(ProfileNameRealms realm)
+	{
+		Map<NameTypes, String> names = new LinkedHashMap<>();
+		if (realm == null || realmNames == null || realmNames.get(realm) == null)
+		{
+			return names;
+		}
+		for (NameTypes nameType : realm.nameTypes())
+		{
+			put(names, nameType, realmNames.get(realm).get(nameType));
+		}
+		return names;
+	}
 
 	// -------------------------------------------------------------------------------------------
 	//  Name projection
