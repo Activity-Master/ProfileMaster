@@ -17,7 +17,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
  * Creates the name-link classifications that separate social and work names from personal names.
  * A separate update so enterprises that already applied {@link ProfileMasterInstall} receive it.
  */
-@SortedUpdate(sortOrder = 51, taskCount = 1,force = true)
+@SortedUpdate(sortOrder = 51, taskCount = 1)
 public class ProfileNameRealmsInstall implements ISystemUpdate
 {
     private static final Logger log = LogManager.getLogger(ProfileNameRealmsInstall.class);
