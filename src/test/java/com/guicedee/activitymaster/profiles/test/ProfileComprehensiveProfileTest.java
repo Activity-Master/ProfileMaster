@@ -10,6 +10,7 @@ import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enter
 import com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributeChoices;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileChoiceConcepts;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileLanguageCatalog;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileProtectedFields;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileNameRealms;
@@ -118,10 +119,11 @@ public class ProfileComprehensiveProfileTest
 				.<Map<String, List<ProfileAttributeChoiceDTO>>>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
 						profileService.getAttributeChoices(tuple.getItem1(), tuple.getItem2()))
 				.await().atMost(Duration.ofMinutes(2));
-		assertEquals(List.of("Gender", "Pronouns", "MaritalStatus", "Occupation", "Ethnicity", "Religion", "BloodType"),
+		assertEquals(List.of("Gender", "Pronouns", "MaritalStatus", "Occupation", "Ethnicity", "Religion", "BloodType", "HomeLanguage", "SpokenLanguages"),
 			List.copyOf(choices.keySet()));
 		for (var attribute : ProfileAttributeChoices.attributes())
 		{
+			if (ProfileLanguageCatalog.isLanguage(attribute.name())) continue;
 			List<String> expected = java.util.Arrays.stream(ProfileAttributeChoices.values())
 					.filter(choice -> choice.attribute() == attribute).map(Enum::name).toList();
 			assertEquals(expected, choices.get(attribute.name()).stream().map(ProfileAttributeChoiceDTO::value).toList(),
@@ -130,6 +132,11 @@ public class ProfileComprehensiveProfileTest
 		assertEquals(new ProfileAttributeChoiceDTO("MaritalStatusPartnered", "Domestic partnership"),
 				choices.get("MaritalStatus").get(2));
 		assertEquals("Prefer not to say", choices.get("Gender").getLast().label());
+		assertEquals(ProfileLanguageCatalog.DEFAULTS, choices.get("HomeLanguage"));
+		assertEquals(choices.get("HomeLanguage"), choices.get("SpokenLanguages"));
+		assertEquals("Caucasian / White", choices.get("Ethnicity").stream()
+			.filter(choice -> choice.value().equals("EthnicityEuropean")).findFirst().orElseThrow().label());
+		assertTrue(choices.get("Religion").contains(new ProfileAttributeChoiceDTO("ReligionChineseAncestral", "Ancestral")));
 
 		ProfileSystem profileSystem = IGuiceContext.get(ProfileSystem.class);
 		IClassificationService<?> classifications = IGuiceContext.get(IClassificationService.class);
@@ -459,6 +466,125 @@ public class ProfileComprehensiveProfileTest
 	}
 
 	@Test
+	@Order(13)
+	@DisplayName("Languages are classified encrypted party links with independent sparse updates")
+	void languagesArePublishedPartyRelationships() {
+		IProfileService<?> service = IGuiceContext.get(IProfileService.class);
+		var supplied = new ComprehensiveProfileDTO();
+		supplied.setHomeLanguage("ProfileLanguage_en");
+		supplied.setSpokenLanguages("ProfileLanguage_fr,ProfileLanguage_en");
+		var stored = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+			service.saveProfile(tuple.getItem1(), tuple.getItem2(), supplied)
+				.chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id)))
+			.await().atMost(Duration.ofMinutes(2));
+		assertEquals("ProfileLanguage_en", stored.getHomeLanguage());
+		assertEquals("ProfileLanguage_en,ProfileLanguage_fr", stored.getSpokenLanguages());
+		sessionFactory.withStatelessSession(session -> session.createNativeQuery("""
+			SELECT concept.classificationdataconceptname, classification.classificationname, link.value,
+			       (SELECT COUNT(*) FROM party.involvedpartyxinvolvedpartyidentificationtypesecuritytoken security
+			        WHERE security.involvedpartyxinvolvedpartyidentificationtypeid = link.involvedpartyxinvolvedpartyidentificationtypeid)
+			FROM party.involvedpartyxinvolvedpartyidentificationtype link
+			JOIN party.involvedpartyidentificationtype type ON type.involvedpartyidentificationtypeid = link.involvedpartyidentificationtypeid
+			JOIN classification.classification classification ON classification.classificationid = link.classificationid
+			JOIN classification.classificationdataconcept concept ON concept.classificationdataconceptid = classification.classificationdataconceptid
+			WHERE link.involvedpartyid = :party
+			  AND type.involvedpartyidentificationname IN ('ProfileAttributeHomeLanguage', 'ProfileAttributeSpokenLanguages')
+			""", Object[].class).setParameter("party", stored.getProfileId()).getResultList().invoke(rows -> {
+				assertEquals(3, rows.size());
+				for (var row : rows) {
+					assertEquals("ProfileLanguages", row[0]);
+					assertTrue(row[1].toString().startsWith("ProfileLanguage_"));
+					assertTrue(row[2].toString().startsWith("amenc:1:"));
+					assertEquals(4L, ((Number) row[3]).longValue());
+				}
+			})).await().atMost(Duration.ofMinutes(2));
+		for (String invalid : List.of("English", "ProfileLanguage_unpublished", "ProfileLanguage_en,ProfileLanguage_en", "ProfileLanguage_en,")) {
+			var rejected = new ComprehensiveProfileDTO();
+			rejected.setProfileId(stored.getProfileId());
+			rejected.setSpokenLanguages(invalid);
+			assertThrows(IllegalArgumentException.class, () -> SessionUtils.<UUID>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+				service.saveProfile(tuple.getItem1(), tuple.getItem2(), rejected)).await().atMost(Duration.ofMinutes(2)));
+		}
+		var reduced = new ComprehensiveProfileDTO();
+		reduced.setProfileId(stored.getProfileId());
+		reduced.setSpokenLanguages("ProfileLanguage_fr");
+		var afterRemoval = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+			service.saveProfile(tuple.getItem1(), tuple.getItem2(), reduced)
+				.chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id)))
+			.await().atMost(Duration.ofMinutes(2));
+		assertEquals("ProfileLanguage_fr", afterRemoval.getSpokenLanguages());
+		assertEquals("ProfileLanguage_en", afterRemoval.getHomeLanguage());
+		var cleared = new ComprehensiveProfileDTO();
+		cleared.setProfileId(stored.getProfileId());
+		cleared.setSpokenLanguages("");
+		var afterClear = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+			service.saveProfile(tuple.getItem1(), tuple.getItem2(), cleared)
+				.chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id)))
+			.await().atMost(Duration.ofMinutes(2));
+		assertNull(afterClear.getSpokenLanguages());
+		assertEquals("ProfileLanguage_en", afterClear.getHomeLanguage());
+	}
+
+	@Test
+	@Order(14)
+	void linkedAddressGeographiesReadDisplayNamesWithoutReplacingTheirIds() {
+		var levels = List.of("Country", "Province", "District", "Locality", "PostalArea");
+		var kinds = List.of("Country", "Province", "Municipalities", "City", "PostalCode");
+		var codes = List.of("ZZ", "ZZ.01", "ZZ.01.DC1", "ZZ.01.JHB", "2000");
+		var names = List.of("Reference Country", "Gauteng", "Johannesburg District", "Johannesburg", "Johannesburg");
+		Map<String, UUID> references = SessionUtils.<Map<String, UUID>>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
+			var session = tuple.getItem1();
+			var system = tuple.getItem3();
+			var token = tuple.getItem4();
+			IClassificationService<?> classifications = IGuiceContext.get(IClassificationService.class);
+			com.guicedee.activitymaster.fsdm.client.services.IClassificationDataConceptService<?> concepts = IGuiceContext.get(com.guicedee.activitymaster.fsdm.client.services.IClassificationDataConceptService.class);
+			com.guicedee.activitymaster.fsdm.client.services.IActiveFlagService<?> flags = IGuiceContext.get(com.guicedee.activitymaster.fsdm.client.services.IActiveFlagService.class);
+			com.guicedee.activitymaster.fsdm.client.services.ISecurityTokenService<?> security = IGuiceContext.get(com.guicedee.activitymaster.fsdm.client.services.ISecurityTokenService.class);
+			var geographies = new java.util.ArrayList<com.guicedee.activitymaster.fsdm.db.entities.geography.Geography>();
+			Uni<Void> inserts = concepts.createNamedDataConcept(session, "AddressLabelTestKinds", "Address display test", system, token).replaceWithVoid();
+			for (int position = 0; position < levels.size(); position++) {
+				final int index = position;
+				inserts = inserts.chain(() -> classifications.createInConcept(session, kinds.get(index), kinds.get(index), "AddressLabelTestKinds", system, null, null, token)
+					.chain(kind -> flags.getActiveFlag(session, tuple.getItem2(), token).chain(active -> {
+						var geo = new com.guicedee.activitymaster.fsdm.db.entities.geography.Geography();
+						geo.setId(UUID.randomUUID()); geo.setName(codes.get(index)); geo.setDescription(names.get(index));
+						geo.setEnterpriseID(tuple.getItem2()); geo.setSystemID(system); geo.setOriginalSourceSystemID(system.getId());
+						geo.setClassificationID(kind); geo.setActiveFlagID(active);
+						geographies.add(geo);
+						return session.insert(geo)
+							.chain(() -> security.resolveDefaultGroupFolderTokens(session, system, token)
+								.chain(grants -> geo.createDefaultSecurity(session, system, tuple.getItem2(), active, grants, token)))
+							.chain(() -> {
+								if (index == 0) return Uni.createFrom().voidItem();
+								var link = new com.guicedee.activitymaster.fsdm.db.entities.geography.GeographyXGeography();
+								link.setId(UUID.randomUUID()); link.setEnterpriseID(tuple.getItem2()); link.setSystemID(system);
+								link.setOriginalSourceSystemID(system.getId()); link.setActiveFlagID(active); link.setClassificationID(kind);
+								link.setParentGeographyID(geographies.get(index - 1)); link.setChildGeographyID(geo);
+								link.setValue("");
+								return session.insert(link).chain(() -> security.resolveDefaultGroupFolderTokens(session, system, token)
+									.chain(grants -> link.createDefaultSecurity(session, system, tuple.getItem2(), active, grants, token))).replaceWithVoid();
+							});
+					})).replaceWithVoid());
+			}
+			return inserts.replaceWith(() -> {
+				var ids = new java.util.LinkedHashMap<String, UUID>();
+				for (int index = 0; index < levels.size(); index++) ids.put(levels.get(index), geographies.get(index).getId());
+				return ids;
+			});
+		}).await().atMost(Duration.ofMinutes(2));
+		IProfileService<?> service = IGuiceContext.get(IProfileService.class);
+		var supplied = new ComprehensiveProfileDTO();
+		supplied.setAddresses(List.of(new com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO(null, "Residential", Map.of(), references, Map.of())));
+		var stored = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+			service.saveProfile(tuple.getItem1(), tuple.getItem2(), supplied)
+				.chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id))).await().atMost(Duration.ofMinutes(2));
+		var address = stored.getAddresses().getFirst();
+		assertEquals(references, address.geographies());
+		assertEquals(Map.of("Country", "Reference Country", "Province", "Gauteng", "District", "Johannesburg District",
+			"Locality", "Johannesburg", "PostalArea", "2000 — Johannesburg"), address.geographyLabels());
+	}
+
+	@Test
 	@Order(1)
 	@DisplayName("A comprehensive profile saves and reads back across names and attributes")
 	public void saveAndReadComprehensiveProfile()
@@ -474,7 +600,7 @@ public class ProfileComprehensiveProfileTest
 		profile.setMobileNumber("+27 11 555 0100");
 		profile.setNationality("British");
 		profile.setDateOfBirth("1815-12-10");
-		profile.setHomeLanguage("London");
+		profile.setHomeLanguage("ProfileLanguage_en");
 		
 		profile.setLinkedIn("https://linkedin.com/in/ada");
 
@@ -497,7 +623,7 @@ public class ProfileComprehensiveProfileTest
 		assertEquals("+27 11 555 0100", stored.getMobileNumber());
 		assertEquals("British", stored.getNationality());
 		assertEquals("1815-12-10", stored.getDateOfBirth());
-		assertEquals("London", stored.getHomeLanguage());
+		assertEquals("ProfileLanguage_en", stored.getHomeLanguage());
 		
 		assertEquals("https://linkedin.com/in/ada", stored.getLinkedIn());
 	}
@@ -514,7 +640,7 @@ public class ProfileComprehensiveProfileTest
 		initial.setFirstName("Grace");
 		initial.setSurname("Hopper");
 		initial.setOccupation("Computer Scientist");
-		initial.setHomeLanguage("New York");
+		initial.setHomeLanguage("ProfileLanguage_en");
 
 		UUID id = SessionUtils.<UUID>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
 			Mutiny.StatelessSession session = tuple.getItem1();
@@ -528,7 +654,7 @@ public class ProfileComprehensiveProfileTest
 		update.setProfileId(id);
 		update.setOccupation("Rear Admiral");
 		update.setPrimaryEmail("grace@example.com");
-		update.setHomeLanguage("Arlington");
+		update.setHomeLanguage("ProfileLanguage_fr");
 
 		ComprehensiveProfileDTO reread = SessionUtils.<ComprehensiveProfileDTO>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
 			Mutiny.StatelessSession session = tuple.getItem1();
@@ -541,7 +667,7 @@ public class ProfileComprehensiveProfileTest
 		assertEquals(id, reread.getProfileId(), "Update must operate on the same profile id");
 		assertEquals("Rear Admiral", reread.getOccupation(), "Updated field must be persisted");
 		assertEquals("grace@example.com", reread.getPrimaryEmail(), "New field must be persisted");
-		assertEquals("Arlington", reread.getHomeLanguage(), "Another existing attribute must be replaced");
+		assertEquals("ProfileLanguage_fr", reread.getHomeLanguage(), "Another existing attribute must be replaced");
 		assertEquals("Grace", reread.getFirstName(), "Sparse update must preserve the name");
 		assertEquals("Hopper", reread.getSurname(), "Sparse update must preserve the surname");
 	}
@@ -593,7 +719,7 @@ public class ProfileComprehensiveProfileTest
 		profile.setEmployer("NASA");
 		profile.setPrimaryEmail("katherine@example.com");
 		profile.setNationality("American");
-		profile.setHomeLanguage("Hampton");
+		profile.setHomeLanguage("ProfileLanguage_en");
 
 		ComprehensiveProfileDTO stored = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
 			Mutiny.StatelessSession session = tuple.getItem1();
@@ -609,7 +735,7 @@ public class ProfileComprehensiveProfileTest
 		assertEquals("NASA", stored.getEmployer());
 		assertEquals("katherine@example.com", stored.getPrimaryEmail());
 		assertEquals("American", stored.getNationality());
-		assertEquals("Hampton", stored.getHomeLanguage());
+		assertEquals("ProfileLanguage_en", stored.getHomeLanguage());
 	}
 
 	@Test
@@ -621,7 +747,7 @@ public class ProfileComprehensiveProfileTest
 		ComprehensiveProfileDTO initial = new ComprehensiveProfileDTO();
 		initial.setFirstName("Ada");
 		initial.setSurname("Lovelace");
-		initial.setHomeLanguage("London");
+		initial.setHomeLanguage("ProfileLanguage_en");
 		initial.setOccupation("Mathematician");
 		UUID id = SessionUtils.<UUID>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
 				service.saveProfile(tuple.getItem1(), tuple.getItem2(), initial))

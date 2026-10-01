@@ -12,6 +12,7 @@ module com.guicedee.activitymaster.profiles {
 
 
 	requires transitive com.guicedee.activitymaster.fsdm.client;
+	requires com.guicedee.activitymaster.fsdm;
 	requires static lombok;
 
     // REST surface + typed REST client for the comprehensive profile
@@ -29,6 +30,8 @@ module com.guicedee.activitymaster.profiles {
 	exports com.guicedee.activitymaster.profiles.services.enumerations;
 
 	provides IMasterSystem with ProfileSystem;
+	provides com.guicedee.activitymaster.fsdm.plugins.IAgeProfileProvider
+			with com.guicedee.activitymaster.profiles.implementations.ProfileAgeProfileProvider;
 	
 	provides IGuiceModule with ProfileServiceBinder;
 	//provides com.jwebmp.core.events.IEventConfigurator with ProfileEventConfigurator;

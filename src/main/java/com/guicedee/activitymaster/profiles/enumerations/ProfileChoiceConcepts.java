@@ -11,7 +11,9 @@ public enum ProfileChoiceConcepts
 	Occupation(ProfileAttributes.Occupation, "ProfileOccupations"),
 	Ethnicity(ProfileAttributes.Ethnicity, "ProfileEthnicityChoices"),
 	Religion(ProfileAttributes.Religion, "ProfileReligionChoices"),
-	BloodType(ProfileAttributes.BloodType, "ProfileBloodTypeChoices");
+	BloodType(ProfileAttributes.BloodType, "ProfileBloodTypeChoices"),
+	HomeLanguage(ProfileAttributes.HomeLanguage, "ProfileLanguages"),
+	SpokenLanguages(ProfileAttributes.SpokenLanguages, "ProfileLanguages");
 
 	/** Legacy link metadata used when reading and retiring pre-encryption selected values. */
 	public enum LinkKind { PARTY, NAME }

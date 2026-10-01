@@ -20,6 +20,7 @@ import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributes;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileChoiceConcepts;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileNameRealms;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileProtectedFields;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileLanguageCatalog;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.activitymaster.profiles.webdto.ComprehensiveProfileDTO;
 import com.guicedee.activitymaster.profiles.webdto.ProfileAttributeChoiceDTO;
@@ -66,6 +67,7 @@ public class ProfileService
 	private IActiveFlagService<?> activeFlags;
 
     @Inject private com.guicedee.activitymaster.fsdm.client.services.IAddressService<?> addresses;
+    @Inject private ProfileLanguageSelections languages;
 
 	// ---- Stateless twins ----
 
@@ -237,6 +239,10 @@ public class ProfileService
 						.chain(ignored -> hydrateNames(session, party, dto, system, token))
 						.chain(() -> hydrateSelectedChoices(session, party, dto, system, token))
 						.chain(() -> hydrateProtectedValues(session, party, dto, system, token))
+                        .chain(() -> languages.read(session, party, "HomeLanguage", system, token)
+                            .invoke(value -> { if (value != null) dto.setHomeLanguage(value); }).replaceWithVoid())
+                        .chain(() -> languages.read(session, party, "SpokenLanguages", system, token)
+                            .invoke(value -> { if (value != null) dto.setSpokenLanguages(value); }).replaceWithVoid())
 						.chain(() -> addresses.findPartyAddresses(session, party, system, token).invoke(dto::setAddresses))
 						.replaceWith(dto);
 				}))
@@ -388,6 +394,12 @@ public class ProfileService
 						final String classificationName = entry.getKey();
 						final String value = entry.getValue();
 					String previous = values.get(classificationName);
+                    if (ProfileLanguageCatalog.isLanguage(classificationName)) {
+                        updates = updates.chain(() -> attributeChoices(session, ProfileAttributes.valueOf(classificationName), system, token)
+                            .chain(published -> languages.replace(session, party, classificationName, value, published, system, token)));
+                        if (previous != null) updates = updates.chain(() -> retireProfileAttribute(session, party.getId(), classificationName, system, token));
+                        continue;
+                    }
 					if (classificationName.equals(ProfileAttributes.Biography.name())) {
 						updates = updates.chain(() -> replaceProtectedValue(session, party,
 							ProfileProtectedFields.attributeType(classificationName), "", system, token));

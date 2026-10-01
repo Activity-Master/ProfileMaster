@@ -10,6 +10,7 @@ import com.guicedee.activitymaster.fsdm.client.services.systems.SortedUpdate;
 import com.guicedee.activitymaster.profiles.ProfileSystem;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileAttributeChoices;
 import com.guicedee.activitymaster.profiles.enumerations.ProfileChoiceConcepts;
+import com.guicedee.activitymaster.profiles.enumerations.ProfileLanguageCatalog;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.apache.logging.log4j.LogManager;
@@ -54,8 +55,20 @@ public class ProfileAttributeChoicesInstall implements ISystemUpdate
 							profileSystem,
 							choice.sequence(),
 							(IClassification<?, ?>) parent,
-							systemToken)))
-					.collect().last()))))
+							systemToken)
+                            .chain(child -> session.createQuery("update Classification set description = :label where id = :id and enterpriseID.id = :enterprise")
+                                .setParameter("label", choice.label()).setParameter("id", child.getId())
+                                .setParameter("enterprise", enterprise.getId()).executeUpdate())))
+					.collect().last()
+                    .chain(() -> Multi.createFrom().iterable(ProfileLanguageCatalog.DEFAULTS)
+                        .onItem().transformToUniAndConcatenate(language -> classificationService
+                            .find(session, "HomeLanguage", profileSystem, systemToken)
+                            .chain(parent -> classificationService.createInConcept(session, language.value(), language.label(),
+                                ProfileLanguageCatalog.CONCEPT, profileSystem, 1, parent, systemToken))
+                            .chain(child -> classificationService.find(session, "SpokenLanguages", profileSystem, systemToken)
+                                .chain(parent -> classificationService.createInConcept(session, language.value(), language.label(),
+                                    ProfileLanguageCatalog.CONCEPT, profileSystem, 1, parent, systemToken))))
+                        .collect().last())))))
 			.map(result -> true)
 			.onFailure().invoke(error -> log.error("Error creating profile attribute choices (stateless): {}", error.getMessage(), error));
 	}
