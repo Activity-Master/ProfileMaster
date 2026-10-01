@@ -1,6 +1,5 @@
 package com.guicedee.activitymaster.profiles.enumerations;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.guicedee.activitymaster.profiles.enumerations.ProfileAttributes.*;
@@ -37,6 +36,34 @@ public enum ProfileAttributeChoices
 	MaritalStatusDivorced(MaritalStatus, "Divorced"),
 	MaritalStatusWidowed(MaritalStatus, "Widowed"),
 	MaritalStatusUndisclosed(MaritalStatus, "Prefer not to say"),
+
+	EthnicityAfrican(Ethnicity, "African"),
+	EthnicityAsian(Ethnicity, "Asian"),
+	EthnicityEuropean(Ethnicity, "European"),
+	EthnicityMiddleEasternNorthAfrican(Ethnicity, "Middle Eastern or North African"),
+	EthnicityMixed(Ethnicity, "Mixed"),
+	EthnicityOther(Ethnicity, "Other"),
+	EthnicityUndisclosed(Ethnicity, "Prefer not to say"),
+
+	ReligionChristianity(Religion, "Christianity"),
+	ReligionIslam(Religion, "Islam"),
+	ReligionHinduism(Religion, "Hinduism"),
+	ReligionBuddhism(Religion, "Buddhism"),
+	ReligionJudaism(Religion, "Judaism"),
+	ReligionTraditional(Religion, "Traditional religion"),
+	ReligionOther(Religion, "Other"),
+	ReligionNone(Religion, "No religion"),
+	ReligionUndisclosed(Religion, "Prefer not to say"),
+
+	BloodTypeOPositive(BloodType, "O+"),
+	BloodTypeONegative(BloodType, "O−"),
+	BloodTypeAPositive(BloodType, "A+"),
+	BloodTypeANegative(BloodType, "A−"),
+	BloodTypeBPositive(BloodType, "B+"),
+	BloodTypeBNegative(BloodType, "B−"),
+	BloodTypeABPositive(BloodType, "AB+"),
+	BloodTypeABNegative(BloodType, "AB−"),
+	BloodTypeUnknown(BloodType, "Unknown"),
 	;
 
 	private final ProfileAttributes attribute;
@@ -81,15 +108,7 @@ public enum ProfileAttributeChoices
 	/** The attributes that take their value from a list of choices, in declaration order. */
 	public static List<ProfileAttributes> attributes()
 	{
-		List<ProfileAttributes> attributes = new ArrayList<>();
-		for (ProfileAttributeChoices choice : values())
-		{
-			if (!attributes.contains(choice.attribute))
-			{
-				attributes.add(choice.attribute);
-			}
-		}
-		return attributes;
+		return ProfileChoiceConcepts.attributes();
 	}
 
 	/** Resolves a default choice by classification name, or {@code null} for an enterprise-added child. */

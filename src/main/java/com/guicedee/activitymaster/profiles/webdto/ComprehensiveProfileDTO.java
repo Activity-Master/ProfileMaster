@@ -29,14 +29,14 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
  * itself from, the underlying ActivityMaster storage primitives:</p>
  *
  * <ul>
- *     <li><b>Names</b> map to the FSDM {@link NameTypes} mechanism — see {@link #toNameValues()}.</li>
- *     <li><b>Everything else</b> maps to {@link ProfileAttributes} classifications — see
+ *     <li><b>Names</b> use {@link NameTypes} keys and protected identification values — see {@link #toNameValues()}.</li>
+ *     <li><b>Other values</b> use {@link ProfileAttributes} keys and protected identification values — see
  *         {@link #toAttributeValues()} / {@link #applyAttributeValues(Map)}.</li>
  * </ul>
  *
  * <p>Any field not covered by an explicit getter/setter can still be carried through the
  * {@link #additionalAttributes} bag, which is merged into the attribute map on write and populated
- * with any unrecognised classification on read.</p>
+ * with any unrecognised profile attribute on read.</p>
  */
 @Getter
 @Setter
@@ -49,6 +49,9 @@ public class ComprehensiveProfileDTO
 	@Serial
 	private static final long serialVersionUID = 1L;
 
+    /** Null on sparse writes preserves addresses; an empty list explicitly ends all addresses. */
+    private java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO> addresses;
+
 	/** The unique identifier of this profile (the backing involved-party id). */
 	private UUID profileId;
 
@@ -56,7 +59,7 @@ public class ComprehensiveProfileDTO
 	private String enterpriseName;
 
 	// -------------------------------------------------------------------------------------------
-	//  Names (stored via NameTypes)
+	//  Names (NameTypes keys, encrypted identification values)
 	// -------------------------------------------------------------------------------------------
 	private String title;
 	private String firstName;

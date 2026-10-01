@@ -7,14 +7,12 @@ import static com.guicedee.activitymaster.fsdm.client.services.classifications.E
 /**
  * The comprehensive set of profile attributes an individual's full profile can hold.
  *
- * <p>Each constant maps to an ActivityMaster {@code Classification} (created at install time by
- * {@code ProfileMasterInstall}) and is stored against the person's {@code InvolvedParty} as a
- * classification value. Names (first name, surname, etc.) are stored separately through the FSDM
- * {@code NameTypes} mechanism — everything else (occupation, contact details, demographics,
- * identification, social handles, etc.) is captured here.</p>
+ * <p>Each constant maps to a profile DTO field. Personal values are stored through encrypted
+ * involved-party identification links. The attribute classifications provide dropdown hierarchy
+ * parents and compatibility reads for older profile data.</p>
  *
- * <p>The {@link #name()} of each constant is the canonical classification name used for both writing
- * ({@code addOrUpdateClassification}) and reading ({@code findClassificationValues}).</p>
+ * <p>The {@link #name()} of each constant is the canonical DTO key. Selectable values use the
+ * profile-owned data concepts and classifications in {@link ProfileChoiceConcepts} for their options.</p>
  */
 public enum ProfileAttributes
 {

@@ -7,6 +7,8 @@ import com.guicedee.activitymaster.fsdm.client.services.SessionUtils;
 import com.guicedee.activitymaster.fsdm.client.services.administration.ActivityMasterConfiguration;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.enterprise.IEnterprise;
 import com.guicedee.activitymaster.profiles.implementations.updates.ProfileMasterInstall;
+import com.guicedee.activitymaster.profiles.implementations.updates.ProfileAttributeChoicesInstall;
+import com.guicedee.activitymaster.profiles.implementations.updates.ProfileProtectedValuesInstall;
 import com.guicedee.activitymaster.profiles.services.interfaces.IProfileService;
 import com.guicedee.activitymaster.profiles.webdto.ComprehensiveProfileDTO;
 import com.guicedee.client.IGuiceContext;
@@ -42,10 +44,12 @@ public class ProfileGraphQLIntegrationTest
 	private Mutiny.SessionFactory sessionFactory;
 	private GraphQL graphQL;
 	private UUID testProfileId;
+	private ProfileEncryptionFixture encryption;
 
 	@BeforeAll
 	public void setup()
 	{
+		encryption = new ProfileEncryptionFixture();
 		LogUtils.addConsoleLogger(Level.INFO);
 		ActivityMasterConfiguration.get().setApplicationEnterpriseName(ENTERPRISE);
 		IGuiceContext.instance();
@@ -78,6 +82,10 @@ public class ProfileGraphQLIntegrationTest
 		Boolean installed = sessionFactory.withStatelessSession(s -> s.withTransaction(tx -> install.update(s, enterprise)))
 				.await().atMost(Duration.ofMinutes(3));
 		assertEquals(Boolean.TRUE, installed, "Profile taxonomy installation should succeed");
+		sessionFactory.withStatelessSession(s -> s.withTransaction(tx ->
+			IGuiceContext.get(ProfileAttributeChoicesInstall.class).update(s, enterprise)
+				.chain(() -> IGuiceContext.get(ProfileProtectedValuesInstall.class).update(s, enterprise))))
+			.await().atMost(Duration.ofMinutes(3));
 
 		// Persist test profile
 		ComprehensiveProfileDTO profile = new ComprehensiveProfileDTO();
@@ -91,8 +99,8 @@ public class ProfileGraphQLIntegrationTest
 		profile.setMobileNumber("+27 11 555 0100");
 		profile.setNationality("British");
 		profile.setDateOfBirth("1815-12-10");
-		profile.setCity("London");
-		profile.setCountry("United Kingdom");
+		profile.setHomeLanguage("English");
+		
 		profile.setLinkedIn("https://linkedin.com/in/ada");
 
 		testProfileId = SessionUtils.<UUID>withActivityMaster(ENTERPRISE, PROFILE_SYSTEM, tuple -> {
@@ -104,6 +112,9 @@ public class ProfileGraphQLIntegrationTest
 
 		assertNotNull(testProfileId, "Test profile ID must be generated");
 	}
+
+	@AfterAll
+	void restoreEncryption() { encryption.close(); }
 
 	@Test
 	@Order(1)
@@ -166,8 +177,8 @@ public class ProfileGraphQLIntegrationTest
 		assertEquals("+27 11 555 0100", profile.get("mobileNumber"));
 		assertEquals("British", profile.get("nationality"));
 		assertEquals("1815-12-10", profile.get("dateOfBirth"));
-		assertEquals("London", profile.get("city"));
-		assertEquals("United Kingdom", profile.get("country"));
+		assertNull(profile.get("city"), "Flattened geography is no longer written");
+		assertNull(profile.get("country"), "Flattened geography is no longer written");
 		assertEquals("https://linkedin.com/in/ada", profile.get("linkedIn"));
 	}
 
