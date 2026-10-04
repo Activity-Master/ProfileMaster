@@ -766,4 +766,50 @@ public class ProfileComprehensiveProfileTest
 		assertEquals("Lovelace", readback.getSurname());
 		assertEquals("Mathematician", readback.getOccupation());
 	}
+    @Test @Order(15)
+    public void typedPhonesAreProtectedRepeatableOwnedAndSparse() {
+        SessionUtils.<Void>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+            IGuiceContext.get(IClassificationService.class).create(tuple.getItem1(), "HomeCellNumber", "Home mobile telephone number",
+                com.guicedee.activitymaster.fsdm.client.services.classifications.EnterpriseClassificationDataConcepts.Address,
+                tuple.getItem3(), tuple.getItem4()).replaceWithVoid()).await().atMost(Duration.ofMinutes(2));
+        IProfileService<?> service = IGuiceContext.get(IProfileService.class);
+        var initial = new ComprehensiveProfileDTO();
+        initial.setFirstName("Telephone Test");
+        initial.setPhones(List.of(
+            new com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO(null, "HomeCellNumber", "+27 82 123 4567", "12"),
+            new com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO(null, "HomeCellNumber", "+27 82 765 4321", "")));
+        var stored = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+            service.saveProfile(tuple.getItem1(), tuple.getItem2(), initial)
+                .chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id))).await().atMost(Duration.ofMinutes(2));
+        assertEquals(2, stored.getPhones().size());
+        assertTrue(stored.getPhones().stream().anyMatch(phone -> phone.extension().equals("12")));
+        var encrypted = SessionUtils.<Object[]>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+            tuple.getItem1().createNativeQuery("""
+                SELECT a.value, i.value FROM party.involvedpartyxaddress pa
+                JOIN address.address a ON a.addressid = pa.addressid
+                JOIN party.involvedpartyxinvolvedpartyidentificationtype i ON i.addressid = a.addressid
+                JOIN dbo.activeflag f ON f.activeflagid = i.activeflagid AND f.allowaccess = 1
+                WHERE pa.involvedpartyid = :party AND i.enterpriseid = :enterprise
+                  AND i.effectivefromdate <= statement_timestamp() AND i.effectivetodate > statement_timestamp()
+                LIMIT 1
+                """, Object[].class).setParameter("party", stored.getProfileId()).setParameter("enterprise", tuple.getItem2().getId()).getSingleResult())
+            .await().atMost(Duration.ofMinutes(1));
+        assertEquals("", encrypted[0]);
+        assertTrue(((String) encrypted[1]).startsWith("amenc:"), "Number is protected at rest");
+        var sparse = new ComprehensiveProfileDTO(); sparse.setProfileId(stored.getProfileId()); sparse.setPreferredName("Unrelated change");
+        var preserved = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+            service.saveProfile(tuple.getItem1(), tuple.getItem2(), sparse)
+                .chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id))).await().atMost(Duration.ofMinutes(2));
+        assertEquals(2, preserved.getPhones().size());
+        var stolen = new ComprehensiveProfileDTO(); stolen.setPhones(stored.getPhones());
+        assertThrows(RuntimeException.class, () -> SessionUtils.<UUID>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+            service.saveProfile(tuple.getItem1(), tuple.getItem2(), stolen)).await().atMost(Duration.ofMinutes(2)));
+        var removed = new ComprehensiveProfileDTO(); removed.setProfileId(stored.getProfileId()); removed.setPhones(List.of());
+        var afterRemoval = SessionUtils.<ComprehensiveProfileDTO>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple ->
+            service.saveProfile(tuple.getItem1(), tuple.getItem2(), removed)
+                .chain(id -> service.getProfile(tuple.getItem1(), tuple.getItem2(), id))).await().atMost(Duration.ofMinutes(2));
+        assertTrue(afterRemoval.getPhones().isEmpty());
+        assertEquals("Unrelated change", afterRemoval.getPreferredName());
+    }
+
 }

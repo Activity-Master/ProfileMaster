@@ -206,7 +206,8 @@ public class ProfileService
         }
 		boolean suppliedValues = profile.toNameValues().values().stream().anyMatch(value -> !value.isEmpty())
 			|| profile.toAttributeValues().entrySet().stream().anyMatch(entry -> !entry.getKey().equals(ProfileAttributes.Biography.name()) && !entry.getValue().isEmpty())
-			|| (profile.getAddresses() != null && profile.getAddresses().stream().anyMatch(address -> !address.identifiers().isEmpty()))
+			|| (profile.getPhones() != null && !profile.getPhones().isEmpty())
+            || (profile.getAddresses() != null && profile.getAddresses().stream().anyMatch(address -> !address.identifiers().isEmpty()))
 			|| java.util.Arrays.stream(ProfileNameRealms.values()).anyMatch(realm ->
 				profile.toRealmNameValues(realm).values().stream().anyMatch(value -> !value.isEmpty()));
 		String mode = com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode", "legacy");
@@ -219,6 +220,7 @@ public class ProfileService
 					.chain(party -> persistNames(session, party, profile, system, token)
 						.chain(() -> persistAttributes(session, party, profile, system, token))
 						.chain(() -> persistAddresses(session, party, profile, system, token))
+                        .chain(() -> persistPhones(session, party, profile, system, token))
 						.chain(() -> retireLegacySelectedChoices(session, party, profile, system, token))
 						.replaceWith(profileId))))
 			.onFailure().invoke(error -> log.error("Error saving profile {} (stateless): {}", profileId, error.getMessage(), error));
@@ -244,6 +246,7 @@ public class ProfileService
                         .chain(() -> languages.read(session, party, "SpokenLanguages", system, token)
                             .invoke(value -> { if (value != null) dto.setSpokenLanguages(value); }).replaceWithVoid())
 						.chain(() -> addresses.findPartyAddresses(session, party, system, token).invoke(dto::setAddresses))
+                        .chain(() -> addresses.findPartyPhones(session, party, system, token).invoke(dto::setPhones))
 						.replaceWith(dto);
 				}))
 			.onFailure().invoke(error -> log.error("Error reading profile {} (stateless): {}", profileId, error.getMessage(), error));
@@ -549,6 +552,27 @@ public class ProfileService
 		}
 		return reads;
 	}
+
+    private Uni<Void> persistPhones(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party,
+                                    ComprehensiveProfileDTO profile, ISystems<?, ?> system, UUID token) {
+        if (profile.getPhones() == null) return Uni.createFrom().voidItem();
+        if (profile.getPhones().size() > 20) return Uni.createFrom().failure(new IllegalArgumentException("At most twenty phones are supported"));
+        var ids = new java.util.HashSet<UUID>();
+        for (var phone : profile.getPhones())
+            if (phone.id() != null && !ids.add(phone.id()))
+                return Uni.createFrom().failure(new IllegalArgumentException("Duplicate telephone reference"));
+        return addresses.findPartyPhones(session, party, system, token).chain(existing -> {
+            Uni<Void> chain = Uni.createFrom().voidItem();
+            for (var phone : profile.getPhones())
+                chain = chain.chain(() -> addresses.savePartyPhone(session, party, phone, system, token).replaceWithVoid());
+            for (var phone : existing)
+                if (!ids.contains(phone.id())) chain = chain.chain(() -> addresses.endPartyPhone(session, party, phone.id(), system, token));
+            for (var name : List.of("MobileNumber", "HomeNumber", "WorkNumber", "FaxNumber"))
+                chain = chain.chain(() -> replaceProtectedValue(session, party, ProfileProtectedFields.attributeType(name), "", system, token))
+                    .chain(() -> retireProfileAttribute(session, party.getId(), name, system, token));
+            return chain;
+        });
+    }
 
     private Uni<Void> persistAddresses(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party,
                                        ComprehensiveProfileDTO profile, ISystems<?, ?> system, UUID token) {

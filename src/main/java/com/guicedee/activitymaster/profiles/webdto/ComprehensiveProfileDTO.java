@@ -51,6 +51,8 @@ public class ComprehensiveProfileDTO
 
     /** Null on sparse writes preserves addresses; an empty list explicitly ends all addresses. */
     private java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO> addresses;
+    /** Null preserves contacts; an empty list explicitly ends all telephone contacts. */
+    private java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO> phones;
 
 	/** The unique identifier of this profile (the backing involved-party id). */
 	private UUID profileId;

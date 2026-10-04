@@ -34,7 +34,9 @@ public class ProfileGraphQLSchemaProvider implements IGraphQLSchemaProvider<Prof
 {
 	private static final String SDL =
 			"\"A comprehensive individual profile stored within ActivityMaster.\"\n"
-			+ "type ComprehensiveProfile {\n"
+			+ "type PartyPhone { id: String, type: String!, number: String!, extension: String }\n"
+            + "type ComprehensiveProfile {\n"
+            + "    phones: [PartyPhone!]\n"
 			+ "    \"The unique identifier of this profile (the backing involved-party ID).\"\n"
 			+ "    profileId: String\n"
 			+ "    \"The owning enterprise name.\"\n"
