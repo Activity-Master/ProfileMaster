@@ -1,5 +1,7 @@
 package com.guicedee.activitymaster.profiles;
 
+import com.guicedee.client.utils.ClassLoading;
+
 //import com.google.inject.persist.Transactional;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.party.IInvolvedParty;
 import com.guicedee.activitymaster.fsdm.client.services.builders.warehouse.systems.ISystems;
@@ -56,9 +58,9 @@ public class RolesService
 		return Uni.createFrom().item(() -> {
 			Set<String> roles = new TreeSet<>();
 			for (ClassInfo classInfo : instance().getScanResult()
-											 .getClassesImplementing(IUserRole.class.getCanonicalName()))
+											 .getAllClassesImplementing(IUserRole.class.getCanonicalName()))
 			{
-				for (Object enumConstant : classInfo.loadClass()
+				for (Object enumConstant : ClassLoading.loadClass(classInfo)
 												.getEnumConstants())
 				{
 					IUserRole<?> role = (IUserRole<?>) enumConstant;
