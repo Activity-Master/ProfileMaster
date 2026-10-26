@@ -82,7 +82,7 @@ public class ProfileService
 						for (IInvolvedParty<?, ?> allId : allIds) {
 							chain = chain.chain(acc -> allId.findInvolvedPartyIdentificationType(session, NoClassification.toString(),
 											IdentificationTypeWebClientUUID.toString(), null, system, true, true, token)
-									.onFailure().recoverWithItem(() -> null)
+									.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithItem(() -> null)
 									.map(idType -> {
 										ProfileServiceDTO<?> dto = new ProfileServiceDTO<>();
 										dto.setIdentityToken(allId.getId());
@@ -150,7 +150,7 @@ public class ProfileService
 						userDTO.setIdentityToken(party.getId());
 						return party;
 					})
-					.onFailure().recoverWithItem(() -> {
+					.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithItem(() -> {
 						IInvolvedParty<?, ?> party = preppedParty(userDTO.getWebClientUUID());
 						userDTO.setIdentityToken(party.getId());
 						return party;
@@ -185,7 +185,7 @@ public class ProfileService
 		return findInvolvedParty(session, system, systemToken, userDTO)
 				.chain(party -> rolesService.getRoles(session, party, system, systemToken))
 				.onFailure().invoke(error -> log.error("Error finding roles (stateless): {}", error.getMessage(), error))
-				.onFailure().recoverWithItem(() -> {
+				.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithItem(() -> {
 					Set<String> guest = new TreeSet<>();
 					guest.add("Guest");
 					return guest;
@@ -226,6 +226,39 @@ public class ProfileService
 			.onFailure().invoke(error -> log.error("Error saving profile {} (stateless): {}", profileId, error.getMessage(), error));
 	}
 
+    @Override
+    public Uni<Boolean> replacePersonalName(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,UUID profileId,
+                                             NameTypes nameType,String expected,String value) {
+        java.util.Objects.requireNonNull(value);
+        return getPersonalName(session,enterprise,profileId,nameType).chain(current -> {
+            if(java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),value))return Uni.createFrom().item(false);
+            if(!java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),java.util.Objects.requireNonNullElse(expected,"")))
+                return Uni.createFrom().failure(new java.util.ConcurrentModificationException("Profile entry changed"));
+            return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                    getISystemToken(session,ProfileSystemName,enterprise).chain(token ->
+                            persistNames(session,preppedParty(profileId),NoClassification.classificationValue(),Map.of(nameType,value),system,token)))
+                    .replaceWith(true);
+        });
+    }
+
+    @Override
+    public Uni<String> getPersonalName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId, NameTypes nameType) {
+        java.util.Objects.requireNonNull(profileId); java.util.Objects.requireNonNull(nameType);
+        return getISystem(session, ProfileSystemName, enterprise).chain(system ->
+                getISystemToken(session, ProfileSystemName, enterprise).chain(token -> {
+                    var party=preppedParty(profileId);
+                    return party.findInvolvedPartyIdentificationTypesByType(session,NoClassification.classificationValue(),
+                            ProfileProtectedFields.nameType("Personal",nameType),system,token)
+                            .chain(links -> {
+                                if(links.size()>1)return Uni.createFrom().failure(new IllegalStateException("Multiple active protected profile values"));
+                                if(!links.isEmpty())return Uni.createFrom().item(links.getFirst().getValue());
+                                return party.findInvolvedPartyNameType(session,NoClassification.classificationValue(),nameType.toString(),null,system,true,true,token)
+                                        .map(link -> link==null?null:link.getValue())
+                                        .onFailure(jakarta.persistence.NoResultException.class).recoverWithNull();
+                            });
+                }));
+    }
+
 	@Override
 	public Uni<ComprehensiveProfileDTO> getProfile(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId)
 	{
@@ -238,8 +271,9 @@ public class ProfileService
 					dto.setEnterpriseName(enterprise.getName());
 					return party.findClassificationValues(session, system, token)
 						.invoke(dto::applyAttributeValues)
-						.chain(ignored -> hydrateNames(session, party, dto, system, token))
-						.chain(() -> hydrateSelectedChoices(session, party, dto, system, token))
+                        .chain(ignored -> legacyPresence(session,party,system).chain(presence ->
+                                (presence.names() ? hydrateNames(session,party,dto,system,token) : Uni.createFrom().voidItem())
+                                    .chain(() -> hydrateSelectedChoices(session,party,dto,system,token,presence.names(),presence.types()))))
 						.chain(() -> hydrateProtectedValues(session, party, dto, system, token))
                         .chain(() -> languages.read(session, party, "HomeLanguage", system, token)
                             .invoke(value -> { if (value != null) dto.setHomeLanguage(value); }).replaceWithVoid())
@@ -272,6 +306,14 @@ public class ProfileService
 			.onFailure().invoke(error -> log.error("Error reading profile attribute choices (stateless): {}", error.getMessage(), error));
 	}
 
+    @Override
+    public Uni<List<ProfileAttributeChoiceDTO>> getAttributeChoicesFor(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,String attribute) {
+        var concept=ProfileChoiceConcepts.forAttributeName(attribute);
+        if(concept==null)return Uni.createFrom().failure(new IllegalArgumentException("Unknown Profile choice concept"));
+        return getISystem(session,ProfileSystemName,enterprise)
+                .chain(system -> getISystemToken(session,ProfileSystemName,enterprise)
+                        .chain(token -> attributeChoices(session,concept.attribute(),system,token)));
+    }
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private Uni<List<ProfileAttributeChoiceDTO>> attributeChoices(Mutiny.StatelessSession session, ProfileAttributes attribute, ISystems<?, ?> system, UUID token)
 	{
@@ -288,7 +330,7 @@ public class ProfileService
 						.chain(child -> child instanceof IClassification<?, ?> classification
 							? classifications.findInConcept(session, classification.getName(), conceptName, system, token)
 								.invoke(scoped -> { if (classification.getId().equals(scoped.getId())) children.add(scoped); })
-								.onFailure().recoverWithNull().replaceWithVoid()
+								.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithNull().replaceWithVoid()
 							: Uni.createFrom().voidItem()));
 				}
 				return fetches.replaceWith(() -> sortedChoices(children));
@@ -416,8 +458,11 @@ public class ProfileService
 					}
 					try { ProfileAttributes.valueOf(classificationName); }
 					catch (IllegalArgumentException custom) {
-						updates = updates.chain(() -> involvedPartyService.createIdentificationType(session, system,
-							ProfileProtectedFields.attributeType(classificationName), "Protected profile attribute", token).replaceWithVoid());
+                        updates = updates.chain(() -> {
+                            String name=ProfileProtectedFields.attributeType(classificationName);
+                            return profileTypeIdentity(session,system,name).chain(id -> involvedPartyService.createIdentificationTypeWithId(
+                                    session,system,name,"Protected profile attribute",id,token)).replaceWithVoid();
+                        });
 					}
 					updates = updates.chain(() -> replaceProtectedValue(session, party,
 						ProfileProtectedFields.attributeType(classificationName), value, system, token));
@@ -429,6 +474,24 @@ public class ProfileService
 				return updates;
 			});
 	}
+
+    private Uni<UUID> profileTypeIdentity(Mutiny.StatelessSession session,ISystems<?, ?> system,String name) {
+        return session.createNativeQuery("select involvedpartyidentificationtypeid from party.involvedpartyidentificationtype where enterpriseid=:enterprise and involvedpartyidentificationname=:name order by warehousecreatedtimestamp desc, involvedpartyidentificationtypeid desc limit 1",UUID.class)
+                .setParameter("enterprise",system.getEnterprise().getId()).setParameter("name",name).getResultList()
+                .map(previous -> {
+                    try {
+                        var bytes=new java.io.ByteArrayOutputStream();
+                        try(var out=new java.io.DataOutputStream(bytes)) {
+                            out.writeUTF("NE1ProfileEditMarker-v1");out.writeUTF(system.getEnterprise().getId().toString());
+                            out.writeUTF(new UUID(0,0).toString());out.writeUTF(new UUID(0,0).toString());
+                            out.writeUTF("taxonomy-identification:"+name);out.writeUTF((previous.isEmpty()?new UUID(0,0):previous.getFirst()).toString());
+                        }
+                        var hash=java.security.MessageDigest.getInstance("SHA-256").digest(bytes.toByteArray());
+                        hash[6]=(byte)((hash[6]&15)|0x80);hash[8]=(byte)((hash[8]&63)|0x80);
+                        var buffer=java.nio.ByteBuffer.wrap(hash);return new UUID(buffer.getLong(),buffer.getLong());
+                    } catch(java.io.IOException|java.security.NoSuchAlgorithmException impossible) {throw new IllegalStateException(impossible);}
+                });
+    }
 
 	private Uni<Void> retireProfileAttribute(Mutiny.StatelessSession session, UUID partyId, String name, ISystems<?, ?> system, UUID token)
 	{
@@ -457,6 +520,17 @@ public class ProfileService
 				}));
 	}
 
+    private record LegacyPresence(boolean names, boolean types) { }
+    /** A negative existence test cannot expose or skip any canonical readable legacy relationship. */
+    private Uni<LegacyPresence> legacyPresence(Mutiny.StatelessSession session,IInvolvedParty<?, ?> party,ISystems<?, ?> system) {
+        return session.createNativeQuery("""
+                select exists(select 1 from party.involvedpartyxinvolvedpartynametype n
+                              where n.involvedpartyid=:party and n.enterpriseid=:enterprise),
+                       exists(select 1 from party.involvedpartyxinvolvedpartytype t
+                              where t.involvedpartyid=:party and t.enterpriseid=:enterprise)
+                """,Object[].class).setParameter("party",party.getId()).setParameter("enterprise",system.getEnterprise().getId())
+                .getSingleResult().map(row -> new LegacyPresence(Boolean.TRUE.equals(row[0]),Boolean.TRUE.equals(row[1])));
+    }
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private Uni<Void> hydrateNames(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party, ComprehensiveProfileDTO dto, ISystems<?, ?> system, UUID token)
 	{
@@ -467,7 +541,7 @@ public class ProfileService
 			chain = chain.chain(() -> ((Uni<IRelationshipValue<?, IInvolvedPartyNameType<?, ?>, ?>>) (Uni<?>) raw.findInvolvedPartyNameType(session,
 					NoClassification.classificationValue(), nameType.toString(), null, system, true, true, token))
 				.map(relationship -> relationship == null ? null : relationship.getValue())
-				.onFailure().recoverWithItem(() -> null)
+				.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithItem(() -> null)
 				.invoke(value -> {
 					if (value != null)
 					{
@@ -483,7 +557,7 @@ public class ProfileService
 				chain = chain.chain(() -> ((Uni<IRelationshipValue<?, IInvolvedPartyNameType<?, ?>, ?>>) (Uni<?>) raw.findInvolvedPartyNameType(session,
 						realm.name(), nameType.toString(), null, system, true, true, token))
 					.map(relationship -> relationship == null ? null : relationship.getValue())
-					.onFailure().recoverWithItem(() -> null)
+					.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithItem(() -> null)
 					.invoke(value -> {
 						if (value != null)
 						{
@@ -537,11 +611,12 @@ public class ProfileService
 	}
 
 	private Uni<Void> hydrateSelectedChoices(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party,
-	                                         ComprehensiveProfileDTO dto, ISystems<?, ?> system, UUID token)
+	                                         ComprehensiveProfileDTO dto, ISystems<?, ?> system, UUID token, boolean names, boolean types)
 	{
 		Uni<Void> reads = Uni.createFrom().voidItem();
 		for (ProfileChoiceConcepts concept : ProfileChoiceConcepts.values())
 		{
+            if (concept.linkKind() == ProfileChoiceConcepts.LinkKind.NAME ? !names : !types) continue;
 			reads = reads.chain(() -> (concept.linkKind() == ProfileChoiceConcepts.LinkKind.NAME
 				? party.findInvolvedPartyNameTypesAll(session, NoClassification.classificationValue(), concept.linkTypeName(), null, system, false, token)
 					.map(links -> links.isEmpty() ? null : links.getLast().getValue())

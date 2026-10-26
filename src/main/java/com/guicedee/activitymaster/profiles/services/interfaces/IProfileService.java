@@ -59,6 +59,15 @@ public interface IProfileService<J extends IProfileService<J>>
 	 */
 	Uni<UUID> saveProfile(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, ComprehensiveProfileDTO profile);
 
+    /** Replaces one prevalidated personal name without processing an entire profile DTO. */
+    Uni<Boolean> replacePersonalName(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,UUID profileId,
+            com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType,String expected,String value);
+
+    /** Reads one personal name with the same protected-value precedence as the full Profile read. */
+    Uni<String> getPersonalName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType);
+
+
 	/**
 	 * Stateless variant of {@link #getProfile(Mutiny.StatelessSession, IEnterprise, UUID)} — reads every stored
 	 * name and attribute on a {@link Mutiny.StatelessSession} into a {@link ComprehensiveProfileDTO}.
@@ -76,4 +85,7 @@ public interface IProfileService<J extends IProfileService<J>>
 	 * an empty list.
 	 */
 	Uni<Map<String, List<ProfileAttributeChoiceDTO>>> getAttributeChoices(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise);
+
+    /** Read one published choice concept using the same canonical checks as the complete list. */
+    Uni<List<ProfileAttributeChoiceDTO>> getAttributeChoicesFor(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, String attribute);
 }
