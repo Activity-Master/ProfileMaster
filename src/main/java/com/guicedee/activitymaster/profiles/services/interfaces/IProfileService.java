@@ -59,8 +59,15 @@ public interface IProfileService<J extends IProfileService<J>>
 	 */
 	Uni<UUID> saveProfile(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, ComprehensiveProfileDTO profile);
 
+    /** Explicitly request grouped grants for eligible protected identification links. */
+    Uni<UUID> saveProfileWithGroupedGrants(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, ComprehensiveProfileDTO profile);
+
     /** Replaces one prevalidated personal name without processing an entire profile DTO. */
     Uni<Boolean> replacePersonalName(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,UUID profileId,
+            com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType,String expected,String value);
+
+    /** Narrow update with explicitly requested grouped grants for eligible protected links. */
+    Uni<Boolean> replacePersonalNameWithGroupedGrants(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,UUID profileId,
             com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType,String expected,String value);
 
     /** Reads one personal name with the same protected-value precedence as the full Profile read. */
