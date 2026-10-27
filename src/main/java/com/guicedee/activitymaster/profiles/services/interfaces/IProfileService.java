@@ -70,6 +70,53 @@ public interface IProfileService<J extends IProfileService<J>>
     Uni<Boolean> replacePersonalNameWithGroupedGrants(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,UUID profileId,
             com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType,String expected,String value);
 
+    /** Scalar attributes whose canonical value is an encrypted identification link or its legacy classification. */
+    static boolean supportsIndependentProtectedAttribute(String name) {
+        return name != null && !name.isBlank()
+                && !java.util.Set.of("Biography", "HomeLanguage", "SpokenLanguages",
+                        "ResidentialAddress", "PostalAddress", "City", "Province", "PostalCode", "Country").contains(name);
+    }
+
+    /** Reads one supported protected attribute with the same legacy fallback as the full profile. */
+    Uni<String> getProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId, String attribute);
+
+    /** Replaces one supported protected attribute, reporting false for an identical value. */
+    Uni<Boolean> replaceProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value);
+
+    /** The same operation with explicitly requested grouped grants on eligible links. */
+    Uni<Boolean> replaceProtectedAttributeWithGroupedGrants(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value);
+
+    /** Reads one language selection with canonical protected and legacy precedence. */
+    Uni<String> getProfileLanguage(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId, String attribute);
+
+    /** Replaces one language selection after checking the expected value and published choices. */
+    Uni<Boolean> replaceProfileLanguage(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value);
+
+    /** Reads one personal, social or work name using the canonical protected and legacy precedence. */
+    Uni<String> getProfileName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType);
+
+    /** Replaces one name in its realm after checking the expected value. */
+    Uni<Boolean> replaceProfileName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType, String expected, String value);
+
+    /** The same realm-name operation with explicitly requested grouped grants. */
+    Uni<Boolean> replaceProfileNameWithGroupedGrants(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType, String expected, String value);
+
+    /** Replaces a complete phone collection and returns its committed transaction view. */
+    Uni<java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO>> replacePhoneCollection(
+            Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO> phones);
+
+    /** Replaces a complete address collection and returns its transaction view. */
+    Uni<java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO>> replaceAddressCollection(
+            Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            java.util.List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO> addresses);
+
     /** Reads one personal name with the same protected-value precedence as the full Profile read. */
     Uni<String> getPersonalName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
             com.guicedee.activitymaster.fsdm.client.services.classifications.types.NameTypes nameType);

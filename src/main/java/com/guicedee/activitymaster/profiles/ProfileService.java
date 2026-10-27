@@ -31,6 +31,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -252,6 +254,9 @@ public class ProfileService
         java.util.Objects.requireNonNull(value);
         return getPersonalName(session,enterprise,profileId,nameType).chain(current -> {
             if(java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),value))return Uni.createFrom().item(false);
+            String encryptionMode = com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode", "legacy");
+            if (!value.isEmpty() && !Set.of("aes-gcm", "enterprise").contains(encryptionMode))
+                return Uni.createFrom().failure(new IllegalStateException("Authenticated encryption must be configured before storing personal profile values"));
             if(!java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),java.util.Objects.requireNonNullElse(expected,"")))
                 return Uni.createFrom().failure(new java.util.ConcurrentModificationException("Profile entry changed"));
             return getISystem(session,ProfileSystemName,enterprise).chain(system ->
@@ -259,6 +264,241 @@ public class ProfileService
                             persistNames(session,preppedParty(profileId),NoClassification.classificationValue(),Map.of(nameType,value),system,token,grouped)))
                     .replaceWith(true);
         });
+    }
+
+    private record ProtectedAttributeState(String value, boolean hasLegacy, boolean hasLegacyChoice) { }
+    private record LegacyChoiceState(String value, boolean present) { }
+
+    private Uni<LegacyChoiceState> legacyChoiceState(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party,
+            ProfileChoiceConcepts concept, ISystems<?, ?> system, UUID token) {
+        if (concept == null) return Uni.createFrom().item(new LegacyChoiceState(null,false));
+        return legacyPresence(session,party,system).chain(presence -> {
+            boolean exists=concept.linkKind()==ProfileChoiceConcepts.LinkKind.NAME ? presence.names() : presence.types();
+            if (!exists) return Uni.createFrom().item(new LegacyChoiceState(null,false));
+            return (concept.linkKind()==ProfileChoiceConcepts.LinkKind.NAME
+                    ? party.findInvolvedPartyNameTypesAll(session,NoClassification.classificationValue(),concept.linkTypeName(),null,system,false,token)
+                    : party.findInvolvedPartyTypesByType(session,NoClassification.classificationValue(),concept.linkTypeName(),system,token))
+                    .map(links -> new LegacyChoiceState(links.isEmpty()?null:links.getLast().getValue(),!links.isEmpty()));
+        });
+    }
+
+    private Uni<ProtectedAttributeState> protectedAttributeState(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party,
+            String attribute, ISystems<?, ?> system, UUID token) {
+        String type=ProfileProtectedFields.attributeType(attribute);
+        var concept=ProfileChoiceConcepts.forAttributeName(attribute);
+        return party.findClassificationValues(session,system,token).chain(legacy ->
+                legacyChoiceState(session,party,concept,system,token).chain(choice ->
+                party.findInvolvedPartyIdentificationTypesByType(session,NoClassification.classificationValue(),type,system,token)
+                        .onFailure(jakarta.persistence.NoResultException.class).recoverWithItem(java.util.List.of())
+                        .map(links -> {
+                            if (links.size()>1) throw new IllegalStateException("Multiple active protected profile values");
+                            String prior=choice.value()!=null?choice.value():legacy.get(attribute);
+                            return new ProtectedAttributeState(links.isEmpty()?prior:links.getFirst().getValue(),legacy.containsKey(attribute),choice.present());
+                        })));
+    }
+
+    @Override
+    public Uni<String> getProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId, String attribute) {
+        java.util.Objects.requireNonNull(profileId);
+        if (!IProfileService.supportsIndependentProtectedAttribute(attribute))
+            return Uni.createFrom().failure(new IllegalArgumentException("Unsupported independent profile attribute"));
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token ->
+                        protectedAttributeState(session,preppedParty(profileId),attribute,system,token).map(ProtectedAttributeState::value)));
+    }
+
+    @Override
+    public Uni<Boolean> replaceProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value) {
+        return replaceProtectedAttribute(session, enterprise, profileId, attribute, expected, value, false);
+    }
+
+    @Override
+    public Uni<Boolean> replaceProtectedAttributeWithGroupedGrants(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value) {
+        return replaceProtectedAttribute(session, enterprise, profileId, attribute, expected, value, true);
+    }
+
+    private Uni<Boolean> replaceProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value, boolean grouped) {
+        java.util.Objects.requireNonNull(profileId); java.util.Objects.requireNonNull(value);
+        if (!IProfileService.supportsIndependentProtectedAttribute(attribute))
+            return Uni.createFrom().failure(new IllegalArgumentException("Unsupported independent profile attribute"));
+        String type = ProfileProtectedFields.attributeType(attribute);
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token -> {
+                    var party = preppedParty(profileId);
+                    return protectedAttributeState(session,party,attribute,system,token).chain(state -> {
+                                    String current = state.value();
+                                    if (java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),value)) return Uni.createFrom().item(false);
+                                    if (!java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),java.util.Objects.requireNonNullElse(expected,"")))
+                                        return Uni.createFrom().failure(new java.util.ConcurrentModificationException("Profile entry changed"));
+                                    String mode = com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode", "legacy");
+                                    if (!value.isEmpty() && !Set.of("aes-gcm", "enterprise").contains(mode))
+                                        return Uni.createFrom().failure(new IllegalStateException("Authenticated encryption must be configured before storing personal profile values"));
+                                    Uni<Void> prepare = Uni.createFrom().voidItem();
+                                    try { ProfileAttributes.valueOf(attribute); }
+                                    catch (IllegalArgumentException custom) {
+                                        prepare = profileTypeIdentity(session,system,type).chain(id -> involvedPartyService.createIdentificationTypeWithId(
+                                                session,system,type,"Protected profile attribute",id,token)).replaceWithVoid();
+                                    }
+                                    Uni<Void> prepared = prepare;
+                                    return resolveOrCreateParty(session,system,profileId,token)
+                                            .chain(resolved -> prepared.chain(() -> replaceProtectedValue(session,resolved,type,value,system,token,grouped))
+                                                    .chain(() -> state.hasLegacy() ? retireProfileAttribute(session,profileId,attribute,system,token)
+                                                            : Uni.createFrom().voidItem())
+                                                    .chain(() -> {
+                                                        var concept=ProfileChoiceConcepts.forAttributeName(attribute);
+                                                        if (!state.hasLegacyChoice() || concept==null) return Uni.createFrom().voidItem();
+                                                        return concept.linkKind()==ProfileChoiceConcepts.LinkKind.NAME
+                                                                ? retireLegacyNameChoice(session,resolved,concept.linkTypeName(),system,token)
+                                                                : retireLegacyPartyChoice(session,resolved,concept.linkTypeName(),system,token);
+                                                    }))
+                                            .replaceWith(true);
+                                });
+                }));
+    }
+
+    private static String canonicalLanguageValue(String attribute, String value) {
+        return String.join(",",ProfileLanguageCatalog.parse(attribute,java.util.Objects.requireNonNullElse(value,"")).stream().sorted().toList());
+    }
+
+    @Override
+    public Uni<String> getProfileLanguage(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId, String attribute) {
+        java.util.Objects.requireNonNull(profileId);
+        if (!ProfileLanguageCatalog.isLanguage(attribute)) return Uni.createFrom().failure(new IllegalArgumentException("Unsupported profile language"));
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token -> {
+                    var party=preppedParty(profileId);
+                    return protectedAttributeState(session,party,attribute,system,token).chain(state ->
+                            languages.read(session,party,attribute,system,token).map(selected -> selected==null?state.value():selected));
+                }));
+    }
+
+    @Override
+    public Uni<Boolean> replaceProfileLanguage(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String attribute, String expected, String value) {
+        java.util.Objects.requireNonNull(value);
+        if (!ProfileLanguageCatalog.isLanguage(attribute)) return Uni.createFrom().failure(new IllegalArgumentException("Unsupported profile language"));
+        final String canonical;
+        try { canonical=canonicalLanguageValue(attribute,value); }
+        catch (IllegalArgumentException invalid) { return Uni.createFrom().failure(invalid); }
+        return getProfileLanguage(session,enterprise,profileId,attribute).chain(current -> {
+            if (java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),canonical)) return Uni.createFrom().item(false);
+            if (!java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),java.util.Objects.requireNonNullElse(expected,"")))
+                return Uni.createFrom().failure(new java.util.ConcurrentModificationException("Profile entry changed"));
+            String mode=com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode","legacy");
+            if (!canonical.isEmpty() && !Set.of("aes-gcm","enterprise").contains(mode))
+                return Uni.createFrom().failure(new IllegalStateException("Authenticated encryption must be configured before storing personal profile values"));
+            return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                    getISystemToken(session,ProfileSystemName,enterprise).chain(token -> {
+                        var party=preppedParty(profileId);
+                        return protectedAttributeState(session,party,attribute,system,token).chain(state ->
+                                attributeChoices(session,ProfileAttributes.valueOf(attribute),system,token).chain(published ->
+                                    resolveOrCreateParty(session,system,profileId,token).chain(resolved ->
+                                            languages.replace(session,resolved,attribute,canonical,published,system,token)
+                                                .chain(() -> state.hasLegacy()?retireProfileAttribute(session,profileId,attribute,system,token):Uni.createFrom().voidItem())
+                                                .chain(() -> {
+                                                    var concept=ProfileChoiceConcepts.forAttributeName(attribute);
+                                                    if (!state.hasLegacyChoice() || concept==null) return Uni.createFrom().voidItem();
+                                                    return concept.linkKind()==ProfileChoiceConcepts.LinkKind.NAME
+                                                            ? retireLegacyNameChoice(session,resolved,concept.linkTypeName(),system,token)
+                                                            : retireLegacyPartyChoice(session,resolved,concept.linkTypeName(),system,token);
+                                                })))).replaceWith(true);
+                    }));
+        });
+    }
+
+    private String nameClassification(String realm, NameTypes nameType) {
+        java.util.Objects.requireNonNull(nameType);
+        if ("Personal".equals(realm)) return NoClassification.classificationValue();
+        var selected=ProfileNameRealms.fromRealm(realm);
+        if (selected==null || !selected.nameTypes().contains(nameType)) throw new IllegalArgumentException("Unsupported profile name realm or type");
+        return selected.name();
+    }
+
+    @Override
+    public Uni<String> getProfileName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, NameTypes nameType) {
+        java.util.Objects.requireNonNull(profileId);
+        String classification=nameClassification(realm,nameType);
+        String canonicalRealm="Personal".equals(realm)?"Personal":ProfileNameRealms.fromRealm(realm).realm();
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token -> {
+                    var party=preppedParty(profileId);
+                    return party.findInvolvedPartyIdentificationTypesByType(session,NoClassification.classificationValue(),
+                            ProfileProtectedFields.nameType(canonicalRealm,nameType),system,token)
+                            .onFailure(jakarta.persistence.NoResultException.class).recoverWithItem(java.util.List.of())
+                            .chain(links -> {
+                                if (links.size()>1) return Uni.createFrom().failure(new IllegalStateException("Multiple active protected profile values"));
+                                if (!links.isEmpty()) return Uni.createFrom().item(links.getFirst().getValue());
+                                return party.findInvolvedPartyNameType(session,classification,nameType.toString(),null,system,true,true,token)
+                                        .map(link -> link==null?null:link.getValue())
+                                        .onFailure(jakarta.persistence.NoResultException.class).recoverWithNull();
+                            });
+                }));
+    }
+
+    @Override
+    public Uni<Boolean> replaceProfileName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, NameTypes nameType, String expected, String value) {
+        return replaceProfileName(session,enterprise,profileId,realm,nameType,expected,value,false);
+    }
+
+    @Override
+    public Uni<Boolean> replaceProfileNameWithGroupedGrants(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, NameTypes nameType, String expected, String value) {
+        return replaceProfileName(session,enterprise,profileId,realm,nameType,expected,value,true);
+    }
+
+    private Uni<Boolean> replaceProfileName(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            String realm, NameTypes nameType, String expected, String value, boolean grouped) {
+        java.util.Objects.requireNonNull(value);
+        String classification=nameClassification(realm,nameType);
+        return getProfileName(session,enterprise,profileId,realm,nameType).chain(current -> {
+            if (java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),value)) return Uni.createFrom().item(false);
+            if (!java.util.Objects.equals(java.util.Objects.requireNonNullElse(current,""),java.util.Objects.requireNonNullElse(expected,"")))
+                return Uni.createFrom().failure(new java.util.ConcurrentModificationException("Profile entry changed"));
+            String mode=com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode","legacy");
+            if (!value.isEmpty() && !Set.of("aes-gcm","enterprise").contains(mode))
+                return Uni.createFrom().failure(new IllegalStateException("Authenticated encryption must be configured before storing personal profile values"));
+            return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                    getISystemToken(session,ProfileSystemName,enterprise).chain(token ->
+                            persistNames(session,preppedParty(profileId),classification,Map.of(nameType,value),system,token,grouped)))
+                    .replaceWith(true);
+        });
+    }
+
+    @Override
+    public Uni<List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO>> replacePhoneCollection(
+            Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyPhoneDTO> phones) {
+        java.util.Objects.requireNonNull(profileId); java.util.Objects.requireNonNull(phones);
+        String mode=com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode","legacy");
+        if (!phones.isEmpty() && !Set.of("aes-gcm","enterprise").contains(mode))
+            return Uni.createFrom().failure(new IllegalStateException("Authenticated encryption must be configured before storing personal profile values"));
+        var dto=new ComprehensiveProfileDTO(); dto.setPhones(phones);
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token ->
+                        resolveOrCreateParty(session,system,profileId,token).chain(party ->
+                                persistPhones(session,party,dto,system,token,false)
+                                        .chain(() -> addresses.findPartyPhones(session,party,system,token)))));
+    }
+
+    @Override
+    public Uni<List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO>> replaceAddressCollection(
+            Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
+            List<com.guicedee.activitymaster.fsdm.client.services.dto.PartyAddressDTO> values) {
+        java.util.Objects.requireNonNull(profileId); java.util.Objects.requireNonNull(values);
+        String mode=com.guicedee.client.Environment.getProperty("activitymaster.encryption.mode","legacy");
+        if (values.stream().anyMatch(address -> !address.identifiers().isEmpty()) && !Set.of("aes-gcm","enterprise").contains(mode))
+            return Uni.createFrom().failure(new IllegalStateException("Authenticated encryption must be configured before storing personal profile values"));
+        var dto=new ComprehensiveProfileDTO(); dto.setAddresses(values);
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token ->
+                        resolveOrCreateParty(session,system,profileId,token).chain(party ->
+                                persistAddresses(session,party,dto,system,token,false)
+                                        .chain(() -> addresses.findPartyAddresses(session,party,system,token)))));
     }
 
     @Override
@@ -340,21 +580,53 @@ public class ProfileService
 		String conceptName = ProfileChoiceConcepts.forAttribute(attribute).conceptName();
 		return classifications.find(session, attribute.name(), system, token)
 			.chain(parent -> ((IClassification) parent).findChildren(session, NoClassification.name(), null, system, token))
-			.chain(links -> {
-				List<IClassification<?, ?>> children = new ArrayList<>();
-				Uni<Void> fetches = Uni.createFrom().voidItem();
-				// The link's secondary is lazy; fetch each on the stateless session.
-				for (Object link : (List<Object>) links)
-				{
-					fetches = fetches.chain(() -> session.fetch(((IRelationshipValue) link).getSecondary())
-						.chain(child -> child instanceof IClassification<?, ?> classification
-							? classifications.findInConcept(session, classification.getName(), conceptName, system, token)
-								.invoke(scoped -> { if (classification.getId().equals(scoped.getId())) children.add(scoped); })
-								.onFailure(failureToRecover -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failureToRecover)).recoverWithNull().replaceWithVoid()
-							: Uni.createFrom().voidItem()));
-				}
-				return fetches.replaceWith(() -> sortedChoices(children));
-			});
+            .chain(links -> {
+                if (((List<?>) links).isEmpty()) return Uni.createFrom().item(List.of());
+                // The hierarchy query above owns link authorization. Batch only the IDs it returned.
+                var ids=new LinkedHashSet<UUID>();
+                for (Object link : (List<Object>) links) ids.add(((IClassification<?, ?>)((IRelationshipValue)link).getSecondary()).getId());
+                return session.createQuery("select c.id, c.name, c.description from Classification c join c.concept where c.id in :ids",Object[].class)
+                        .setParameter("ids",ids).getResultList().chain(childRows -> {
+                            if (childRows.size()!=ids.size()) return Uni.createFrom().failure(new IllegalStateException("Profile choice classification unavailable"));
+                            var childrenById=new LinkedHashMap<UUID,Object[]>(); var names=new LinkedHashSet<String>();
+                            for (var row:childRows) {childrenById.put((UUID)row[0],row);names.add((String)row[1]);}
+                            com.guicedee.activitymaster.fsdm.client.services.IClassificationDataConceptService<?> concepts=com.guicedee.client.IGuiceContext.get(com.guicedee.activitymaster.fsdm.client.services.IClassificationDataConceptService.class);
+                            return concepts.find(session,conceptName,system,token)
+                                    .onFailure(failure -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failure)).recoverWithNull()
+                                    .chain(concept -> {
+                                        if (concept==null) return Uni.createFrom().item(List.<ProfileAttributeChoiceDTO>of());
+                                        var query=new com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification().builder(session)
+                                                .withEnterprise(system.getEnterprise())
+                                                .where("name",com.entityassist.enumerations.Operand.InList,names)
+                                                .where("concept",com.entityassist.enumerations.Operand.Equals,concept)
+                                                .inActiveRange().inDateRange()
+                                                .selectColumn(com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification_.id)
+                                                .selectColumn(com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification_.name)
+                                                .selectColumn(com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification_.description)
+                                                .selectColumn(com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification_.classificationSequenceNumber);
+                                        return query.getAll(Object[].class).chain(rows -> {
+                                            var byName=new HashMap<String,List<Object[]>>();
+                                            for (var row:rows) byName.computeIfAbsent((String)row[1],ignored -> new ArrayList<>()).add(row);
+                                            List<IClassification<?, ?>> accepted=new ArrayList<>();
+                                            Uni<Void> duplicates=Uni.createFrom().voidItem();
+                                            for (var child:childrenById.entrySet()) {
+                                                String name=(String)child.getValue()[1]; var matches=byName.getOrDefault(name,List.of());
+                                                if (matches.size()==1 && child.getKey().equals(matches.getFirst()[0])) {
+                                                    var match=matches.getFirst();
+                                                    accepted.add(new com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification(
+                                                            (UUID)match[0],(String)match[1],(String)match[2],((Number)match[3]).intValue()));
+                                                } else if (matches.size()>1) {
+                                                    // Preserve the canonical resolver's first-row behavior for duplicate names.
+                                                    duplicates=duplicates.chain(() -> classifications.findInConcept(session,name,conceptName,system,token)
+                                                            .invoke(scoped -> { if (child.getKey().equals(scoped.getId())) accepted.add(scoped); })
+                                                            .onFailure(failure -> !com.guicedee.activitymaster.fsdm.client.services.SessionUtils.isSerializationFailure(failure)).recoverWithNull().replaceWithVoid());
+                                                }
+                                            }
+                                            return duplicates.replaceWith(() -> sortedChoices(accepted));
+                                        });
+                                    });
+                        });
+            });
 	}
 
 	private static List<ProfileAttributeChoiceDTO> sortedChoices(List<IClassification<?, ?>> children)
@@ -710,14 +982,23 @@ public class ProfileService
 	private Uni<Void> hydrateProtectedValues(Mutiny.StatelessSession session, IInvolvedParty<?, ?> party,
 	                                         ComprehensiveProfileDTO dto, ISystems<?, ?> system, UUID token)
 	{
-		return party.findInvolvedPartyIdentificationTypes(session, NoClassification.classificationValue(), system, token)
-			.chain(links -> {
-				Uni<Void> reads = Uni.createFrom().voidItem();
-				for (var link : links)
-					reads = reads.chain(() -> session.fetch(link.getSecondary())
-						.invoke(type -> applyProtectedValue(dto, type.getName(), link.getValue())).replaceWithVoid());
-				return reads;
-			});
+        return party.findInvolvedPartyIdentificationTypes(session, NoClassification.classificationValue(), system, token)
+            .chain(links -> {
+                if (links.isEmpty()) return Uni.createFrom().voidItem();
+                // Links have already passed the canonical enterprise and row-read query. Resolve only
+                // the type IDs referenced by those links, in one query instead of one fetch per value.
+                var ids = new java.util.LinkedHashSet<UUID>();
+                for (var link : links) ids.add(java.util.Objects.requireNonNull(link.getSecondary()).getId());
+                return session.createQuery("select t.id, t.name from InvolvedPartyIdentificationType t where t.id in :ids", Object[].class)
+                        .setParameter("ids", ids).getResultList().invoke(rows -> {
+                            var names = new java.util.HashMap<UUID, String>();
+                            for (var row : rows) names.put((UUID) row[0], (String) row[1]);
+                            for (var link : links) {
+                                String name = java.util.Objects.requireNonNull(names.get(link.getSecondary().getId()), "Identification type unavailable");
+                                applyProtectedValue(dto, name, link.getValue());
+                            }
+                        }).replaceWithVoid();
+            });
 	}
 
 	private void applyProtectedValue(ComprehensiveProfileDTO dto, String type, String value)
