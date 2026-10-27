@@ -99,7 +99,7 @@ public class ProfileGraphQLIntegrationTest
 		profile.setMobileNumber("+27 11 555 0100");
 		profile.setNationality("British");
 		profile.setDateOfBirth("1815-12-10");
-		profile.setHomeLanguage("English");
+		profile.setHomeLanguage("ProfileLanguage_en");
 		
 		profile.setLinkedIn("https://linkedin.com/in/ada");
 

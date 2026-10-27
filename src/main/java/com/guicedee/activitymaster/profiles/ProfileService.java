@@ -394,7 +394,7 @@ public class ProfileService
                     getISystemToken(session,ProfileSystemName,enterprise).chain(token -> {
                         var party=preppedParty(profileId);
                         return protectedAttributeState(session,party,attribute,system,token).chain(state ->
-                                attributeChoices(session,ProfileAttributes.valueOf(attribute),system,token).chain(published ->
+                                attributeChoices(session,ProfileAttributes.valueOf(attribute),system,token,canonical.isEmpty()?null:Set.copyOf(ProfileLanguageCatalog.parse(attribute,canonical))).chain(published ->
                                     resolveOrCreateParty(session,system,profileId,token).chain(resolved ->
                                             languages.replace(session,resolved,attribute,canonical,published,system,token)
                                                 .chain(() -> state.hasLegacy()?retireProfileAttribute(session,profileId,attribute,system,token):Uni.createFrom().voidItem())
@@ -574,12 +574,32 @@ public class ProfileService
                 .chain(system -> getISystemToken(session,ProfileSystemName,enterprise)
                         .chain(token -> attributeChoices(session,concept.attribute(),system,token)));
     }
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private Uni<List<ProfileAttributeChoiceDTO>> attributeChoices(Mutiny.StatelessSession session, ProfileAttributes attribute, ISystems<?, ?> system, UUID token)
+    @Override
+    public Uni<List<ProfileAttributeChoiceDTO>> getAttributeChoicesForValues(Mutiny.StatelessSession session,IEnterprise<?, ?> enterprise,String attribute,Set<String> values) {
+        var concept=ProfileChoiceConcepts.forAttributeName(attribute);
+        if(concept==null)return Uni.createFrom().failure(new IllegalArgumentException("Unknown Profile choice concept"));
+        var selected=Set.copyOf(values);
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token -> attributeChoices(session,concept.attribute(),system,token,selected)));
+    }
+
+    private Uni<List<ProfileAttributeChoiceDTO>> attributeChoices(Mutiny.StatelessSession session, ProfileAttributes attribute, ISystems<?, ?> system, UUID token) {
+        return attributeChoices(session,attribute,system,token,null);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+	private Uni<List<ProfileAttributeChoiceDTO>> attributeChoices(Mutiny.StatelessSession session, ProfileAttributes attribute, ISystems<?, ?> system, UUID token,Set<String> selected)
 	{
 		String conceptName = ProfileChoiceConcepts.forAttribute(attribute).conceptName();
+        if(selected!=null && selected.isEmpty())return Uni.createFrom().item(List.of());
 		return classifications.find(session, attribute.name(), system, token)
-			.chain(parent -> ((IClassification) parent).findChildren(session, NoClassification.name(), null, system, token))
+            .chain(parent -> {
+                if(selected==null) return ((IClassification) parent).findChildren(session, NoClassification.name(), null, system, token);
+                return new com.guicedee.activitymaster.fsdm.db.entities.classifications.ClassificationXClassification().builder(session)
+                        .findLink((com.guicedee.activitymaster.fsdm.db.entities.classifications.Classification)parent,null,null)
+                        .inActiveRange().withClassification(NoClassification.name(),system).inDateRange().canRead(system,token)
+                        .withEnterprise(system.getEnterprise()).where("childClassificationID.name",com.entityassist.enumerations.Operand.InList,selected).getAll();
+            })
             .chain(links -> {
                 if (((List<?>) links).isEmpty()) return Uni.createFrom().item(List.of());
                 // The hierarchy query above owns link authorization. Batch only the IDs it returned.

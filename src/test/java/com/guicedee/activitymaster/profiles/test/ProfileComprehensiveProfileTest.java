@@ -136,7 +136,7 @@ public class ProfileComprehensiveProfileTest
 		assertEquals(choices.get("HomeLanguage"), choices.get("SpokenLanguages"));
 		assertEquals("Caucasian / White", choices.get("Ethnicity").stream()
 			.filter(choice -> choice.value().equals("EthnicityEuropean")).findFirst().orElseThrow().label());
-		assertTrue(choices.get("Religion").contains(new ProfileAttributeChoiceDTO("ReligionChineseAncestral", "Ancestral")));
+		assertTrue(choices.get("Religion").contains(new ProfileAttributeChoiceDTO("ReligionChineseAncestral", "Chinese ancestral religion")));
 
 		ProfileSystem profileSystem = IGuiceContext.get(ProfileSystem.class);
 		IClassificationService<?> classifications = IGuiceContext.get(IClassificationService.class);

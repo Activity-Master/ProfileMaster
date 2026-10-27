@@ -142,4 +142,7 @@ public interface IProfileService<J extends IProfileService<J>>
 
     /** Read one published choice concept using the same canonical checks as the complete list. */
     Uni<List<ProfileAttributeChoiceDTO>> getAttributeChoicesFor(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, String attribute);
+
+    /** Read only requested published choices while retaining the canonical hierarchy and concept checks. */
+    Uni<List<ProfileAttributeChoiceDTO>> getAttributeChoicesForValues(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, String attribute, java.util.Set<String> values);
 }
