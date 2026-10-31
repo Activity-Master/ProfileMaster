@@ -80,6 +80,9 @@ public interface IProfileService<J extends IProfileService<J>>
     /** Reads one supported protected attribute with the same legacy fallback as the full profile. */
     Uni<String> getProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId, String attribute);
 
+    /** Residential address country with the protected/legacy Profile Country fallback, without full profile hydration. */
+    Uni<String> getAgeCountry(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId);
+
     /** Replaces one supported protected attribute, reporting false for an identical value. */
     Uni<Boolean> replaceProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
             String attribute, String expected, String value);

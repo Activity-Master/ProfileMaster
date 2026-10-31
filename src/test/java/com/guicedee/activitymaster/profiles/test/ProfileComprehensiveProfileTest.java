@@ -403,6 +403,9 @@ public class ProfileComprehensiveProfileTest
         assertTrue(stored.getAddresses().stream().anyMatch(address -> "Billing".equals(address.purpose())));
         assertTrue(stored.getAddresses().stream().allMatch(address -> country.equals(address.geographies().get("Country"))));
         assertTrue(stored.getAddresses().stream().allMatch(address -> "Reference Country".equals(address.geographyLabels().get("Country"))));
+        assertEquals("ZZ",SessionUtils.<String>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                service.getAgeCountry(tuple.getItem1(),tuple.getItem2(),stored.getProfileId()))
+                .await().atMost(Duration.ofSeconds(30)),"Age country follows the residential geography");
         SessionUtils.<Void>withActivityMasterStateless(ENTERPRISE, PROFILE_SYSTEM, tuple -> tuple.getItem1().createNativeQuery("""
             SELECT COUNT(DISTINCT ag.geographyid), COUNT(*) FROM address.addressxgeography ag
             JOIN party.involvedpartyxaddress pa ON pa.addressid = ag.addressid
@@ -627,6 +630,36 @@ public class ProfileComprehensiveProfileTest
 		
 		assertEquals("https://linkedin.com/in/ada", stored.getLinkedIn());
 	}
+
+    @Test
+    void ageReadsUseProtectedBirthDateAndFailClosedForInvalidValues() {
+        IProfileService<?> service = IGuiceContext.get(IProfileService.class);
+        var ages = IGuiceContext.get(com.guicedee.activitymaster.fsdm.plugins.AgeRestrictionService.class);
+        var profile = new ComprehensiveProfileDTO();
+        profile.setFirstName("Age fixture"); profile.setDateOfBirth("1990-01-02");
+        UUID id = SessionUtils.<UUID>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                service.saveProfile(tuple.getItem1(),tuple.getItem2(),profile)).await().atMost(Duration.ofMinutes(1));
+        assertNull(SessionUtils.<String>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                ages.country(tuple.getItem1(),tuple.getItem2(),id)).await().atMost(Duration.ofSeconds(30)));
+        assertEquals(java.time.LocalDate.of(1990,1,2),SessionUtils.<java.time.LocalDate>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                ages.dateOfBirth(tuple.getItem1(),tuple.getItem2(),id)).await().atMost(Duration.ofSeconds(30)));
+        SessionUtils.<Void>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                ages.require(tuple.getItem1(),tuple.getItem2(),id,com.guicedee.activitymaster.fsdm.plugins.AgeRating.parse("18+")))
+                .await().atMost(Duration.ofSeconds(30));
+        String previous = "1990-01-02";
+        for(String value:List.of("not-a-date","2999-01-01","")) {
+            String expected=previous;
+            SessionUtils.withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                    service.replaceProtectedAttribute(tuple.getItem1(),tuple.getItem2(),id,"DateOfBirth",expected,value))
+                    .await().atMost(Duration.ofSeconds(30));
+            assertNull(SessionUtils.<java.time.LocalDate>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                    ages.dateOfBirth(tuple.getItem1(),tuple.getItem2(),id)).await().atMost(Duration.ofSeconds(30)));
+            assertThrows(SecurityException.class,()->SessionUtils.<Void>withActivityMasterStateless(ENTERPRISE,PROFILE_SYSTEM,tuple ->
+                    ages.require(tuple.getItem1(),tuple.getItem2(),id,com.guicedee.activitymaster.fsdm.plugins.AgeRating.parse("18+")))
+                    .await().atMost(Duration.ofSeconds(30)));
+            previous=value;
+        }
+    }
 
 	@Test
 	@Order(2)

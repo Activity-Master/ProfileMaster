@@ -308,6 +308,28 @@ public class ProfileService
     }
 
     @Override
+    public Uni<String> getAgeCountry(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId) {
+        return getISystem(session,ProfileSystemName,enterprise).chain(system ->
+                getISystemToken(session,ProfileSystemName,enterprise).chain(token -> {
+                    var party = preppedParty(java.util.Objects.requireNonNull(profileId));
+                    return addresses.findPartyAddresses(session,party,system,token).chain(addresses -> {
+                        for (var address : addresses) {
+                            var geography = address.geographies().get("Country");
+                            if ("Residential".equals(address.purpose()) && geography != null)
+                                return session.get(com.guicedee.activitymaster.fsdm.db.entities.geography.Geography.class,geography)
+                                        .map(row -> row == null ? null : ageCountryCode(row.getName()));
+                        }
+                        return protectedAttributeState(session,party,"Country",system,token)
+                                .map(state -> ageCountryCode(state.value()));
+                    });
+                }));
+    }
+
+    private static String ageCountryCode(String value) {
+        return value != null && value.matches("[A-Za-z]{2}") ? value.toUpperCase(java.util.Locale.ROOT) : null;
+    }
+
+    @Override
     public Uni<Boolean> replaceProtectedAttribute(Mutiny.StatelessSession session, IEnterprise<?, ?> enterprise, UUID profileId,
             String attribute, String expected, String value) {
         return replaceProtectedAttribute(session, enterprise, profileId, attribute, expected, value, false);
